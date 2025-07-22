@@ -1,0 +1,32 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"preferredVersions": {
+		"php": "8.1",
+		"wp": "latest"
+	},
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginZipFile": {
+				"resource": "wordpress.org/plugins",
+				"slug": "woocommerce"
+			}
+		},
+		{
+			"step": "activatePlugin",
+			"pluginPath": "woocommerce/woocommerce.php"
+		},
+		{
+			"step": "runWpInstallationWizard",
+			"options": {
+				"blogname": "UniVoucher Test Site",
+				"adminUsername": "admin",
+				"adminPassword": "password"
+			}
+		}
+	],
+	"features": {
+		"networking": true
+	},
+	"description": "Test UniVoucher For WooCommerce plugin with WooCommerce pre-installed"
+}

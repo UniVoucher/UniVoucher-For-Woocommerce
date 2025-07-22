@@ -1,0 +1,663 @@
+/**
+ * UniVoucher Image Templates Styles
+ */
+
+/* Custom Font Picker Styles */
+.custom-font-picker {
+    position: relative;
+    user-select: none;
+    min-width: 120px;
+    font-size: 11px;
+}
+
+.custom-font-picker.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f5f5f5 !important;
+}
+
+.custom-font-picker.disabled .font-picker-selected {
+    color: #999;
+}
+
+.font-picker-selected {
+    transition: background-color 0.2s ease;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.custom-font-picker:not(.disabled):hover .font-picker-selected {
+    background-color: #f8f9fa;
+}
+
+.font-picker-arrow {
+    font-size: 10px;
+    color: #666;
+    transition: transform 0.2s ease;
+}
+
+.custom-font-picker.disabled .font-picker-arrow {
+    color: #999;
+}
+
+.custom-font-picker.active .font-picker-arrow {
+    transform: rotate(180deg);
+}
+
+.font-picker-dropdown {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.font-option {
+    transition: background-color 0.2s ease;
+    font-size: 12px;
+    padding: 6px 8px !important;
+    line-height: 1.3;
+}
+
+.font-option:hover {
+    background-color: #f8f9fa;
+}
+
+.font-option.selected {
+    background-color: #0073aa;
+    color: #fff;
+}
+
+/* Font Loading */
+@font-face {
+    font-family: 'AreaKilometer50';
+    src: url('../fonts/AreaKilometer50.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'BorderWall';
+    src: url('../fonts/BorderWall.otf') format('opentype');
+}
+
+
+
+@font-face {
+    font-family: 'Excluded';
+    src: url('../fonts/Excluded.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Excludeditalic';
+    src: url('../fonts/Excludeditalic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Freedom';
+    src: url('../fonts/Freedom.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Inter-Bold';
+    src: url('../fonts/Inter-Bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Martius';
+    src: url('../fonts/Martius.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'MartiusItalic';
+    src: url('../fonts/MartiusItalic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'MinnePetat';
+    src: url('../fonts/MinnePetat.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Swansea';
+    src: url('../fonts/Swansea.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'SwanseaBold';
+    src: url('../fonts/SwanseaBold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'SwanseaBoldItalic';
+    src: url('../fonts/SwanseaBoldItalic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'MoonHouse';
+    src: url('../fonts/MoonHouse.ttf') format('truetype');
+}
+
+/* Test Grid for responsive 3-column layout */
+.univoucher-test-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 100%;
+}
+
+@media (min-width: 900px) {
+    .univoucher-test-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Image Editor Container */
+#univoucher-image-editor-container {
+    max-width: 100%;
+    margin: 20px 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
+#univoucher-image-editor {
+    display: inline-block;
+    position: relative;
+    max-width: 100%;
+    max-height: calc(80vh - 200px);
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#univoucher-template-preview {
+    display: block;
+    max-width: 100%;
+    max-height: calc(80vh - 220px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+/* Draggable Text Element */
+#univoucher-draggable-text {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+}
+
+#univoucher-draggable-text:active {
+    cursor: grabbing;
+}
+
+/* Draggable Amount with Symbol Element */
+#univoucher-draggable-amount-with-symbol {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+}
+
+#univoucher-draggable-amount-with-symbol:active {
+    cursor: grabbing;
+}
+
+/* Draggable Amount Element */
+#univoucher-draggable-amount {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+}
+
+#univoucher-draggable-amount:active {
+    cursor: grabbing;
+}
+
+/* Draggable Token Symbol Element */
+#univoucher-draggable-token-symbol {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+}
+
+#univoucher-draggable-token-symbol:active {
+    cursor: grabbing;
+}
+
+/* Draggable Network Name Element */
+#univoucher-draggable-network-name {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+}
+
+#univoucher-draggable-network-name:active {
+    cursor: grabbing;
+}
+
+/* Draggable Chain Logo Element */
+#univoucher-draggable-logo {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 9;
+}
+
+#univoucher-draggable-logo:active {
+    cursor: grabbing;
+}
+
+#univoucher-draggable-logo img {
+    display: block;
+}
+
+/* Draggable Token Logo Element */
+#univoucher-draggable-token {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 8;
+}
+
+#univoucher-draggable-token:active {
+    cursor: grabbing;
+}
+
+#univoucher-draggable-token img {
+    display: block;
+}
+
+/* Draggable Elements */
+.draggable-element {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.draggable-element:hover {
+    outline: 1px solid rgba(0, 123, 255, 0.5);
+    outline-offset: 0px;
+}
+
+/* Unified outline styling for active elements (hover or selected) */
+.draggable-element.active {
+    outline: 2px solid #007cba;
+    outline-offset: 0px;
+}
+
+.draggable-element:active {
+    cursor: grabbing;
+}
+
+/* Individual Element Styles */
+#univoucher-draggable-amount-with-symbol,
+#univoucher-draggable-amount,
+#univoucher-draggable-token-symbol,
+#univoucher-draggable-network-name {
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: baseline;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1px 1px;
+    line-height: 1;
+}
+
+#univoucher-draggable-logo,
+#univoucher-draggable-token {
+    display: inline-block;
+}
+
+#univoucher-draggable-logo img,
+#univoucher-draggable-token img {
+    display: block;
+    pointer-events: none;
+}
+
+/* Test Generation Section */
+#univoucher-test-generation {
+    margin-right: 10px;
+}
+
+#univoucher-test-result {
+    margin-top: 15px;
+}
+
+#univoucher-test-result img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Form Fields Styling */
+.univoucher-color-picker {
+    width: 100px !important;
+}
+
+.univoucher-wc-row input[type="number"] {
+    width: 80px;
+}
+
+/* Template Selection Preview */
+.template-preview-container {
+    margin: 10px 0;
+    text-align: center;
+}
+
+.template-preview-container img {
+    max-width: 200px;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #univoucher-image-editor {
+        max-width: 100%;
+    }
+}
+
+/* Loading States */
+.univoucher-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner.is-active {
+    float: none;
+    margin: 0 5px;
+}
+
+/* Resize Controls */
+.univoucher-resize-controls {
+    position: absolute;
+    display: flex;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.univoucher-resize-controls.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.resize-btn {
+    width: 26px;
+    height: 26px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: all 0.1s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.resize-btn:hover {
+    background: #f8f8f8;
+    border-color: #999;
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.resize-btn:active {
+    background: #e8e8e8;
+    transform: scale(0.98);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.resize-minus {
+    color: #d63638;
+}
+
+.resize-minus:hover {
+    color: #a12a2c;
+    background: #fef2f2;
+}
+
+.resize-plus {
+    color: #00a32a;
+}
+
+.resize-plus:hover {
+    color: #007a20;
+    background: #f0f8f0;
+}
+
+/* Color Picker Styling */
+.wp-picker-container {
+    position: relative;
+}
+
+.wp-picker-container.wp-picker-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.wp-picker-container.wp-picker-disabled .wp-color-result {
+    background-color: #f1f1f1 !important;
+    border-color: #ddd !important;
+    cursor: not-allowed !important;
+}
+
+/* Fix color picker positioning and z-index */
+.wp-picker-container .wp-picker-holder {
+    position: fixed !important;
+    z-index: 999999 !important;
+    margin-bottom: 5px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 4px;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+}
+
+/* Alternative approach - ensure the picker is above everything */
+.wp-picker-container.wp-picker-active .wp-picker-holder {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure color picker doesn't stretch the controller container */
+.univoucher-element-controllers {
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Visual Editor Container */
+.univoucher-visual-editor {
+    position: relative;
+    z-index: 1;
+    max-height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure WordPress admin elements don't interfere */
+.wp-picker-container .wp-picker-input-wrap {
+    position: relative;
+    z-index: 2;
+}
+
+/* Success/Error Messages */
+.univoucher-message {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.univoucher-message.success {
+    background: #f0f8f0;
+    border: 1px solid #00a32a;
+    color: #00a32a;
+}
+
+.univoucher-message.error {
+    background: #fbeaea;
+    border: 1px solid #d63638;
+    color: #d63638;
+}
+
+/* Tab Content Styling */
+.nav-tab-wrapper + form .form-table {
+    margin-top: 20px;
+}
+
+/* Help Text */
+.univoucher-help-text {
+    font-style: italic;
+    color: #666;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+/* Alignment dropdown styling */
+#element-align {
+    min-width: 70px;
+    height: 28px;
+    font-size: 11px;
+    padding: 4px 6px;
+}
+
+/* Unified controller field styling */
+.univoucher-element-controllers input[type="number"],
+.univoucher-element-controllers input[type="text"],
+.univoucher-element-controllers select {
+    height: 28px;
+    font-size: 11px;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    min-width: 50px;
+}
+
+.univoucher-element-controllers label {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
+    margin-right: 4px;
+}
+
+.univoucher-element-controllers .wp-picker-container {
+    height: 28px;
+}
+
+.univoucher-element-controllers .wp-color-result {
+    height: 28px;
+    padding: 4px 6px;
+    font-size: 11px;
+}
+
+/* Alignment Visual Indicators */
+.alignment-indicator {
+    position: absolute;
+    pointer-events: none !important;
+    z-index: 15;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.alignment-indicator.show {
+    opacity: 1;
+}
+
+.alignment-vertical-line {
+    width: 2px;
+    background: #007cba;
+    position: absolute;
+    box-shadow: 0 0 4px rgba(0, 124, 186, 0.3);
+}
+
+.alignment-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    z-index: 16;
+}
+
+/* Left alignment arrow */
+.alignment-arrow.left {
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid #d63638;
+    margin-left: -2px;
+}
+
+/* Center alignment arrow */
+.alignment-arrow.center {
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid #00a32a;
+    margin-left: -6px;
+    margin-top: -2px;
+}
+
+/* Right alignment arrow */
+.alignment-arrow.right {
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 10px solid #d63638;
+    margin-left: -8px;
+}
+
+/* Arrow labels */
+.alignment-arrow::after {
+    content: attr(data-label);
+    position: absolute;
+    font-size: 10px;
+    font-weight: bold;
+    white-space: nowrap;
+    color: #333;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 4px;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.alignment-arrow.left::after {
+    left: 12px;
+    top: -8px;
+}
+
+.alignment-arrow.center::after {
+    left: -15px;
+    top: 12px;
+}
+
+.alignment-arrow.right::after {
+    right: 12px;
+    top: -8px;
+} 
