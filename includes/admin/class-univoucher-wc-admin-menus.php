@@ -132,6 +132,11 @@ class UniVoucher_WC_Admin_Menus {
 				'settings_group' => 'univoucher_wc_stock_settings',
 				'sections' => array( 'univoucher_wc_stock_sync_section' ),
 			),
+			'delivery' => array(
+				'title' => esc_html__( 'Card Delivery', 'univoucher-for-woocommerce' ),
+				'settings_group' => 'univoucher_wc_delivery_settings',
+				'sections' => array( 'univoucher_wc_delivery_section' ),
+			),
 			'templates' => array(
 				'title' => esc_html__( 'Content Templates', 'univoucher-for-woocommerce' ),
 				'settings_group' => 'univoucher_wc_templates_settings',

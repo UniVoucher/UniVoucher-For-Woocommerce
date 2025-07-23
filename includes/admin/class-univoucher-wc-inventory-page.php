@@ -317,6 +317,7 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 		$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
 		$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
 		$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
+		$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
 		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 
 		// Get order by and order.
@@ -329,6 +330,7 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 			'status'          => $filter_status,
 			'delivery_status' => $filter_delivery_status,
 			'chain_id'        => $chain_filter,
+			'product_id'      => $product_filter,
 			'search'          => $search,
 			'orderby'         => $orderby,
 			'order'           => $order,
@@ -365,6 +367,7 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 		$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
 		$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
 		$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
+		$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
 		$networks = UniVoucher_WC_Product_Fields::get_supported_networks();
 		?>
 		<div class="alignleft actions">
@@ -389,6 +392,38 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 						<?php echo esc_html( $network['name'] ); ?>
 					</option>
 				<?php endforeach; ?>
+			</select>
+			
+			<select id="filter-by-product">
+				<option value=""><?php esc_html_e( 'All Products', 'univoucher-for-woocommerce' ); ?></option>
+				<?php
+				// Get products that have UniVoucher enabled
+				$univoucher_products = get_posts( array(
+					'post_type'      => 'product',
+					'post_status'    => 'publish',
+					'posts_per_page' => -1,
+					'meta_query'     => array(
+						array(
+							'key'     => '_univoucher_enabled',
+							'value'   => 'yes',
+							'compare' => '=',
+						),
+					),
+					'orderby'        => 'title',
+					'order'          => 'ASC',
+				) );
+				
+				foreach ( $univoucher_products as $product ) {
+					$selected = selected( $product_filter, $product->ID, false );
+					echo sprintf(
+						'<option value="%d"%s>#%d %s</option>',
+						esc_attr( $product->ID ),
+						$selected,
+						esc_html( $product->ID ),
+						esc_html( $product->post_title )
+					);
+				}
+				?>
 			</select>
 			
 			<button type="button" class="button" id="filter-submit"><?php esc_html_e( 'Filter', 'univoucher-for-woocommerce' ); ?></button>

@@ -66,7 +66,7 @@ class UniVoucher_WC_Encryption {
  * 
  * ⚠️  CRITICAL SECURITY WARNING ⚠️
  * 
- * This file contains the database encryption key, The database key is used to encrypt and store your gift card inventory scrambled in the database.
+ * This file contains the database encryption key, The database key is used to encrypt and store your gift card inventory encrypted ( unreadable ) in the database.
  * It is also used to decrypt (and show the real key) in the WP admin or user dashboard. Keep this key secure and always maintain a backup.
  * If this key is lost, you will not be able to access any of your existing gift cards, and they will become permanently unusable.
  * 

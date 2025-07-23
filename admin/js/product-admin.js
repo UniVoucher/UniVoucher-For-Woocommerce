@@ -79,6 +79,11 @@
          * Initialize get token info functionality
          */
         initGetTokenInfo: function() {
+            // Disable button if cards exist
+            if (univoucher_product_ajax.has_existing_cards) {
+                $('#univoucher-get-token-info').prop('disabled', true);
+            }
+            
             $('#univoucher-get-token-info').on('click', function(e) {
                 e.preventDefault();
                 UniVoucherProductAdmin.fetchTokenInfo();
@@ -89,7 +94,10 @@
          * Toggle options visibility
          */
         toggleOptions: function(enabled, $options) {
-            if (enabled) {
+            // Check if product has existing cards (this will be set by PHP)
+            var hasExistingCards = univoucher_product_ajax.has_existing_cards || false;
+            
+            if (enabled && !hasExistingCards) {
                 $options.slideDown();
             } else {
                 $options.slideUp();

@@ -31,7 +31,7 @@
 			$('#filter-submit').on('click', this.handleFilter.bind(this));
 
 			// Auto-filter on dropdown change  
-			$('#filter-by-status, #filter-by-delivery-status, #filter-by-chain').on('change', this.handleFilter.bind(this));
+			$('#filter-by-status, #filter-by-delivery-status, #filter-by-chain, #filter-by-product').on('change', this.handleFilter.bind(this));
 
 			// Enter key for search
 			$('input[name="s"]').on('keypress', function(e) {
@@ -208,6 +208,7 @@
 			const status = $('#filter-by-status').val();
 			const deliveryStatus = $('#filter-by-delivery-status').val();
 			const chainId = $('#filter-by-chain').val();
+			const productId = $('#filter-by-product').val();
 			const search = $('input[name="s"]').val();
 			
 			const url = new URL(window.location);
@@ -229,6 +230,12 @@
 				url.searchParams.set('chain_id', chainId);
 			} else {
 				url.searchParams.delete('chain_id');
+			}
+			
+			if (productId) {
+				url.searchParams.set('product_id', productId);
+			} else {
+				url.searchParams.delete('product_id');
 			}
 			
 			if (search) {

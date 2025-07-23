@@ -661,3 +661,21 @@
     right: 12px;
     top: -8px;
 } 
+
+/* Highlight help text */
+#no-selection-help {
+    font-size: 12px;
+    color: #6c757d;
+    font-style: italic;
+    margin-left: auto;
+    transition: all 0.3s ease;
+}
+
+#no-selection-help.highlighted {
+    color: #856404;
+    font-weight: 600;
+    background-color: #fff3cd;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #ffc107;
+}

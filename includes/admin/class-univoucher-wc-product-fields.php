@@ -106,6 +106,12 @@ class UniVoucher_WC_Product_Fields {
 	 */
 	public function add_product_data_panel() {
 		global $product_object;
+		
+		// Check if product has existing gift cards in inventory
+		$product_manager = UniVoucher_WC_Product_Manager::instance();
+		$has_existing_cards = $product_manager->product_has_existing_cards( $product_object ? $product_object->get_id() : 0 );
+		$cards_count = $product_manager->get_product_cards_count( $product_object ? $product_object->get_id() : 0 );
+		
 		?>
 		<div id="univoucher_gift_card_data" class="panel woocommerce_options_panel">
 			<div class="options_group">
@@ -123,7 +129,30 @@ class UniVoucher_WC_Product_Fields {
 				?>
 			</div>
 
-			<div class="options_group univoucher-gift-card-options" style="<?php echo $product_object && $product_object->get_meta( '_univoucher_enabled' ) ? '' : 'display:none;'; ?>">
+			<?php if ( $has_existing_cards ) : ?>
+			<div class="univoucher-stock-notice" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin: 25px; display: block;">
+				<h4 style="margin: 0 0 8px 0; color: #856404; font-size: 14px;">
+					<span class="dashicons dashicons-warning" style="font-size: 16px; margin-right: 5px;"></span>
+					<?php esc_html_e( 'Gift Card Settings Locked', 'univoucher-for-woocommerce' ); ?>
+				</h4>
+				<p style="margin: 0; color: #856404; font-size: 13px; line-height: 1.4;">
+					<?php 
+					printf(
+						/* translators: %d is the number of gift cards */
+						esc_html__( 'This product has %d existing gift card/s in the inventory. You must delete all gift cards connected to this product from the inventory before you can modify the gift card settings.', 'univoucher-for-woocommerce' ),
+						$cards_count
+					);
+					?>
+				</p>
+				<p style="margin: 8px 0 0 0; font-size: 12px; color: #856404;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-inventory&product_id=' . ( $product_object ? $product_object->get_id() : 0 ) ) ); ?>" style="color: #856404; text-decoration: underline;">
+						<?php esc_html_e( 'Manage Inventory →', 'univoucher-for-woocommerce' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php endif; ?>
+
+			<div class="options_group univoucher-gift-card-options" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) && ! $has_existing_cards ) ? '' : 'display:none;'; ?>">
 				<?php
 				// Network selection.
 				woocommerce_wp_select(
@@ -134,6 +163,7 @@ class UniVoucher_WC_Product_Fields {
 						'desc_tip'    => true,
 						'options'     => $this->get_network_options(),
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_network' ) : '1',
+						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
 
@@ -149,6 +179,7 @@ class UniVoucher_WC_Product_Fields {
 							'erc20'  => esc_html__( 'ERC-20 Token', 'univoucher-for-woocommerce' ),
 						),
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_token_type' ) : 'native',
+						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
 
@@ -162,6 +193,7 @@ class UniVoucher_WC_Product_Fields {
 						'placeholder' => esc_attr__( '0x...', 'univoucher-for-woocommerce' ),
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_token_address' ) : '',
 						'wrapper_class' => 'univoucher-erc20-field',
+						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
 				?>
@@ -185,9 +217,12 @@ class UniVoucher_WC_Product_Fields {
 						'description' => esc_html__( 'Amount of tokens per gift card.', 'univoucher-for-woocommerce' ),
 						'desc_tip'    => true,
 						'type'        => 'number',
-						'custom_attributes' => array(
-							'step' => '0.000001',
-							'min'  => '0',
+						'custom_attributes' => array_merge(
+							array(
+								'step' => '0.000001',
+								'min'  => '0',
+							),
+							$has_existing_cards ? array( 'disabled' => 'disabled' ) : array()
 						),
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_card_amount' ) : '',
 					)
@@ -236,7 +271,7 @@ class UniVoucher_WC_Product_Fields {
 			</div>
 
 			<!-- Auto-generate Title & Description Section -->
-			<div class="options_group univoucher-auto-generate-section" style="<?php echo $product_object && $product_object->get_meta( '_univoucher_enabled' ) ? '' : 'display:none;'; ?>">
+			<div class="options_group univoucher-auto-generate-section" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) && ! $has_existing_cards ) ? '' : 'display:none;'; ?>">
 				<h4 style="padding-left: 12px;"><?php esc_html_e( 'Auto Generate:', 'univoucher-for-woocommerce' ); ?></h4>
 				<p class="form-field">
 					<label>&nbsp;</label>
@@ -261,16 +296,24 @@ class UniVoucher_WC_Product_Fields {
 					<span id="univoucher-image-status" style="font-size: 12px; color: #666; margin-left: 0;"></span>
 					<br>
 					<br>
-					<span class="description" style="display: block; margin-left: 0px; font-style: italic;">
-						<?php 
-						printf(
-							/* translators: %1$s: opening link tag, %2$s: closing link tag */
-							esc_html__( '* Generated content and image templates can be customized in %1$sUniVoucher Settings%2$s.', 'univoucher-for-woocommerce' ),
-							'<a href="' . esc_url( admin_url( 'admin.php?page=univoucher-settings' ) ) . '" target="_blank">',
-							'</a>'
-						);
-						?>
-					</span>
+					<div class="univoucher-stock-notice" style="background: #e7f3ff; border: 1px solid #0073aa; border-radius: 4px; padding: 12px; margin: 25px; display: block;">
+						<h4 style="margin: 0 0 8px 0; color: #0073aa; font-size: 14px;">
+							<span class="dashicons dashicons-info" style="font-size: 16px; margin-right: 5px;"></span>
+							<?php esc_html_e( 'Generated content and image templates can be customized in settings', 'univoucher-for-woocommerce' ); ?>
+						</h4>
+						<ul style="margin: 8px 0 0 0; padding-left: 20px; color: #0073aa; font-size: 13px;">
+							<li style="margin-bottom: 4px;">
+								<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-settings&tab=templates' ) ); ?>" target="_blank" style="color: #0073aa; text-decoration: none;">
+									<?php esc_html_e( 'Customize product title and descriptions Template →', 'univoucher-for-woocommerce' ); ?>
+								</a>
+							</li>
+							<li>
+								<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-settings&tab=image-templates' ) ); ?>" target="_blank" style="color: #0073aa; text-decoration: none;">
+									<?php esc_html_e( 'Customize product image template →', 'univoucher-for-woocommerce' ); ?>
+								</a>
+							</li>
+						</ul>
+					</div>
 					<br>
 				</p>
 			</div>
@@ -472,6 +515,11 @@ class UniVoucher_WC_Product_Fields {
 			true
 		);
 
+		// Check if product has existing cards
+		$product_manager = UniVoucher_WC_Product_Manager::instance();
+		$has_existing_cards = $product_manager->product_has_existing_cards( $post->ID );
+		$cards_count = $product_manager->get_product_cards_count( $post->ID );
+		
 		// Localize script.
 		wp_localize_script(
 			'univoucher-wc-product-admin',
@@ -480,6 +528,8 @@ class UniVoucher_WC_Product_Fields {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'univoucher_product_nonce' ),
 				'networks' => self::$supported_networks,
+				'has_existing_cards' => $has_existing_cards,
+				'cards_count' => $cards_count,
 			)
 		);
 

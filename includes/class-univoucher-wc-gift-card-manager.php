@@ -289,6 +289,7 @@ class UniVoucher_WC_Gift_Card_Manager {
 			'status'          => '',
 			'delivery_status' => '',
 			'chain_id'        => '',
+			'product_id'      => '',
 			'token_type'      => '',
 			'search'          => '',
 			'orderby'         => 'created_at',
@@ -314,6 +315,11 @@ class UniVoucher_WC_Gift_Card_Manager {
 		if ( ! empty( $args['chain_id'] ) ) {
 			$where_conditions[] = 'chain_id = %d';
 			$where_values[] = absint( $args['chain_id'] );
+		}
+
+		if ( ! empty( $args['product_id'] ) ) {
+			$where_conditions[] = 'product_id = %d';
+			$where_values[] = absint( $args['product_id'] );
 		}
 
 		if ( ! empty( $args['token_type'] ) ) {

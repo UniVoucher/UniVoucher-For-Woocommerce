@@ -2,9 +2,9 @@
 Contributors: univoucher
 Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,15 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.1.0 =
+* Enhanced email delivery system with customizable templates
+* Improved order management and customer-facing gift card display
+* Advanced inventory filtering by product
+* Enhanced product management with safety features
+* Improved image template customization interface
+* Security and performance enhancements
+* Updated WordPress compatibility (tested up to 6.8.2)
+
 = 1.0.0 =
 * Initial release
 * Digital gift card management with UniVoucher integration
@@ -128,8 +137,13 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Admin interface for card management and settings
 * Comprehensive delivery status tracking
 * Support for both ERC-20 tokens and native currencies
+* Automatic product content generation with customizable templates
+* Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Important update with enhanced email delivery system, improved order management, advanced inventory filtering, and better product management. Includes security improvements and enhanced user interface.
 
 = 1.0.0 =
 Initial release of UniVoucher For WooCommerce. Install to start selling crypto gift cards in your WooCommerce store.

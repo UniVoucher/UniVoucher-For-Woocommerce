@@ -40,6 +40,18 @@ jQuery(document).ready(function($) {
                 self.updateAllElementPositions();
                 self.updateAllPreviews();
                 self.setupColorPickerBehavior();
+                
+                // Auto-select amount with token element if available
+                if ($('#univoucher_wc_image_show_amount_with_symbol').is(':checked') && $('#univoucher-draggable-amount-with-symbol').is(':visible')) {
+                    // Ensure element position is fully updated before selecting
+                    self.updateAmountWithSymbolPosition();
+                    setTimeout(function() {
+                        self.selectElement('#univoucher-draggable-amount-with-symbol', 'amount_with_symbol');
+                    }, 50);
+                } else {
+                    // Highlight the help text if no element is auto-selected
+                    $('#no-selection-help').addClass('highlighted');
+                }
             }, 100);
         },
 
@@ -773,6 +785,13 @@ jQuery(document).ready(function($) {
         handleTemplateChange: function() {
             var self = this;
             var selectedTemplate = $('#univoucher_wc_image_template').val();
+            
+            // Check if custom template is selected
+            if (selectedTemplate === 'custom_template') {
+                this.scrollToCustomResources();
+                return;
+            }
+            
             var confirmation = confirm('Changing the template will reset all element positions and sizes to default values. Do you want to continue?');
             
             if (confirmation) {
@@ -804,7 +823,45 @@ jQuery(document).ready(function($) {
             }
         },
 
-
+        /**
+         * Scroll to custom resources section and highlight it
+         */
+        scrollToCustomResources: function() {
+            // Find the custom resources section
+            var $customResourcesSection = $('.settings-group').filter(function() {
+                return $(this).find('h4').text().trim() === 'Custom Resources';
+            });
+            
+            if ($customResourcesSection.length) {
+                // Scroll to the section
+                $('html, body').animate({
+                    scrollTop: $customResourcesSection.offset().top - 50
+                }, 500);
+                
+                // Highlight the section temporarily
+                $customResourcesSection.css({
+                    'background-color': '#f0f8ff',
+                    'border': '2px solid #0073aa',
+                    'border-radius': '8px'
+                });
+                
+                // Remove highlight after 3 seconds
+                setTimeout(function() {
+                    $customResourcesSection.css({
+                        'background-color': '',
+                        'border': '',
+                        'border-radius': ''
+                    });
+                }, 3000);
+                
+                // Reset template selection to previous value
+                var $templateSelect = $('#univoucher_wc_image_template');
+                var previousValue = $templateSelect.data('previous-value');
+                if (previousValue) {
+                    $templateSelect.val(previousValue);
+                }
+            }
+        },
 
         /**
          * Reset to wide 4x3 template defaults
@@ -1874,8 +1931,8 @@ jQuery(document).ready(function($) {
             // Activate the element (this will handle all visual states)
             this.activateElement(element, type);
 
-            // Hide help text
-            $('#no-selection-help').hide();
+            // Hide help text and remove highlighting
+            $('#no-selection-help').hide().removeClass('highlighted');
 
             // Enable appropriate controls and load settings
             if (type === 'amount_with_symbol' || type === 'amount' || type === 'token_symbol' || type === 'network_name') {
@@ -2051,8 +2108,8 @@ jQuery(document).ready(function($) {
             $('#element-size, #element-color, #element-align').prop('disabled', true);
             this.disableColorPicker();
             
-            // Show help text
-            $('#no-selection-help').show();
+            // Show help text with highlighting
+            $('#no-selection-help').show().addClass('highlighted');
         },
 
         /**

@@ -1,173 +1,32 @@
-# Copyright (C) 2024 UniVoucher
+# Copyright (C) 2025 UniVoucher
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: UniVoucher For WooCommerce 1.0.0\n"
-"Report-Msgid-Bugs-To: https://univoucher.com/support\n"
-"POT-Creation-Date: 2024-01-01 00:00:00+00:00\n"
+"Project-Id-Version: UniVoucher For WooCommerce 1.1.0\n"
+"Report-Msgid-Bugs-To: https://univoucher.com/\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "X-Generator: WP-CLI 2.8.0\n"
 "X-Domain: univoucher-for-woocommerce\n"
 
-#: univoucher-for-woocommerce.php:108
-msgid "UniVoucher For WooCommerce requires WooCommerce to be installed and active."
+#: includes/class-univoucher-wc-order-manager.php:103
+msgid "UniVoucher Gift Cards:"
 msgstr ""
 
-#: univoucher-for-woocommerce.php:109
-msgid "Plugin dependency check"
+#: includes/class-univoucher-wc-order-manager.php:121
+msgid "Card ID:"
 msgstr ""
 
-#: univoucher-for-woocommerce.php:157
-msgid "UniVoucher For WooCommerce"
-msgstr ""
-
-#: univoucher-for-woocommerce.php:158
-msgid "requires WooCommerce to be installed and active."
-msgstr ""
-
-#: univoucher-for-woocommerce.php:160
-msgid "Install WooCommerce"
-msgstr ""
-
-# Customer-facing strings - Order/Gift Card display
-#: includes/class-univoucher-wc-order-manager.php:92
-msgid "Your Gift Cards"
-msgstr ""
-
-#: includes/class-univoucher-wc-order-manager.php:98
-msgid "Gift Card"
-msgstr ""
-
-#: includes/class-univoucher-wc-order-manager.php:106
+#: includes/class-univoucher-wc-order-manager.php:125
 msgid "Card Secret:"
 msgstr ""
 
-#: includes/class-univoucher-wc-order-manager.php:112
-msgid "Network:"
+#: includes/class-univoucher-wc-order-manager.php:130
+msgid "Redeem at:"
 msgstr ""
 
-#: includes/class-univoucher-wc-order-manager.php:114
-msgid "Token:"
-msgstr ""
-
-#: includes/class-univoucher-wc-order-manager.php:120
-msgid "Status:"
-msgstr ""
-
-# Customer-facing error messages and notifications
-#: includes/class-univoucher-wc-gift-card-manager.php
-msgid "Gift card delivered successfully."
-msgstr ""
-
-#: includes/class-univoucher-wc-gift-card-manager.php
-msgid "Failed to deliver gift card."
-msgstr ""
-
-#: includes/class-univoucher-wc-gift-card-manager.php
-msgid "Gift card not found or already delivered."
-msgstr ""
-
-#: includes/class-univoucher-wc-gift-card-manager.php
-msgid "Invalid order or gift card data."
-msgstr ""
-
-# Product-related customer messages
-#: includes/class-univoucher-wc-product-manager.php
-msgid "This product includes a crypto gift card."
-msgstr ""
-
-#: includes/class-univoucher-wc-product-manager.php
-msgid "Gift card will be delivered upon order completion."
-msgstr ""
-
-#: includes/class-univoucher-wc-product-manager.php
-msgid "Insufficient gift card stock available."
-msgstr ""
-
-#: includes/class-univoucher-wc-product-manager.php
-msgid "Gift card stock updated."
-msgstr ""
-
-# Order processing messages
-#: includes/class-univoucher-wc-order-manager.php
-msgid "Your gift cards have been processed and will be available shortly."
-msgstr ""
-
-#: includes/class-univoucher-wc-order-manager.php
-msgid "There was an issue processing your gift cards. Please contact support."
-msgstr ""
-
-# Stock and availability messages
-#: includes/class-univoucher-wc-stock-manager.php
-msgid "Gift cards in stock"
-msgstr ""
-
-#: includes/class-univoucher-wc-stock-manager.php
-msgid "Out of stock"
-msgstr ""
-
-#: includes/class-univoucher-wc-stock-manager.php
-msgid "Limited stock available"
-msgstr ""
-
-# Email notifications (customer-facing)
-msgid "Your UniVoucher Gift Card"
-msgstr ""
-
-msgid "Thank you for your purchase! Your crypto gift card details are below:"
-msgstr ""
-
-msgid "Card Details"
-msgstr ""
-
-msgid "Important: Save this information securely. This is the only time you will see the complete card details."
-msgstr ""
-
-msgid "How to redeem your gift card:"
-msgstr ""
-
-msgid "Visit the UniVoucher platform"
-msgstr ""
-
-msgid "Enter your card secret"
-msgstr ""
-
-msgid "Connect your wallet and redeem"
-msgstr ""
-
-msgid "Need help? Contact our support team."
-msgstr ""
-
-# Frontend validation messages
-msgid "Please enter a valid card secret."
-msgstr ""
-
-msgid "Card secret cannot be empty."
-msgstr ""
-
-msgid "Invalid card format."
-msgstr ""
-
-msgid "This card has already been redeemed."
-msgstr ""
-
-msgid "Card not found or expired."
-msgstr ""
-
-# Checkout and cart messages
-msgid "This item includes a crypto gift card"
-msgstr ""
-
-msgid "Gift card will be sent to your email after payment"
-msgstr ""
-
-msgid "Limited quantity available"
-msgstr ""
-
-msgid "Cannot add to cart - insufficient gift card stock"
+#: includes/class-univoucher-wc-order-manager.php:132
+msgid "or"
 msgstr "" 

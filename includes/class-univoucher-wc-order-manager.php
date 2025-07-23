@@ -55,11 +55,13 @@ class UniVoucher_WC_Order_Manager {
 	 */
 	private function init_hooks() {
 		// Customer-facing hooks - show gift cards only for completed orders
-		add_action( 'woocommerce_order_details_after_order_table', array( $this, 'display_customer_gift_cards' ) );
-		add_action( 'woocommerce_thankyou', array( $this, 'display_customer_gift_cards' ) );
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_customer_gift_cards' ) );
 
 		// Admin-facing hooks - show gift cards with assignment functionality
 		add_action( 'woocommerce_admin_order_items_after_line_items', array( $this, 'display_admin_gift_cards' ) );
+		
+		// Email delivery hook
+		add_action( 'woocommerce_order_status_completed', array( $this, 'send_gift_cards_email' ) );
 		
 		// AJAX handlers for admin card assignment and unassignment
 		add_action( 'wp_ajax_univoucher_assign_product_cards', array( $this, 'ajax_assign_product_cards' ) );
@@ -75,6 +77,11 @@ class UniVoucher_WC_Order_Manager {
 	 * @param WC_Order|int $order Order object or order ID.
 	 */
 	public function display_customer_gift_cards( $order ) {
+		// Check if customer card display is enabled
+		if ( ! get_option( 'univoucher_wc_show_in_order_details', true ) ) {
+			return;
+		}
+
 		if ( is_numeric( $order ) ) {
 			$order = wc_get_order( $order );
 		}
@@ -89,46 +96,57 @@ class UniVoucher_WC_Order_Manager {
 			return;
 		}
 
+		$networks = array(1=>'Ethereum',10=>'Optimism',56=>'BNB Chain',137=>'Polygon',42161=>'Arbitrum',43114=>'Avalanche',8453=>'Base');
+		$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+
 		?>
 		<section class="woocommerce-univoucher-gift-cards">
-			<h2 class="woocommerce-order-details__title"><?php esc_html_e( 'Your Gift Cards', 'univoucher-for-woocommerce' ); ?></h2>
+			<h2><?php esc_html_e( 'UniVoucher Gift Cards:', 'univoucher-for-woocommerce' ); ?></h2>
 			<div class="univoucher-cards-container">
-				<?php foreach ( $gift_cards as $card ) : ?>
-					<div class="univoucher-card" style="border: 2px solid #0073aa; border-radius: 8px; padding: 20px; margin: 15px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-						<div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-							<h3 style="margin: 0; color: #0073aa; font-size: 18px;">
-								<?php esc_html_e( 'Gift Card', 'univoucher-for-woocommerce' ); ?> #<?php echo esc_html( $card->card_id ); ?>
-							</h3>
-							<span class="card-amount" style="font-size: 20px; font-weight: bold; color: #28a745;">
-								<?php echo esc_html( number_format( (float) $card->amount, 4 ) ); ?> <?php echo esc_html( $card->token_symbol ); ?>
-							</span>
-						</div>
-						<div class="card-details" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
-							<div>
-								<strong><?php esc_html_e( 'Card Secret:', 'univoucher-for-woocommerce' ); ?></strong><br>
-								<code style="background: #f1f1f1; padding: 4px 8px; border-radius: 4px; font-family: monospace; word-break: break-all;">
-									<?php echo esc_html( $card->card_secret ); ?>
-								</code>
+				<?php foreach ( $gift_cards as $card ) : 
+					$network_name = isset( $networks[ $card->chain_id ] ) ? $networks[ $card->chain_id ] : 'Chain ' . $card->chain_id;
+				?>
+					<div class="univoucher-card">
+						<div class="card-header">
+							<div class="card-amount">
+								<img src="<?php echo esc_url( $plugin_url . 'admin/images/tokens/' . strtolower( $card->token_symbol ) . '.png' ); ?>" alt="<?php echo esc_attr( $card->token_symbol ); ?>" onerror="this.src='<?php echo esc_url( $plugin_url . 'admin/images/tokens/token.png' ); ?>'">
+								<span><?php echo esc_html( number_format( (float) $card->amount, 4 ) ); ?> <?php echo esc_html( $card->token_symbol ); ?></span>
 							</div>
-							<div>
-								<strong><?php esc_html_e( 'Network:', 'univoucher-for-woocommerce' ); ?></strong> Chain ID <?php echo esc_html( $card->chain_id ); ?><br>
-								<?php if ( $card->token_address ) : ?>
-									<strong><?php esc_html_e( 'Token:', 'univoucher-for-woocommerce' ); ?></strong> 
-									<code style="font-size: 12px; word-break: break-all;"><?php echo esc_html( $card->token_address ); ?></code>
-								<?php endif; ?>
+							<div class="card-network">
+								<img src="<?php echo esc_url( $plugin_url . 'admin/images/networks/' . $card->chain_id . '.png' ); ?>" alt="<?php echo esc_attr( $network_name ); ?>">
+								<span><?php echo esc_html( $network_name ); ?></span>
 							</div>
 						</div>
-						<div class="card-footer" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; font-size: 12px; color: #6c757d;">
-							<?php esc_html_e( 'Status:', 'univoucher-for-woocommerce' ); ?> 
-							<span style="text-transform: capitalize;"><?php echo esc_html( str_replace( '_', ' ', $card->delivery_status ) ); ?></span>
-							<?php if ( $card->delivery_status === 'delivered' ) : ?>
-								<span style="color: #28a745;">✓</span>
-							<?php endif; ?>
+						<div class="card-details">
+							<div class="card-id">
+								<strong><?php esc_html_e( 'Card ID:', 'univoucher-for-woocommerce' ); ?></strong>
+								<code><?php echo esc_html( $card->card_id ); ?></code>
+							</div>
+							<div class="card-secret">
+								<strong><?php esc_html_e( 'Card Secret:', 'univoucher-for-woocommerce' ); ?></strong>
+								<code><?php echo esc_html( $card->card_secret ); ?></code>
+							</div>
+						</div>
+						<div class="card-redeem">
+							<?php esc_html_e( 'Redeem at:', 'univoucher-for-woocommerce' ); ?> 
+							<a href="https://univoucher.com" target="_blank" rel="noopener noreferrer">univoucher.com</a> 
+							<?php esc_html_e( 'or', 'univoucher-for-woocommerce' ); ?> 
+							<a href="https://redeemnow.xyz" target="_blank" rel="noopener noreferrer">redeemnow.xyz</a>
 						</div>
 					</div>
 				<?php endforeach; ?>
 			</div>
 		</section>
+		<style>
+		.univoucher-card{border:1px solid #ddd;border-radius:8px;padding:20px;margin:15px 0;background:#fff}
+		.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+		.card-amount,.card-network{display:flex;align-items:center;gap:8px}
+		.card-amount img,.card-network img{width:24px;height:24px}
+		.card-details{margin:15px 0}
+		.card-id,.card-secret{margin:8px 0}
+		.card-id code,.card-secret code{background:#f5f5f5;padding:4px 8px;border-radius:4px;font-family:monospace;word-break:break-all;display:block;margin-top:4px}
+		.card-redeem{margin-top:15px;padding-top:15px;border-top:1px solid #eee}
+		</style>
 		<?php
 	}
 
@@ -661,6 +679,78 @@ class UniVoucher_WC_Order_Manager {
 				)
 			) );
 		}
+	}
+
+	/**
+	 * Send gift cards email when order is completed.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	public function send_gift_cards_email( $order_id ) {
+		// Check if email delivery is enabled
+		if ( ! get_option( 'univoucher_wc_send_email_cards', true ) ) {
+			return;
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		$gift_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order_id );
+		if ( empty( $gift_cards ) ) {
+			return;
+		}
+
+		// Get email template and subject
+		$template = get_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeemnow.xyz" target="_blank">https://redeemnow.xyz</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
+		$subject_template = get_option( 'univoucher_wc_email_subject', 'Your UniVoucher Gift Cards - Order #{order_number}' );
+
+		// Build cards content
+		$cards_content = '';
+		$networks = array(1=>'Ethereum',10=>'Optimism',56=>'BNB Chain',137=>'Polygon',42161=>'Arbitrum',43114=>'Avalanche',8453=>'Base');
+		
+		foreach ( $gift_cards as $card ) {
+			$network_name = isset( $networks[ $card->chain_id ] ) ? $networks[ $card->chain_id ] : 'Chain ' . $card->chain_id;
+			$cards_content .= sprintf(
+				'<div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 10px 0; background: #fff;"><strong>Card ID:</strong> %s<br><strong>Card Secret:</strong> <code style="background: #f5f5f5; padding: 2px 4px; border-radius: 3px;">%s</code><br><strong>Amount:</strong> %s %s<br><strong>Network:</strong> %s</div>',
+				$card->card_id,
+				$card->card_secret,
+				number_format( (float) $card->amount, 4 ),
+				$card->token_symbol,
+				$network_name
+			);
+		}
+
+		// Replace placeholders in subject and content
+		$replacements = array( 
+			$order->get_billing_first_name() ?: $order->get_billing_email(),
+			$order->get_order_number(),
+			$cards_content,
+			get_bloginfo( 'name' )
+		);
+		
+		$email_content = str_replace(
+			array( '{customer_name}', '{order_number}', '{cards_content}', '{site_name}' ),
+			$replacements,
+			$template
+		);
+		
+		$email_subject = str_replace(
+			array( '{customer_name}', '{order_number}', '{site_name}' ),
+			array( 
+				$order->get_billing_first_name() ?: $order->get_billing_email(),
+				$order->get_order_number(),
+				get_bloginfo( 'name' )
+			),
+			$subject_template
+		);
+
+		// Send email
+		$to = $order->get_billing_email();
+		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+
+		wp_mail( $to, $email_subject, $email_content, $headers );
 	}
 
 	/**

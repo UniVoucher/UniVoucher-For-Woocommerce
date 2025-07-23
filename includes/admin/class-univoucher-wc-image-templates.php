@@ -1665,6 +1665,9 @@ class UniVoucher_WC_Image_Templates {
 									<?php echo esc_html( $template['name'] ); ?>
 								</option>
 							<?php endforeach; ?>
+							<option value="custom_template" <?php selected( $selected_template, 'custom_template' ); ?>>
+								<?php esc_html_e( 'Add Custom Template', 'univoucher-for-woocommerce' ); ?>
+							</option>
 						</select>
 					</div>
 				</div>

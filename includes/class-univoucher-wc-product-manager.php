@@ -59,6 +59,12 @@ class UniVoucher_WC_Product_Manager {
 			 
 			// Handle WordPress bulk edit operations
 			add_action( 'bulk_edit_posts', array( $this, 'uv_handle_bulk_edit' ) );
+			
+			// Handle product duplication to sync stock
+			add_action( 'woocommerce_product_duplicate', array( $this, 'uv_handle_product_duplicate' ), 10, 2 );
+			
+			// Prevent permanent deletion of products with existing gift cards
+			add_action( 'before_delete_post', array( $this, 'uv_prevent_product_deletion' ) );
 		}
 	}
 
@@ -82,7 +88,7 @@ class UniVoucher_WC_Product_Manager {
 				<?php esc_html_e( 'Since UniVoucher Gift Card is activated for this product, stock management (Track stock quantity) is automatically enabled and stock quantity is calculated by UniVoucher inventory management.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 			<p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-inventory' ) ); ?>" style="color: #0073aa; text-decoration: none;">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-inventory&product_id=' . ( $product_object ? $product_object->get_id() : 0 ) ) ); ?>" style="color: #0073aa; text-decoration: none;">
 					<?php esc_html_e( 'Manage UniVoucher inventory →', 'univoucher-for-woocommerce' ); ?>
 				</a>
 			</p>
@@ -231,6 +237,72 @@ class UniVoucher_WC_Product_Manager {
 		return 'yes' === $product_obj->get_meta( '_univoucher_enabled' );
 	}
 
+	/**
+	 * Check if a product has existing gift cards.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return bool True if the product has existing gift cards, false otherwise.
+	 */
+	public function product_has_existing_cards( $product_id ) {
+		global $wpdb;
+		$database = UniVoucher_WC_Database::instance();
+		$table = $database->uv_get_gift_cards_table();
+
+		$count = $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM $table WHERE product_id = %d",
+			$product_id
+		) );
+
+		return (int) $count > 0;
+	}
+
+	/**
+	 * Get the count of gift cards for a product.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return int Number of gift cards for the product.
+	 */
+	public function get_product_cards_count( $product_id ) {
+		global $wpdb;
+		$database = UniVoucher_WC_Database::instance();
+		$table = $database->uv_get_gift_cards_table();
+
+		$count = $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM $table WHERE product_id = %d",
+			$product_id
+		) );
+
+		return (int) $count;
+	}
+
+	/**
+	 * Prevent permanent deletion of products with existing gift cards.
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public function uv_prevent_product_deletion( $post_id ) {
+		if ( 'product' !== get_post_type( $post_id ) ) {
+			return;
+		}
+
+		if ( $this->product_has_existing_cards( $post_id ) ) {
+			$cards_count = $this->get_product_cards_count( $post_id );
+			$product = wc_get_product( $post_id );
+			$product_name = $product ? $product->get_name() : sprintf( __( 'Product #%d', 'univoucher-for-woocommerce' ), $post_id );
+			
+			wp_die(
+				sprintf(
+					/* translators: %1$s is the product name, %2$d is the product ID, %3$d is the number of gift cards */
+					esc_html__( 'You cannot delete "%1$s" (Product #%2$d) as it has %3$d existing gift card/s in the inventory. You must delete all gift cards connected to this product from the inventory before you can permanently delete this product.', 'univoucher-for-woocommerce' ),
+					$product_name,
+					$post_id,
+					$cards_count
+				),
+				esc_html__( 'Product with Gift Cards', 'univoucher-for-woocommerce' ),
+				array( 'back_link' => true )
+			);
+		}
+	}
 
 	/**
 	 * Handle WordPress bulk edit operations for UniVoucher products.
@@ -285,5 +357,32 @@ class UniVoucher_WC_Product_Manager {
 			$stock_manager = UniVoucher_WC_Stock_Manager::instance();
 			$stock_manager->uv_sync_product_stock( $product_id );
 		}
+	}
+
+	/**
+	 * Handle product duplication for UniVoucher enabled products.
+	 * This method is triggered when a product is duplicated and ensures
+	 * stock management is properly synced for the duplicated product.
+	 *
+	 * @param WC_Product $duplicate The duplicated product object.
+	 * @param WC_Product $product The original product object.
+	 */
+	public function uv_handle_product_duplicate( $duplicate, $product ) {
+		// Check if the duplicated product has UniVoucher enabled
+		if ( ! $this->is_univoucher_enabled( $duplicate ) ) {
+			return;
+		}
+
+		// Ensure stock management is activated for the duplicated product
+		$duplicate_id = $duplicate->get_id();
+		$current_manage = get_post_meta( $duplicate_id, '_manage_stock', true );
+		
+		if ( $current_manage !== 'yes' ) {
+			update_post_meta( $duplicate_id, '_manage_stock', 'yes' );
+		}
+
+		// Sync product stock with UniVoucher inventory
+		$stock_manager = UniVoucher_WC_Stock_Manager::instance();
+		$stock_manager->uv_sync_product_stock( $duplicate_id );
 	}
 }

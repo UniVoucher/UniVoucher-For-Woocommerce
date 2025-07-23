@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.0.0';
+		public $version = '1.1.0';
 
 		/**
 		 * The single instance of the class.
@@ -223,6 +223,12 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			add_option( 'univoucher_wc_title_template', 'UniVoucher {amount} {symbol} Gift Card on {network}' );
 			add_option( 'univoucher_wc_short_description_template', 'UniVoucher gift card worth {amount} {symbol} on {network} network. instantly redeemable to any crypto wallet and globally supported' );
 			add_option( 'univoucher_wc_description_template', "<p>UniVoucher enables anyone to gift crypto across multiple blockchain networks with a redeemable crypto gift cards. Whether you want to gift ETH to a friend, distribute USDC rewards to your team, or create promotional crypto codes, UniVoucher provides a decentralized, transparent, and user-friendly solution.</p>\n\n<p><strong>Features:</strong></p>\n<ul>\n<li>Globally supported</li>\n<li>Redeemable to any crypto wallet</li>\n<li>Issued on {network} network</li>\n</ul>\n\n<p>After purchase, you will receive your gift card details in format of card ID and card Secret XXXXX-XXXXX-XXXXX-XXXXX that can be redeemed instantly.</p>\n\n<h3>HOW TO REDEEM</h3>\n\n<p><strong>Option 1 - Regular Redemption (gas fees required):</strong></p>\n<ol>\n<li>Visit: <a href=\"https://univoucher.com\" target=\"_blank\">https://univoucher.com</a></li>\n<li>Connect your wallet</li>\n<li>Click Redeem</li>\n<li>Enter the Card ID and Card Secret above</li>\n<li>Click \"Redeem Card\"</li>\n</ol>\n\n<p><strong>Option 2 - Gasless Redemption (no fees):</strong></p>\n<ol>\n<li>Visit: <a href=\"https://redeemnow.xyz\" target=\"_blank\">https://redeemnow.xyz</a></li>\n<li>Enter the Card ID and Card Secret above</li>\n<li>Enter your wallet address</li>\n<li>Get tokens without paying gas fees</li>\n</ol>" );
+
+			// Set email delivery settings
+			add_option( 'univoucher_wc_send_email_cards', true );
+			add_option( 'univoucher_wc_show_in_order_details', true );
+			add_option( 'univoucher_wc_email_subject', 'Your UniVoucher Gift Cards - Order #{order_number}' );
+			add_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeemnow.xyz" target="_blank">https://redeemnow.xyz</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
 
 			// Set plugin version.
 			update_option( 'univoucher_wc_version', UNIVOUCHER_WC_VERSION );
