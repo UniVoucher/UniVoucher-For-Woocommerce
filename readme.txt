@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,13 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.1.1 =
+* Improved gift card assignment behavior - now assigns all available cards instead of failing when insufficient stock
+* Enhanced order logging with aggregated card assignment notes instead of individual card logs
+* Fixed product settings bug that was preventing proper configuration
+* Better handling of partial card assignments with clear visibility into unassigned cards
+* Improved stock management when cards are insufficient for order quantities
+
 = 1.1.0 =
 * Enhanced email delivery system with customizable templates
 * Improved order management and customer-facing gift card display
@@ -141,6 +148,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Important update with improved gift card assignment behavior and enhanced order logging. This version fixes product settings issues and provides better handling of insufficient stock scenarios.
 
 = 1.1.0 =
 Important update with enhanced email delivery system, improved order management, advanced inventory filtering, and better product management. Includes security improvements and enhanced user interface.

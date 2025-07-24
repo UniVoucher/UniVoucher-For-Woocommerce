@@ -160,42 +160,63 @@ class UniVoucher_WC_Stock_Manager {
 		// Mark the ordered number of gift cards as sold
 		global $wpdb;
 
-		// Get available gift cards for this product with card_id for order notes
+		// Get all available gift cards for this product
 		$cards = $wpdb->get_results( $wpdb->prepare(
 			"SELECT id, card_id FROM {$this->database->uv_get_gift_cards_table()}
 			WHERE product_id = %d AND status = 'available' 
-			ORDER BY created_at ASC 
-			LIMIT %d",
-			$product_id,
-			$quantity
+			ORDER BY created_at ASC",
+			$product_id
 		) );
 
-		if ( count( $cards ) < $quantity ) {
-			// WooCommerce will handle stock issues
-			return;
-		}
+		$available_count = count( $cards );
+		$cards_to_assign = min( $available_count, $quantity );
+		$unassigned_count = $quantity - $cards_to_assign;
 
-		// Mark the cards as sold (delivery_status remains 'never delivered')
-		$card_ids = wp_list_pluck( $cards, 'id' );
-		$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
-		
-		$result = $wpdb->query( $wpdb->prepare(
-			"UPDATE {$this->database->uv_get_gift_cards_table()}
-			SET status = 'sold', order_id = %d 
-			WHERE id IN ($card_ids_placeholder)",
-			array_merge( array( $order->get_id() ), $card_ids )
-		) );
+		if ( $cards_to_assign > 0 ) {
+			// Take only the cards we can assign
+			$cards_to_process = array_slice( $cards, 0, $cards_to_assign );
+			
+			// Mark the cards as sold (delivery_status remains 'never delivered')
+			$card_ids = wp_list_pluck( $cards_to_process, 'id' );
+			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
+			
+			$result = $wpdb->query( $wpdb->prepare(
+				"UPDATE {$this->database->uv_get_gift_cards_table()}
+				SET status = 'sold', order_id = %d 
+				WHERE id IN ($card_ids_placeholder)",
+				array_merge( array( $order->get_id() ), $card_ids )
+			) );
 
-		if ( $result === false ) {
-			return;
-		}
+			if ( $result === false ) {
+				return;
+			}
 
-		// Add order notes for each assigned card
-		foreach ( $cards as $card ) {
+			// Create aggregated order note
+			$assigned_card_ids = wp_list_pluck( $cards_to_process, 'card_id' );
+			$card_ids_string = implode( ', ', $assigned_card_ids );
+			
+			$note_message = sprintf( 
+				// translators: %1$d is the number of cards assigned, %2$s is the card IDs, %3$d is the number of unassigned cards
+				__( 'UniVoucher: %1$d cards assigned to order (IDs: %2$s)', 'univoucher-for-woocommerce' ),
+				$cards_to_assign,
+				$card_ids_string
+			);
+			
+			if ( $unassigned_count > 0 ) {
+				$note_message .= sprintf( 
+					// translators: %d is the number of unassigned cards
+					__( ' - %d cards unassigned due to insufficient stock', 'univoucher-for-woocommerce' ),
+					$unassigned_count
+				);
+			}
+			
+			$order->add_order_note( $note_message );
+		} else {
+			// No cards available at all
 			$order->add_order_note( sprintf( 
-				// translators: %s is the card ID
-				__( 'UniVoucher Card %s assigned to order (status: sold, delivery: never delivered)', 'univoucher-for-woocommerce' ),
-				$card->card_id
+				// translators: %d is the number of cards requested
+				__( 'UniVoucher: No cards available for assignment - %d cards requested but none in stock', 'univoucher-for-woocommerce' ),
+				$quantity
 			) );
 		}
 

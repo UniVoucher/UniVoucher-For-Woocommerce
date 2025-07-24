@@ -124,8 +124,15 @@ class UniVoucher_WC_Product_Fields {
 						'description' => esc_html__( 'Deliver a UniVoucher gift card with this product from available stock.', 'univoucher-for-woocommerce' ),
 						'desc_tip'    => true,
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_enabled' ) : '',
+						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
+				
+				// Add hidden field to preserve enable checkbox value when disabled
+				if ( $has_existing_cards ) {
+					$enabled_value = $product_object ? $product_object->get_meta( '_univoucher_enabled' ) : '';
+					echo '<input type="hidden" name="_univoucher_enabled" value="' . esc_attr( $enabled_value ) . '" />';
+				}
 				?>
 			</div>
 
@@ -152,7 +159,7 @@ class UniVoucher_WC_Product_Fields {
 			</div>
 			<?php endif; ?>
 
-			<div class="options_group univoucher-gift-card-options" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) && ! $has_existing_cards ) ? '' : 'display:none;'; ?>">
+			<div class="options_group univoucher-gift-card-options" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;'; ?>">
 				<?php
 				// Network selection.
 				woocommerce_wp_select(
@@ -166,6 +173,12 @@ class UniVoucher_WC_Product_Fields {
 						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
+				
+				// Add hidden field to preserve network value when disabled
+				if ( $has_existing_cards ) {
+					$network_value = $product_object ? $product_object->get_meta( '_univoucher_network' ) : '1';
+					echo '<input type="hidden" name="_univoucher_network" value="' . esc_attr( $network_value ) . '" />';
+				}
 
 				// Token type selection.
 				woocommerce_wp_select(
@@ -182,6 +195,12 @@ class UniVoucher_WC_Product_Fields {
 						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
+				
+				// Add hidden field to preserve token type value when disabled
+				if ( $has_existing_cards ) {
+					$token_type_value = $product_object ? $product_object->get_meta( '_univoucher_token_type' ) : 'native';
+					echo '<input type="hidden" name="_univoucher_token_type" value="' . esc_attr( $token_type_value ) . '" />';
+				}
 
 				// ERC-20 token address.
 				woocommerce_wp_text_input(
@@ -196,11 +215,17 @@ class UniVoucher_WC_Product_Fields {
 						'custom_attributes' => $has_existing_cards ? array( 'disabled' => 'disabled' ) : array(),
 					)
 				);
+				
+				// Add hidden field to preserve token address value when disabled
+				if ( $has_existing_cards ) {
+					$token_address_value = $product_object ? $product_object->get_meta( '_univoucher_token_address' ) : '';
+					echo '<input type="hidden" name="_univoucher_token_address" value="' . esc_attr( $token_address_value ) . '" />';
+				}
 				?>
 
 				<p class="form-field">
 					<label>&nbsp;</label>
-					<button type="button" id="univoucher-get-token-info" class="button univoucher-erc20-field">
+					<button type="button" id="univoucher-get-token-info" class="button univoucher-erc20-field" <?php echo $has_existing_cards ? 'disabled="disabled"' : ''; ?>>
 						<?php esc_html_e( 'Get Token Info', 'univoucher-for-woocommerce' ); ?>
 					</button>
 					<span class="spinner" id="univoucher-token-spinner"></span>
@@ -227,6 +252,12 @@ class UniVoucher_WC_Product_Fields {
 						'value'       => $product_object ? $product_object->get_meta( '_univoucher_card_amount' ) : '',
 					)
 				);
+				
+				// Add hidden field to preserve card amount value when disabled
+				if ( $has_existing_cards ) {
+					$card_amount_value = $product_object ? $product_object->get_meta( '_univoucher_card_amount' ) : '';
+					echo '<input type="hidden" name="_univoucher_card_amount" value="' . esc_attr( $card_amount_value ) . '" />';
+				}
 
 				// Token symbol (display only).
 				?>
@@ -271,7 +302,7 @@ class UniVoucher_WC_Product_Fields {
 			</div>
 
 			<!-- Auto-generate Title & Description Section -->
-			<div class="options_group univoucher-auto-generate-section" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) && ! $has_existing_cards ) ? '' : 'display:none;'; ?>">
+			<div class="options_group univoucher-auto-generate-section" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;'; ?>">
 				<h4 style="padding-left: 12px;"><?php esc_html_e( 'Auto Generate:', 'univoucher-for-woocommerce' ); ?></h4>
 				<p class="form-field">
 					<label>&nbsp;</label>

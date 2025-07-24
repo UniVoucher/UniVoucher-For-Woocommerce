@@ -39,14 +39,17 @@
         initToggleFields: function() {
             var $enableCheckbox = $('#_univoucher_enabled');
             var $options = $('.univoucher-gift-card-options, .univoucher-auto-generate-section');
+            var hasExistingCards = univoucher_product_ajax.has_existing_cards || false;
             
             // Initial state
             this.toggleOptions($enableCheckbox.is(':checked'), $options);
             
-            // Handle checkbox change
-            $enableCheckbox.on('change', function() {
-                UniVoucherProductAdmin.toggleOptions($(this).is(':checked'), $options);
-            });
+            // Handle checkbox change (only if not disabled)
+            if (!hasExistingCards) {
+                $enableCheckbox.on('change', function() {
+                    UniVoucherProductAdmin.toggleOptions($(this).is(':checked'), $options);
+                });
+            }
         },
         
         /**
@@ -79,15 +82,20 @@
          * Initialize get token info functionality
          */
         initGetTokenInfo: function() {
+            var hasExistingCards = univoucher_product_ajax.has_existing_cards || false;
+            
             // Disable button if cards exist
-            if (univoucher_product_ajax.has_existing_cards) {
+            if (hasExistingCards) {
                 $('#univoucher-get-token-info').prop('disabled', true);
             }
             
-            $('#univoucher-get-token-info').on('click', function(e) {
-                e.preventDefault();
-                UniVoucherProductAdmin.fetchTokenInfo();
-            });
+            // Only add click handler if button is not disabled
+            if (!hasExistingCards) {
+                $('#univoucher-get-token-info').on('click', function(e) {
+                    e.preventDefault();
+                    UniVoucherProductAdmin.fetchTokenInfo();
+                });
+            }
         },
         
         /**
@@ -97,7 +105,7 @@
             // Check if product has existing cards (this will be set by PHP)
             var hasExistingCards = univoucher_product_ajax.has_existing_cards || false;
             
-            if (enabled && !hasExistingCards) {
+            if (enabled) {
                 $options.slideDown();
             } else {
                 $options.slideUp();
