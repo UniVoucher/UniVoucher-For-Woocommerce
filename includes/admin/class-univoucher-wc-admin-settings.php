@@ -92,6 +92,26 @@ class UniVoucher_WC_Admin_Settings {
 
 		register_setting(
 			'univoucher_wc_delivery_settings',
+			'univoucher_wc_auto_complete_orders',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_delivery_settings',
+			'univoucher_wc_require_processing_if_missing_cards',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_delivery_settings',
 			'univoucher_wc_send_email_cards',
 			array(
 				'type'              => 'boolean',
@@ -293,6 +313,19 @@ class UniVoucher_WC_Admin_Settings {
 			esc_html__( 'Cards delivery for completed orders', 'univoucher-for-woocommerce' ),
 			array( $this, 'delivery_section_callback' ),
 			'univoucher_wc_delivery_settings'
+		);
+
+		// Add auto-complete orders field.
+		add_settings_field(
+			'univoucher_wc_auto_complete_orders',
+			esc_html__( 'Order Auto-Completion', 'univoucher-for-woocommerce' ),
+			array( $this, 'auto_complete_orders_callback' ),
+			'univoucher_wc_delivery_settings',
+			'univoucher_wc_delivery_section',
+			array(
+				'label_for' => 'univoucher_wc_auto_complete_orders',
+				'class'     => 'univoucher-wc-row',
+			)
 		);
 
 		// Add show customer cards field.
@@ -1400,4 +1433,115 @@ class UniVoucher_WC_Admin_Settings {
 			'description_template' => $description_template,
 		) );
 	}
+
+	/**
+	 * Auto-complete orders field callback.
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function auto_complete_orders_callback( $args ) {
+		$auto_complete = get_option( 'univoucher_wc_auto_complete_orders', true );
+		$require_processing = get_option( 'univoucher_wc_require_processing_if_missing_cards', true );
+		?>
+		
+		<div class="univoucher-settings-box">
+			<h4>
+				<?php esc_html_e( 'Order Auto-Completion', 'univoucher-for-woocommerce' ); ?>
+			</h4>
+			
+			<div style="margin-bottom: 15px;">
+				<p style="margin: 5px 0 8px 0; font-size: 13px;">
+					<?php esc_html_e( 'Automatically mark orders as "Completed" when they contain only UniVoucher products or other products that don\'t require processing, with sufficient inventory available.', 'univoucher-for-woocommerce' ); ?>
+				</p>
+			</div>
+
+			<div class="univoucher-settings-box-info">
+				<label for="<?php echo esc_attr( $args['label_for'] ); ?>" style="display: flex; align-items: center; margin: 0;">
+					<input
+						type="checkbox"
+						id="<?php echo esc_attr( $args['label_for'] ); ?>"
+						name="<?php echo esc_attr( $args['label_for'] ); ?>"
+						value="1"
+						<?php checked( $auto_complete, true ); ?>
+					/>
+					<strong style="color: #0c5460;">
+						<?php esc_html_e( 'Auto-complete orders with UniVoucher products', 'univoucher-for-woocommerce' ); ?>
+					</strong>
+				</label>
+				<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
+					<?php esc_html_e( 'When enabled, orders containing only UniVoucher products or other products that don\'t require processing will automatically be marked as "Completed" upon payment, allowing immediate gift card delivery.', 'univoucher-for-woocommerce' ); ?>
+				</p>
+			</div>
+
+			<div class="univoucher-settings-box-warning" style="margin-top: 15px;">
+				<strong style="color: #856404;">
+					<span class="dashicons dashicons-info" style="margin-right: 3px;"></span>
+					<?php esc_html_e( 'How it works:', 'univoucher-for-woocommerce' ); ?>
+				</strong>
+				<div style="margin-top: 8px; font-size: 12px; color: #856404;">
+					<div style="margin: 2px 0;">• <?php esc_html_e( 'Orders with only UniVoucher products or other non-processing products will auto-complete if sufficient inventory is available', 'univoucher-for-woocommerce' ); ?></div>
+					<div style="margin: 2px 0;">• <?php esc_html_e( 'Orders with mixed products (UniVoucher + physical items) will still require manual processing', 'univoucher-for-woocommerce' ); ?></div>
+					<div style="margin: 2px 0;">• <?php esc_html_e( 'Gift cards will be delivered immediately upon order completion', 'univoucher-for-woocommerce' ); ?></div>
+					<div style="margin: 2px 0;">• <?php esc_html_e( 'If inventory is insufficient, orders will require manual processing regardless of this setting', 'univoucher-for-woocommerce' ); ?></div>
+				</div>
+			</div>
+
+			<div id="inventory-processing-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e5e9; <?php echo $auto_complete ? '' : 'display: none;'; ?>">
+				<h5 style="margin: 0 0 10px 0; color: #495057; font-size: 14px;">
+					<?php esc_html_e( 'Inventory-Based Processing (recommended)', 'univoucher-for-woocommerce' ); ?>
+				</h5>
+				
+				<div style="margin-bottom: 15px;">
+					<p style="margin: 5px 0 8px 0; font-size: 13px;">
+						<?php esc_html_e( 'Control whether orders should require manual processing based on available inventory for UniVoucher products.', 'univoucher-for-woocommerce' ); ?>
+					</p>
+				</div>
+
+				<div class="univoucher-settings-box-info">
+					<label for="univoucher_wc_require_processing_if_missing_cards" style="display: flex; align-items: center; margin: 0;">
+						<input
+							type="checkbox"
+							id="univoucher_wc_require_processing_if_missing_cards"
+							name="univoucher_wc_require_processing_if_missing_cards"
+							value="1"
+							<?php checked( $require_processing, true ); ?>
+							style="margin-right: 10px;"
+						/>
+						<strong style="color: #0c5460;">
+							<?php esc_html_e( 'Require manual processing when inventory is insufficient', 'univoucher-for-woocommerce' ); ?>
+						</strong>
+					</label>
+					<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
+						<?php esc_html_e( 'When enabled, orders will only auto-complete if there is sufficient available inventory for all UniVoucher products in the order.', 'univoucher-for-woocommerce' ); ?>
+					</p>
+				</div>
+
+				<div class="univoucher-settings-box-warning" style="margin-top: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px;">
+					<strong style="color: #721c24;">
+						<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
+						<?php esc_html_e( 'Warning:', 'univoucher-for-woocommerce' ); ?>
+					</strong>
+					<span style="font-size: 13px; color: #721c24;">
+						<?php esc_html_e( 'If disabled, orders will auto-complete regardless of inventory availability, which may lead to orders with unassigned gift cards.', 'univoucher-for-woocommerce' ); ?>
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#<?php echo esc_js( $args['label_for'] ); ?>').on('change', function() {
+				if ($(this).is(':checked')) {
+					$('#inventory-processing-section').show();
+				} else {
+					$('#inventory-processing-section').hide();
+				}
+			});
+		});
+		</script>
+
+		<?php
+	}
+
+
 }

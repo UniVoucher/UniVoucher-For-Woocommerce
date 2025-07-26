@@ -67,6 +67,9 @@ class UniVoucher_WC_Order_Manager {
 		add_action( 'wp_ajax_univoucher_assign_product_cards', array( $this, 'ajax_assign_product_cards' ) );
 		add_action( 'wp_ajax_univoucher_unassign_card', array( $this, 'ajax_unassign_card' ) );
 		
+		// Auto-complete orders with UniVoucher products
+		add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'auto_complete_univoucher_orders' ), 10, 3 );
+		
 		// Enqueue admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 	}
@@ -748,7 +751,12 @@ class UniVoucher_WC_Order_Manager {
 
 		// Send email
 		$to = $order->get_billing_email();
-		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		$from_name = get_bloginfo( 'name' );
+		$from_email = get_option( 'admin_email' );
+		$headers = array(
+		    'Content-Type: text/html; charset=UTF-8',
+		    'From: ' . $from_name . ' <' . $from_email . '>'
+		);
 
 		wp_mail( $to, $email_subject, $email_content, $headers );
 	}
@@ -771,5 +779,72 @@ class UniVoucher_WC_Order_Manager {
 		}
 		
 		// Scripts are inlined in the display method for simplicity
+	}
+
+	/**
+	 * Auto-complete orders with UniVoucher products.
+	 *
+	 * @param bool       $needs_processing Whether the item needs processing.
+	 * @param WC_Product $product          The product object.
+	 * @param int        $order_id         The order ID.
+	 * @return bool Whether the item needs processing.
+	 */
+	public function auto_complete_univoucher_orders( $needs_processing, $product, $order_id ) {
+		// Check if auto-completion is enabled
+		$auto_complete_enabled = get_option( 'univoucher_wc_auto_complete_orders', true );
+		
+		if ( ! $auto_complete_enabled ) {
+			return $needs_processing;
+		}
+
+		// Check if this product has UniVoucher enabled
+		$is_univoucher_enabled = UniVoucher_WC_Product_Manager::instance()->is_univoucher_enabled( $product );
+		
+		if ( $is_univoucher_enabled ) {
+			
+			// If require processing for missing cards is enabled, check for missing cards
+			$require_processing_if_missing = get_option( 'univoucher_wc_require_processing_if_missing_cards', true );
+			
+			if ( $require_processing_if_missing ) {
+				$order = wc_get_order( $order_id );
+				if ( $order ) {
+					$ordered_cards = $this->get_ordered_cards_for_order( $order );
+					
+					$product_id = $product->get_id();
+					$ordered_quantity = isset( $ordered_cards[ $product_id ] ) ? $ordered_cards[ $product_id ] : 0;
+					
+					$assigned_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order_id );
+					
+					$assigned_quantity = 0;
+					foreach ( $assigned_cards as $card ) {
+						if ( $card->product_id == $product_id ) {
+							$assigned_quantity++;
+						}
+					}
+					
+					if ( $ordered_quantity > $assigned_quantity ) {
+						$missing = $ordered_quantity - $assigned_quantity;
+						// Check available inventory for this product
+						global $wpdb;
+						$database = UniVoucher_WC_Database::instance();
+						$table = esc_sql( $database->uv_get_gift_cards_table() );
+						$available_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE product_id = %d AND status = 'available'", $product_id ) );
+						if ( $available_count < $missing ) {
+							return true; // Needs processing if not enough inventory
+						} else {
+						}
+					} else {
+					}
+				} else {
+				}
+			} else {
+			}
+			
+			// For UniVoucher products, don't need processing (auto-complete)
+			return false;
+		}
+
+		// For non-UniVoucher products, use default behavior
+		return $needs_processing;
 	}
 } 

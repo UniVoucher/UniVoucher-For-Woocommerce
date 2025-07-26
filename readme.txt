@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,12 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed email sender display issue - gift card delivery emails now use site name and admin email instead of "WordPress" as sender
+* Added order auto-completion feature for UniVoucher products with configurable settings
+* Enhanced order processing logic with inventory-based processing controls
+* Added new admin settings for order auto-completion and inventory-based processing
+
 = 1.1.1 =
 * Improved gift card assignment behavior - now assigns all available cards instead of failing when insufficient stock
 * Enhanced order logging with aggregated card assignment notes instead of individual card logs
@@ -148,6 +154,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Important update with order auto-completion feature and email sender fix. This version adds configurable order auto-completion for UniVoucher products, enhanced inventory-based processing controls, and fixes email sender display. Includes new admin settings for controlling order completion behavior.
 
 = 1.1.1 =
 Important update with improved gift card assignment behavior and enhanced order logging. This version fixes product settings issues and provides better handling of insufficient stock scenarios.
