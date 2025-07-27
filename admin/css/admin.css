@@ -871,16 +871,7 @@
 	background: #0073aa;
 }
 
-/* Unified Settings Box Styles */
 .univoucher-settings-box {
-	background: #f9f9f9;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	padding: 15px;
-	margin-bottom: 20px;
-}
-
-.univoucher-settings-box-light {
 	background: #fff;
 	border: 1px solid #ddd;
 	border-radius: 4px;
@@ -937,7 +928,6 @@
 }
 
 .univoucher-settings-box h4,
-.univoucher-settings-box-light h4,
 .univoucher-settings-box-info h4 {
 	margin: 0 0 12px 0;
 	color: #2c3e50;

@@ -751,11 +751,8 @@ class UniVoucher_WC_Order_Manager {
 
 		// Send email
 		$to = $order->get_billing_email();
-		$from_name = get_bloginfo( 'name' );
-		$from_email = get_option( 'admin_email' );
 		$headers = array(
-		    'Content-Type: text/html; charset=UTF-8',
-		    'From: ' . $from_name . ' <' . $from_email . '>'
+		    'Content-Type: text/html; charset=UTF-8'
 		);
 
 		wp_mail( $to, $email_subject, $email_content, $headers );

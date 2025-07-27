@@ -147,6 +147,11 @@ class UniVoucher_WC_Admin_Menus {
 				'settings_group' => 'univoucher_wc_image_settings',
 				'sections' => array( 'univoucher_wc_template_settings_section', 'univoucher_wc_visual_editor_section' ),
 			),
+			'compatibility' => array(
+				'title' => esc_html__( 'Integrations', 'univoucher-for-woocommerce' ),
+				'settings_group' => 'univoucher_wc_compatibility_settings',
+				'sections' => array( 'univoucher_wc_compatibility_section' ),
+			),
 		);
 		?>
 		<div class="wrap">

@@ -844,6 +844,7 @@ class UniVoucher_WC_Add_Cards_Page {
 		$product_id = absint( $_POST['product_id'] );
 		$card_ids = isset( $_POST['card_ids'] ) ? array_map( 'sanitize_text_field', $_POST['card_ids'] ) : array();
 		$card_secrets = isset( $_POST['card_secrets'] ) ? array_map( 'sanitize_text_field', $_POST['card_secrets'] ) : array();
+		$creation_dates = isset( $_POST['creation_dates'] ) ? array_map( 'sanitize_text_field', $_POST['creation_dates'] ) : array();
 		$chain_id = absint( $_POST['chain_id'] );
 		$token_address = sanitize_text_field( $_POST['token_address'] );
 		$token_symbol = sanitize_text_field( $_POST['token_symbol'] );
@@ -861,6 +862,7 @@ class UniVoucher_WC_Add_Cards_Page {
 
 		foreach ( $card_ids as $index => $card_id ) {
 			$card_secret = $card_secrets[ $index ];
+			$creation_date = isset( $creation_dates[ $index ] ) ? $creation_dates[ $index ] : null;
 			
 			if ( empty( $card_id ) || empty( $card_secret ) ) {
 				continue;
@@ -879,6 +881,11 @@ class UniVoucher_WC_Add_Cards_Page {
 				'token_decimals' => $token_decimals,
 				'amount'         => $amount,
 			);
+
+			// Add creation date if available
+			if ( $creation_date ) {
+				$data['created_at'] = $creation_date;
+			}
 
 			$result = $gift_card_manager->uv_add_gift_card( $data );
 

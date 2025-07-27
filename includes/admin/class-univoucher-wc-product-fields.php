@@ -1124,19 +1124,9 @@ class UniVoucher_WC_Product_Fields {
 		
 		// Update attachment metadata
 		$metadata_updated = wp_update_attachment_metadata( $attachment_id, $attachment_metadata );
-		
-		if ( false === $metadata_updated ) {
-			// Log warning but don't fail the entire operation
-			error_log( 'UniVoucher: Failed to update attachment metadata for attachment ID: ' . $attachment_id );
-		}
 
 		// Set as featured image for the product
 		$featured_set = set_post_thumbnail( $product_id, $attachment_id );
-		
-		if ( false === $featured_set ) {
-			// Log warning but don't fail the entire operation
-			error_log( 'UniVoucher: Failed to set featured image for product ID: ' . $product_id );
-		}
 
 		return $attachment_id;
 	}

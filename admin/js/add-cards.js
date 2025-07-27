@@ -775,6 +775,7 @@
             
             var cardIds = [];
             var cardSecrets = [];
+            var creationDates = [];
             var allValid = true;
             
             $('#gift-cards-tbody tr').each(function() {
@@ -792,6 +793,20 @@
                     
                     cardIds.push(cardId);
                     cardSecrets.push(cardSecret);
+                    
+                    // Extract creation date from validation result
+                    var creationDate = null;
+                    if (validationResult.api_data && validationResult.api_data.createdAt) {
+                        // Convert UTC timestamp to MySQL format
+                        var date = new Date(validationResult.api_data.createdAt);
+                        creationDate = date.getUTCFullYear() + '-' + 
+                                     String(date.getUTCMonth() + 1).padStart(2, '0') + '-' + 
+                                     String(date.getUTCDate()).padStart(2, '0') + ' ' + 
+                                     String(date.getUTCHours()).padStart(2, '0') + ':' + 
+                                     String(date.getUTCMinutes()).padStart(2, '0') + ':' + 
+                                     String(date.getUTCSeconds()).padStart(2, '0');
+                    }
+                    creationDates.push(creationDate);
                 }
             });
             
@@ -817,6 +832,7 @@
                     product_id: $('#selected-product-id').val(),
                     card_ids: cardIds,
                     card_secrets: cardSecrets,
+                    creation_dates: creationDates,
                     chain_id: $('#product-chain-id').val(),
                     token_address: $('#product-token-address').val(),
                     token_symbol: $('#product-token-symbol').val(),
