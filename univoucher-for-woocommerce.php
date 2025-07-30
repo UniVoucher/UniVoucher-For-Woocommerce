@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.1.3
+ * Version: 1.1.4
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.1.3
+	 * @version 1.1.4
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.1.3';
+		public $version = '1.1.4';
 
 		/**
 		 * The single instance of the class.
@@ -106,6 +106,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			// Include admin class.
 			if ( is_admin() ) {
 				include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin.php';
+				include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-internal-wallet.php';
 			}
 		}
 
@@ -335,7 +336,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			}
 
 			// Check if backup is confirmed first (most important check).
-			if ( UniVoucher_WC_Admin_Settings::is_database_key_backup_confirmed() ) {
+			if ( function_exists( 'univoucher_is_database_key_backup_confirmed' ) && univoucher_is_database_key_backup_confirmed() ) {
 				return;
 			}
 
@@ -388,6 +389,11 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 				UniVoucher_WC_Stock_Manager::instance();
 				UniVoucher_WC_Order_Manager::instance();
 				UniVoucher_WC_LMFWC_Integration::instance();
+				
+				// Initialize admin components
+				if ( is_admin() ) {
+					UniVoucher_WC_Internal_Wallet::instance();
+				}
 			}
 		}
 

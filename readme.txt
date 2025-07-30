@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.1.4 =
+* Enhanced UniVoucher For WooCommerce with Internal Wallet functionality
+* Added new method for card creation using an internal wallet
 = 1.1.3 =
 * Enhanced License Manager for WooCommerce integration with improved order processing
 * Fixed order context setup for better email delivery and order details display
@@ -159,6 +162,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.1.4 =
+Feature update with Internal Wallet functionality. This version introduces a new method for card creation using an internal wallet, along with associated admin settings and UI components.
 
 = 1.1.3 =
 Important update with enhanced License Manager for WooCommerce integration. This version improves order processing, email delivery, and admin order actions for UniVoucher cards. enhanced creation date handling.

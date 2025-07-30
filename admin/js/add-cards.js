@@ -149,6 +149,17 @@
             
             // Clear method forms
             $('.method-form').hide();
+            $('.method-box-inline').removeClass('active');
+            
+            // Reset internal wallet specific elements
+            $('#current-method').val('');
+            $('#internal-wallet-step').val('1');
+            $('#internal-wallet-step1').show();
+            $('#internal-wallet-step2').hide();
+            $('#internal-wallet-step3').hide();
+            $('#card-quantity').val(1);
+            $('#allowance-section').hide();
+            $('#prepare-cards-btn').prop('disabled', false);
         },
         
         /**
@@ -253,11 +264,6 @@
             
             // Update validation requirements
             this.updateValidationRequirements(settings);
-            
-            // Auto-open UniVoucher dApp by default
-            setTimeout(function() {
-                UniVoucherAddCards.showMethodElements('univoucher');
-            }, 100);
             
             // Reset card inputs
             this.resetCardTable();
@@ -378,10 +384,13 @@
          */
         showMethodElements: function(method) {
             $('.method-form').hide();
+            $('#current-method').val(method);
             
             if (method === 'univoucher') {
                 $('#method-elements').show();
                 $('#cards-form').show();
+            } else if (method === 'internal-wallet') {
+                UniVoucherInternalWallet.initInternalWallet();
             }
         },
         

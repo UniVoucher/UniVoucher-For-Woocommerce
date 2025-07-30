@@ -126,6 +126,24 @@ class UniVoucher_WC_Admin {
 
 		// Localize script for AJAX on settings page.
 		if ( strpos( $hook, 'univoucher-settings' ) !== false ) {
+			// Enqueue ethers.js for wallet functionality
+			wp_enqueue_script(
+				'univoucher-wc-ethers',
+				'https://unpkg.com/ethers@6.0.6/dist/ethers.umd.min.js',
+				array(),
+				'6.0.6',
+				true
+			);
+
+			// Enqueue QRCode.js for wallet QR code generation
+			wp_enqueue_script(
+				'univoucher-wc-qrcode',
+				'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
+				array(),
+				'1.0.0',
+				true
+			);
+
 			wp_localize_script(
 				'univoucher-wc-admin',
 				'univoucher_settings_vars',
@@ -178,6 +196,15 @@ class UniVoucher_WC_Admin {
 				'univoucher-wc-add-cards',
 				plugins_url( 'admin/js/add-cards.js', UNIVOUCHER_WC_PLUGIN_FILE ),
 				array( 'jquery', 'univoucher-wc-notifications' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
+			// Enqueue internal wallet scripts
+			wp_enqueue_script(
+				'univoucher-wc-internal-wallet',
+				plugins_url( 'admin/js/internal-wallet.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery', 'univoucher-wc-notifications', 'univoucher-wc-add-cards' ),
 				UNIVOUCHER_WC_VERSION,
 				true
 			);

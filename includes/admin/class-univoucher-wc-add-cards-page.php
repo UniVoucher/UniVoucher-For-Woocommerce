@@ -144,14 +144,14 @@ class UniVoucher_WC_Add_Cards_Page {
 										</div>
 									</div>
 
-									<!-- Create with Private Key Method -->
-									<div class="method-box-inline coming-soon" data-method="private-key">
+									<!-- Create with Internal Wallet Method -->
+									<div class="method-box-inline available" data-method="internal-wallet">
 										<div class="method-icon-inline">
 											<span class="dashicons dashicons-admin-network"></span>
 										</div>
 										<div class="method-content-inline">
-											<h4><?php esc_html_e( 'Private Key', 'univoucher-for-woocommerce' ); ?> <span class="soon-tag"><?php esc_html_e( 'soon', 'univoucher-for-woocommerce' ); ?></span></h4>
-											<p><?php esc_html_e( 'Create new cards directly using your wallet private key and add them to inventory.', 'univoucher-for-woocommerce' ); ?></p>
+											<h4><?php esc_html_e( 'Internal Wallet', 'univoucher-for-woocommerce' ); ?></h4>
+											<p><?php esc_html_e( 'Create new cards directly using your Internal Wallet private key and add them to inventory.', 'univoucher-for-woocommerce' ); ?></p>
 										</div>
 									</div>
 
@@ -303,6 +303,193 @@ class UniVoucher_WC_Add_Cards_Page {
 						</div>
 					</div>
 
+					<!-- Internal Wallet Form -->
+					<div class="method-form" id="internal-wallet-form" style="display: none;">
+						<!-- Step 1: Quantity and Cost -->
+						<div class="postbox" id="internal-wallet-step1">
+							<div class="postbox-header">
+								<h2 class="hndle"><?php esc_html_e( 'Step 1: Configure Cards Creation', 'univoucher-for-woocommerce' ); ?></h2>
+							</div>
+							<div class="inside">
+								<!-- Wallet Info -->
+								<div class="wallet-info-section" style="margin-bottom: 20px;">
+									<h4><?php esc_html_e( 'Internal Wallet Information:', 'univoucher-for-woocommerce' ); ?></h4>
+									<div class="wallet-info-grid" style="display: grid; grid-template-columns: auto 1fr; gap: 15px; margin-bottom: 15px;">
+										<div>
+											<strong><?php esc_html_e( 'Wallet Address:', 'univoucher-for-woocommerce' ); ?></strong>
+											<div id="wallet-address-display" style="font-family: monospace; font-size: 13px; color: #666; margin-top: 3px;"><?php esc_html_e( 'Loading...', 'univoucher-for-woocommerce' ); ?></div>
+										</div>
+										<div>
+											<strong><?php esc_html_e( 'Balances (showing only what we need):', 'univoucher-for-woocommerce' ); ?></strong>
+											<div id="wallet-balances" style="margin-top: 3px;">
+												<div id="balance-loading" style="color: #666; font-size: 13px;"><?php esc_html_e( 'Loading balances...', 'univoucher-for-woocommerce' ); ?></div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Quantity Selection -->
+								<div class="quantity-section" style="margin-bottom: 20px;">
+									<label for="card-quantity" style="font-weight: 600; display: block; margin-bottom: 5px;">
+										<?php esc_html_e( 'Number of Cards to Create:', 'univoucher-for-woocommerce' ); ?>
+									</label>
+									<input type="number" id="card-quantity" min="1" max="100" value="1" style="width: 100px;" />
+									<p class="description"><?php esc_html_e( 'Choose how many cards to create (1-100)', 'univoucher-for-woocommerce' ); ?></p>
+								</div>
+
+								<!-- Cost Summary -->
+								<div class="cost-summary" style="margin-bottom: 20px;">
+									<h4><?php esc_html_e( 'Cost Summary:', 'univoucher-for-woocommerce' ); ?></h4>
+									<table class="widefat" style="max-width: 500px;">
+										<tbody>
+											<tr>
+												<td><?php esc_html_e( 'Card Amount:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="cost-card-amount">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'UniVoucher Fee:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="cost-univoucher-fee">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'Quantity:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="cost-quantity">1</td>
+											</tr>
+											<tr style="font-weight: bold; border-top: 1px solid #ddd;">
+												<td><?php esc_html_e( 'Total Balance Needed:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="cost-total-needed">-</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<!-- Token Allowance Section -->
+									<h4><?php esc_html_e( 'Token Allowance:', 'univoucher-for-woocommerce' ); ?></h4>
+									<div id="allowance-status">
+										<div id="allowance-loading" style="display: none;">
+											<span class="spinner is-active"></span> <?php esc_html_e( 'Checking allowance...', 'univoucher-for-woocommerce' ); ?>
+										</div>
+										<div id="allowance-insufficient" style="display: none;">
+											<p style="color: #d63638;"><?php esc_html_e( 'Insufficient token allowance. You need to approve the UniVoucher contract to spend your tokens.', 'univoucher-for-woocommerce' ); ?></p>
+											<div style="margin-top: 10px;">
+												<button type="button" class="button button-primary" id="approve-tokens-btn" style="margin-right: 10px;">
+													<?php esc_html_e( 'Approve Token Allowance', 'univoucher-for-woocommerce' ); ?>
+												</button>
+												<button type="button" class="button button-secondary" id="approve-unlimited-tokens-btn">
+													<?php esc_html_e( 'Approve Unlimited Token Allowance', 'univoucher-for-woocommerce' ); ?>
+												</button>
+											</div>
+										</div>
+										<div id="allowance-sufficient" style="display: none;">
+											<p style="color: #46b450;"><?php esc_html_e( '✅ Token allowance is sufficient.', 'univoucher-for-woocommerce' ); ?></p>
+										</div>
+									</div>
+
+								<!-- Action Buttons -->
+								<div class="step1-actions">
+									<button type="button" class="button button-primary" id="prepare-cards-btn" disabled>
+										<?php esc_html_e( 'Prepare Cards', 'univoucher-for-woocommerce' ); ?>
+									</button>
+									<div id="step1-error" style="display: none; margin-top: 10px; color: #d63638;"></div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Step 2: Transaction Summary -->
+						<div class="postbox" id="internal-wallet-step2" style="display: none;">
+							<div class="postbox-header">
+								<h2 class="hndle"><?php esc_html_e( 'Step 2: Transaction Summary', 'univoucher-for-woocommerce' ); ?></h2>
+							</div>
+							<div class="inside">
+								<div id="gas-estimation-loading" style="margin-bottom: 20px;">
+									<span class="spinner is-active"></span> <?php esc_html_e( 'Estimating gas costs...', 'univoucher-for-woocommerce' ); ?>
+								</div>
+
+								<div id="transaction-summary" style="display: none;">
+									<h4><?php esc_html_e( 'Transaction Cost Summary:', 'univoucher-for-woocommerce' ); ?></h4>
+									<table class="widefat" style="max-width: 500px; margin-bottom: 20px;">
+										<tbody>
+											<tr>
+												<td><?php esc_html_e( 'Card Amount:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-cost-card-amount">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'UniVoucher Fee:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-cost-univoucher-fee">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'Quantity:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-cost-quantity">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'Gas Required:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-gas-required">-</td>
+											</tr>
+											<tr>
+												<td><?php esc_html_e( 'Gas Cost:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-gas-cost">-</td>
+											</tr>
+											<tr style="font-weight: bold; border-top: 1px solid #ddd;">
+												<td><?php esc_html_e( 'Total Transaction Cost:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-total-cost">-</td>
+											</tr>
+										</tbody>
+									</table>
+
+									<div class="step2-actions">
+										<button type="button" class="button button-secondary" id="back-to-step1-btn">
+											<?php esc_html_e( '← Back to Step 1', 'univoucher-for-woocommerce' ); ?>
+										</button>
+										<button type="button" class="button button-primary" id="create-cards-btn">
+											<?php esc_html_e( 'Create Cards & Add to Inventory', 'univoucher-for-woocommerce' ); ?>
+										</button>
+									</div>
+								</div>
+
+								<div id="step2-error" style="display: none; margin-top: 10px; color: #d63638;"></div>
+							</div>
+						</div>
+
+						<!-- Step 3: Success -->
+						<div class="postbox" id="internal-wallet-step3" style="display: none;">
+							<div class="postbox-header">
+								<h2 class="hndle"><?php esc_html_e( 'Step 3: Cards Created Successfully', 'univoucher-for-woocommerce' ); ?></h2>
+							</div>
+							<div class="inside">
+								<div id="creation-success" style="margin-bottom: 20px;">
+									<p style="color: #46b450; font-size: 16px; font-weight: bold;">
+										✅ <span id="success-message"><?php esc_html_e( 'Cards created successfully!', 'univoucher-for-woocommerce' ); ?></span>
+									</p>
+								</div>
+
+								<div id="created-cards-info">
+									<h4><?php esc_html_e( 'Created Cards:', 'univoucher-for-woocommerce' ); ?></h4>
+									<div id="created-cards-list" style="margin-bottom: 20px;">
+										<!-- Will be populated with created card details -->
+									</div>
+								</div>
+
+								<div id="updated-stock-info">
+									<h4><?php esc_html_e( 'Updated Inventory:', 'univoucher-for-woocommerce' ); ?></h4>
+									<p><?php esc_html_e( 'New Stock Quantity:', 'univoucher-for-woocommerce' ); ?> <strong id="new-stock-quantity">-</strong></p>
+								</div>
+
+								<div id="transaction-info" style="margin-bottom: 20px;">
+									<h4><?php esc_html_e( 'Transaction Details:', 'univoucher-for-woocommerce' ); ?></h4>
+									<p><?php esc_html_e( 'Transaction Hash:', 'univoucher-for-woocommerce' ); ?> <a id="transaction-link" href="#" target="_blank" style="font-family: monospace;">-</a></p>
+								</div>
+
+								<div class="step3-actions">
+									<button type="button" class="button button-primary" id="create-more-cards-btn">
+										<?php esc_html_e( 'Create More Cards', 'univoucher-for-woocommerce' ); ?>
+									</button>
+									<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-inventory' ) ); ?>" class="button button-secondary">
+										<?php esc_html_e( 'View Inventory', 'univoucher-for-woocommerce' ); ?>
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+
 
 				</div>
 			</div>
@@ -321,6 +508,11 @@ class UniVoucher_WC_Add_Cards_Page {
 		<input type="hidden" id="verification-nonce" value="<?php echo esc_attr( wp_create_nonce( 'univoucher_verify_cards' ) ); ?>" />
 		<input type="hidden" id="add-cards-nonce" value="<?php echo esc_attr( wp_create_nonce( 'univoucher_add_cards' ) ); ?>" />
 		<input type="hidden" id="csv-upload-nonce" value="<?php echo esc_attr( wp_create_nonce( 'univoucher_csv_upload' ) ); ?>" />
+		
+		<!-- Internal Wallet Hidden Fields -->
+		<input type="hidden" id="alchemy-api-key" value="<?php echo esc_attr( get_option( 'univoucher_wc_alchemy_api_key', '' ) ); ?>" />
+		<input type="hidden" id="current-method" value="" />
+		<input type="hidden" id="internal-wallet-step" value="1" />
 
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {

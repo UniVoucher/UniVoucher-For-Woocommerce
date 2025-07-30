@@ -280,13 +280,19 @@
 }
 
 .method-box-inline.available {
-	border-color: #0073aa;
+	border-color: #e0e0e0;
 }
 
 .method-box-inline.available:hover {
 	border-color: #005a87;
 	box-shadow: 0 2px 8px rgba(0, 115, 170, 0.15);
 	transform: translateY(-1px);
+}
+
+.method-box-inline.active {
+	border-color: #0073aa;
+	box-shadow: 0 2px 8px rgba(0, 115, 170, 0.2);
+	background: #f8f9ff;
 }
 
 .method-box-inline.coming-soon {
@@ -309,6 +315,10 @@
 }
 
 .method-box-inline.available .method-icon-inline .dashicons {
+	color: #666;
+}
+
+.method-box-inline.active .method-icon-inline .dashicons {
 	color: #0073aa;
 }
 
@@ -871,6 +881,19 @@
 	background: #0073aa;
 }
 
+/* Special styling for notifications with transaction hashes */
+.univoucher-notification-with-tx {
+	max-width: 600px !important;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+
+.univoucher-notification-with-tx .univoucher-notification-content {
+	font-family: monospace;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
 .univoucher-settings-box {
 	background: #fff;
 	border: 1px solid #ddd;
@@ -945,4 +968,211 @@
 
 .univoucher-settings-highlight strong {
 	color: #2980b9;
+}
+
+/* Wallet Details Styles */
+#wallet-details-container {
+	margin-top: 15px;
+}
+
+#wallet-address-display {
+	font-family: 'Courier New', monospace;
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 8px 12px;
+}
+
+#copy-address-btn,
+#refresh-balances-btn {
+	margin-left: 10px;
+}
+
+#balances-container {
+	margin-top: 20px;
+}
+
+#balances-container h5 {
+	margin: 0 0 15px 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.balance-card {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 15px;
+	background: #f9f9f9;
+	transition: all 0.2s ease;
+	min-height: 120px;
+}
+
+.balance-card:hover {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	transform: translateY(-1px);
+}
+
+
+
+
+
+#balances-loading,
+#balances-error {
+	padding: 15px;
+	border-radius: 4px;
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+}
+
+#balances-error {
+	background: #f8d7da;
+	border-color: #f5c6cb;
+	color: #721c24;
+}
+
+/* Responsive design for wallet details */
+@media (max-width: 768px) {
+	#wallet-address-display {
+		width: 100% !important;
+		max-width: none !important;
+	}
+	
+	#copy-address-btn,
+	#refresh-balances-btn {
+		margin-left: 5px;
+		font-size: 12px;
+		padding: 4px 8px;
+	}
+	
+	.balance-card {
+		min-height: auto;
+		padding: 12px;
+	}
+	
+	#balances-list > div {
+		grid-template-columns: 1fr !important;
+	}
+}
+
+/* Internal Wallet Styles */
+.wallet-info-grid {
+	border: 1px solid #ddd;
+	padding: 15px;
+	border-radius: 4px;
+	background: #f9f9f9;
+}
+
+.cost-summary table {
+	border-collapse: collapse;
+}
+
+.cost-summary table td {
+	padding: 8px 12px;
+	border-bottom: 1px solid #eee;
+}
+
+.cost-summary table tr:last-child td {
+	border-bottom: none;
+}
+
+#allowance-section {
+	border: 1px solid #ddd;
+	padding: 15px;
+	border-radius: 4px;
+	background: #f9f9f9;
+}
+
+#allowance-insufficient {
+	background: #fef7f7;
+	border: 1px solid #f5c6cb;
+	padding: 12px;
+	border-radius: 4px;
+}
+
+#allowance-sufficient {
+	background: #f0f9ff;
+	border: 1px solid #bee5eb;
+	padding: 12px;
+	border-radius: 4px;
+}
+
+.step1-actions, .step2-actions, .step3-actions {
+	margin-top: 20px;
+	padding-top: 15px;
+	border-top: 1px solid #ddd;
+}
+
+#transaction-summary table {
+	border-collapse: collapse;
+}
+
+#transaction-summary table td {
+	padding: 8px 12px;
+	border-bottom: 1px solid #eee;
+}
+
+#transaction-summary table tr:last-child td {
+	border-bottom: none;
+}
+
+#created-cards-list {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	padding: 15px;
+	border-radius: 4px;
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+#transaction-link {
+	word-break: break-all;
+}
+
+/* Internal Wallet Steps Navigation */
+.internal-wallet-steps {
+	display: flex;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #ddd;
+}
+
+.internal-wallet-steps .step {
+	padding: 10px 20px;
+	background: #f1f1f1;
+	margin-right: 1px;
+	position: relative;
+}
+
+.internal-wallet-steps .step.active {
+	background: #0073aa;
+	color: white;
+}
+
+.internal-wallet-steps .step.completed {
+	background: #46b450;
+	color: white;
+}
+
+/* Balance display styling */
+#wallet-balances {
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+/* Responsive adjustments for internal wallet */
+@media (max-width: 768px) {
+	.wallet-info-grid {
+		grid-template-columns: 1fr !important;
+		gap: 10px;
+	}
+	
+	.cost-summary table,
+	#transaction-summary table {
+		font-size: 12px;
+	}
+	
+	.step2-actions .button {
+		display: block;
+		margin-bottom: 10px;
+		width: 100%;
+	}
 } 

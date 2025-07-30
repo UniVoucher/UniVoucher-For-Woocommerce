@@ -21,7 +21,11 @@
         var notificationId = 'notification-' + Date.now();
         var typeClass = 'univoucher-notification-' + type;
         
-        var notification = $('<div class="univoucher-notification ' + typeClass + '" id="' + notificationId + '">' +
+        // Check if message contains a transaction hash (long hex string)
+        var hasTransactionHash = /0x[a-fA-F0-9]{64}/.test(message);
+        var extraClass = hasTransactionHash ? ' univoucher-notification-with-tx' : '';
+        
+        var notification = $('<div class="univoucher-notification ' + typeClass + extraClass + '" id="' + notificationId + '">' +
             '<div class="univoucher-notification-content">' + message + '</div>' +
             '<button class="univoucher-notification-close">&times;</button>' +
             '<div class="univoucher-notification-progress" style="width: 100%;"></div>' +

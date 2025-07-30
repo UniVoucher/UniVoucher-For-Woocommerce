@@ -609,7 +609,7 @@ class UniVoucher_WC_Product_Fields {
 		}
 
 		// Get API key.
-		$api_key = UniVoucher_WC_Admin_Settings::get_api_key();
+		$api_key = function_exists( 'univoucher_get_api_key' ) ? univoucher_get_api_key() : '';
 		if ( empty( $api_key ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Alchemy API key not configured, please check your UniVoucher settings.', 'univoucher-for-woocommerce' ) ) );
 		}

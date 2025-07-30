@@ -127,6 +127,11 @@ class UniVoucher_WC_Admin_Menus {
 				'settings_group' => 'univoucher_wc_api_settings',
 				'sections' => array( 'univoucher_wc_api_section' ),
 			),
+			'wallet' => array(
+				'title' => esc_html__( 'Internal Wallet', 'univoucher-for-woocommerce' ),
+				'settings_group' => 'univoucher_wc_wallet_settings',
+				'sections' => array( 'univoucher_wc_wallet_section' ),
+			),
 			'stock' => array(
 				'title' => esc_html__( 'Stock Sync', 'univoucher-for-woocommerce' ),
 				'settings_group' => 'univoucher_wc_stock_settings',
