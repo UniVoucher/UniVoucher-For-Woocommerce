@@ -59,7 +59,7 @@ class UniVoucher_WC_Internal_Wallet {
 	 */
 	public function ajax_get_wallet_info() {
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -99,7 +99,7 @@ class UniVoucher_WC_Internal_Wallet {
 	 */
 	public function ajax_get_wallet_address() {
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -144,7 +144,7 @@ class UniVoucher_WC_Internal_Wallet {
 	 */
 	public function ajax_check_allowance() {
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -174,7 +174,7 @@ class UniVoucher_WC_Internal_Wallet {
 	 */
 	public function ajax_estimate_gas() {
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -204,7 +204,7 @@ class UniVoucher_WC_Internal_Wallet {
 	 */
 	public function ajax_create_cards_internal() {
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 

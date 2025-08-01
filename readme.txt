@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.1.4
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -46,6 +46,20 @@ UniVoucher For WooCommerce integrates the power of decentralized gift cards with
 * Automatic product image generation with customizable templates
 * Drag-and-drop image customization interface
 * Upload custom templates, fonts, and token logos
+
+**💼 Internal Wallet**
+
+* Internal crypto wallet management for gift card creation
+* Manual card addition to inventory with stored wallet private key
+* Automatic on-demand card creation for backordered orders
+* Real-time wallet balance tracking and management
+
+**🔄 Backorder Automation**
+
+* Automated stock management for backordered orders
+* Automatic creation of backordered cards using internal wallet and UniVoucher API
+* Smart order assignment checks with improved inventory management
+* Configurable email notifications based on order assignment status
 
 = Supported Networks =
 
@@ -116,6 +130,11 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.2.0 =
+* Enhance UniVoucher For WooCommerce with new backorder management features
+* Added automatic creation of backordered cards using the internal wallet
+* Added new settings for email notifications based on order assignment status
+
 = 1.1.4 =
 * Enhanced UniVoucher For WooCommerce with Internal Wallet functionality
 * Added new method for card creation using an internal wallet
@@ -162,6 +181,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Enhance UniVoucher For WooCommerce with new backorder management features. This update introduces automatic creation of backordered cards using the internal wallet, improved order assignment checks, and new settings for email notifications based on order assignment status.
 
 = 1.1.4 =
 Feature update with Internal Wallet functionality. This version introduces a new method for card creation using an internal wallet, along with associated admin settings and UI components.

@@ -220,6 +220,11 @@ class UniVoucher_WC_Stock_Manager {
 			) );
 		}
 
+		// Handle backordered cards if auto-create is enabled
+		if ( $unassigned_count > 0 && get_option( 'univoucher_wc_auto_create_backordered_cards', false ) ) {
+			$this->handle_backordered_cards( $order, $item, $unassigned_count );
+		}
+
 		// WooCommerce handles stock quantity/status automatically
 	}
 
@@ -837,4 +842,167 @@ class UniVoucher_WC_Stock_Manager {
 		return max( 0, $ordered_cards - $assigned_cards );
 	}
 
+	/**
+	 * Handle backordered cards by creating them via UniVoucher API.
+	 *
+	 * @param WC_Order              $order Order object.
+	 * @param WC_Order_Item_Product $item Order item.
+	 * @param int                   $unassigned_count Number of cards to create.
+	 */
+	private function handle_backordered_cards( $order, $item, $unassigned_count ) {
+		$product_id = $item->get_product_id();
+		$product = wc_get_product( $product_id );
+		
+		if ( ! $product ) {
+			return;
+		}
+
+		// Check if UniVoucher is enabled for this product
+		$univoucher_enabled = $product->get_meta( '_univoucher_enabled' );
+		if ( $univoucher_enabled !== 'yes' ) {
+			return;
+		}
+
+		// Get product settings
+		$chain_id = $product->get_meta( '_univoucher_network' );
+		$token_address = $product->get_meta( '_univoucher_token_address' );
+		$token_amount = $product->get_meta( '_univoucher_card_amount' );
+		$token_decimals = $product->get_meta( '_univoucher_token_decimals' );
+		$token_type = $product->get_meta( '_univoucher_token_type' );
+
+		// Convert decimal amount to wei for API
+		$token_amount_wei = $this->decimal_to_wei( $token_amount, $token_decimals );
+
+		// Handle token address format
+		// For native tokens, use zero address
+		if ( $token_type === 'native' || empty( $token_address ) ) {
+			$token_address = '0x0000000000000000000000000000000000000000';
+		}
+
+		// Validate network is supported
+		$supported_networks = array( 1, 8453, 56, 137, 42161, 10, 43114 );
+		if ( ! in_array( intval( $chain_id ), $supported_networks ) ) {
+			$order->add_order_note( sprintf( 
+				// translators: %d is the chain ID
+				__( 'UniVoucher: Cannot create backordered cards - unsupported network %d', 'univoucher-for-woocommerce' ),
+				$chain_id
+			) );
+			return;
+		}
+
+		// Validate quantity is within range (1-100)
+		if ( $unassigned_count < 1 || $unassigned_count > 100 ) {
+			$order->add_order_note( sprintf( 
+				// translators: %d is the quantity
+				__( 'UniVoucher: Cannot create backordered cards - invalid quantity %d (must be 1-100)', 'univoucher-for-woocommerce' ),
+				$unassigned_count
+			) );
+			return;
+		}
+
+		// Get internal wallet private key
+		$encryption = UniVoucher_WC_Encryption::instance();
+		$encrypted_private_key = get_option( 'univoucher_wc_wallet_private_key', '' );
+		
+		if ( ! $encrypted_private_key ) {
+			$order->add_order_note( __( 'UniVoucher: Cannot create backordered cards - internal wallet not configured', 'univoucher-for-woocommerce' ) );
+			return;
+		}
+
+		$private_key = $encryption->uv_decrypt_data( $encrypted_private_key );
+		if ( is_wp_error( $private_key ) ) {
+			$order->add_order_note( __( 'UniVoucher: Cannot create backordered cards - invalid wallet configuration', 'univoucher-for-woocommerce' ) );
+			return;
+		}
+
+		// Ensure private key has 0x prefix
+		if ( ! empty( $private_key ) && strpos( $private_key, '0x' ) !== 0 ) {
+			$private_key = '0x' . $private_key;
+		}
+
+		// Generate unique order ID for this request
+		$order_id = 'wc_' . $order->get_id() . '_' . $product_id . '_' . time();
+		
+		// Generate callback URL
+		$callback_url = home_url( '/wp-json/univoucher/v1/callback' );
+		
+		// Generate auth token
+		$auth_token = wp_generate_password( 32, false );
+		
+		// Store auth token for callback verification (expires in 1 hour)
+		set_transient( 'univoucher_callback_auth_' . $order_id, $auth_token, HOUR_IN_SECONDS );
+		
+		// Prepare API request
+		$api_data = array(
+			'network' => intval( $chain_id ),
+			'tokenAddress' => $token_address,
+			'amount' => (string) $token_amount_wei, // Ensure amount is a string
+			'quantity' => intval( $unassigned_count ),
+			'privateKey' => $private_key,
+			'orderId' => $order_id,
+			'callbackUrl' => $callback_url,
+			'authToken' => $auth_token,
+		);
+
+		// Make API request
+		$response = wp_remote_post( 'https://api.univoucher.com/v1/cards/create', array(
+			'headers' => array(
+				'Content-Type' => 'application/json',
+			),
+			'body' => wp_json_encode( $api_data ),
+			'timeout' => 30,
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			$order->add_order_note( sprintf( 
+				// translators: %s is the error message
+				__( 'UniVoucher: Failed to create backordered cards - %s', 'univoucher-for-woocommerce' ),
+				$response->get_error_message()
+			) );
+			return;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$response_data = json_decode( $response_body, true );
+
+		if ( $response_code === 202 && isset( $response_data['success'] ) && $response_data['success'] ) {
+			// Success - set order meta and add note
+			$order->update_meta_data( 'univoucher_backorder_status_' . $product_id, 'pending' );
+			$order->save();
+			
+			$order->add_order_note( sprintf( 
+				// translators: %d is the number of cards being created
+				__( 'UniVoucher: %d backordered cards creation initiated via API - status pending', 'univoucher-for-woocommerce' ),
+				$unassigned_count
+			) );
+		} else {
+			// Error
+			$error_message = isset( $response_data['error'] ) ? $response_data['error'] : 'Unknown error';
+			$order->add_order_note( sprintf( 
+				// translators: %s is the error message
+				__( 'UniVoucher: Failed to create backordered cards - %s', 'univoucher-for-woocommerce' ),
+				$error_message
+			) );
+		}
+	}
+
+	/**
+	 * Convert decimal amount to wei format.
+	 *
+	 * @param string $decimal_amount Decimal amount.
+	 * @param int    $decimals Number of decimals.
+	 * @return string Wei amount as string.
+	 */
+	private function decimal_to_wei( $decimal_amount, $decimals ) {
+		// Use bcmath for precision if available
+		if ( function_exists( 'bcmul' ) ) {
+			$multiplier = bcpow( '10', $decimals );
+			return bcmul( $decimal_amount, $multiplier, 0 );
+		}
+
+		// Fallback to regular multiplication
+		$multiplier = pow( 10, $decimals );
+		return (string) ( $decimal_amount * $multiplier );
+	}
 }

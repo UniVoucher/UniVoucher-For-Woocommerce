@@ -122,11 +122,11 @@ class UniVoucher_WC_Admin_Settings {
 
 		register_setting(
 			'univoucher_wc_delivery_settings',
-			'univoucher_wc_require_processing_if_missing_cards',
+			'univoucher_wc_backorder_initial_status',
 			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
-				'default'           => true,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => 'processing',
 			)
 		);
 
@@ -137,6 +137,16 @@ class UniVoucher_WC_Admin_Settings {
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
 				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_delivery_settings',
+			'univoucher_wc_send_email_only_fully_assigned',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => false,
 			)
 		);
 
@@ -157,6 +167,16 @@ class UniVoucher_WC_Admin_Settings {
 				'type'              => 'string',
 				'sanitize_callback' => 'wp_kses_post',
 				'default'           => '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeemnow.xyz" target="_blank">https://redeemnow.xyz</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>',
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_delivery_settings',
+			'univoucher_wc_auto_create_backordered_cards',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => false,
 			)
 		);
 

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.1.4
+ * Version: 1.2.0
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.1.4
+	 * @version 1.2.0
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.1.4';
+		public $version = '1.2.0';
 
 		/**
 		 * The single instance of the class.
@@ -99,6 +99,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			// Include gift card and stock management classes (needed for both admin and frontend).
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-gift-card-manager.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-stock-manager.php';
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-callback-manager.php';
 
 			// Include integration classes.
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-lmfwc-integration.php';
@@ -124,6 +125,9 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			
 			// Add plugin action links.
 			add_filter( 'plugin_action_links_' . UNIVOUCHER_WC_PLUGIN_BASENAME, array( $this, 'plugin_action_links' ) );
+			
+			// Register REST API endpoints for webhooks
+			add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		}
 
 		/**
@@ -230,6 +234,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 
 			// Set email delivery settings
 			add_option( 'univoucher_wc_send_email_cards', true );
+			add_option( 'univoucher_wc_send_email_only_fully_assigned', true );
 			add_option( 'univoucher_wc_show_in_order_details', true );
 			add_option( 'univoucher_wc_email_subject', 'Your UniVoucher Gift Cards - Order #{order_number}' );
 			add_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeemnow.xyz" target="_blank">https://redeemnow.xyz</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
@@ -410,6 +415,20 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		public function __wakeup() {
 			wc_doing_it_wrong( __FUNCTION__, __( 'Unserializing instances of this class is forbidden.', 'univoucher-for-woocommerce' ), '1.0.0' );
 		}
+
+		/**
+		 * Register REST API routes.
+		 */
+		public function register_rest_routes() {
+			$callback_manager = UniVoucher_WC_Callback_Manager::instance();
+			register_rest_route( 'univoucher/v1', '/callback', array(
+				'methods' => 'POST',
+				'callback' => array( $callback_manager, 'handle_univoucher_callback' ),
+				'permission_callback' => '__return_true',
+			) );
+		}
+
+
 	}
 
 endif;

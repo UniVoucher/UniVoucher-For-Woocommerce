@@ -94,6 +94,17 @@ function univoucher_wallet_private_key_callback( $args ) {
 		<div style="margin-top: 10px;">
 			<span id="validation-result" style="font-weight: bold;"></span>
 		</div>
+		
+		<div class="univoucher-settings-box-info" style="margin-top: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; padding: 12px;">
+			<strong style="color: #0c5460;">
+				<span class="dashicons dashicons-info" style="margin-right: 3px;"></span>
+				<?php esc_html_e( 'Auto-Create Cards For Backorders:', 'univoucher-for-woocommerce' ); ?>
+			</strong>
+			<div style="margin-top: 8px; font-size: 13px; color: #0c5460;">
+				<?php esc_html_e( 'This wallet can be used for the "Auto-create missing cards using internal wallet" feature in Card Delivery settings. When enabled, this wallet will be used to automatically create required cards for backordered orders.', 'univoucher-for-woocommerce' ); ?>
+			</div>
+		</div>
+	
 	</div>
 
 	<script>

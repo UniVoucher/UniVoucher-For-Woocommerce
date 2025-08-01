@@ -67,11 +67,21 @@ class UniVoucher_WC_Order_Manager {
 		add_action( 'wp_ajax_univoucher_assign_product_cards', array( $this, 'ajax_assign_product_cards' ) );
 		add_action( 'wp_ajax_univoucher_unassign_card', array( $this, 'ajax_unassign_card' ) );
 		
+		// AJAX handler for checking order assignment status
+		add_action( 'wp_ajax_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
+		add_action( 'wp_ajax_nopriv_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
+		
 		// Auto-complete orders with UniVoucher products
 		add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'auto_complete_univoucher_orders' ), 10, 3 );
 		
 		// Enqueue admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		
+		// Thank you page notice for unassigned cards
+		add_action( 'woocommerce_before_thankyou', array( $this, 'display_unassigned_cards_notice' ) );
+		
+		// Order details page notice for unassigned cards
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_unassigned_cards_notice' ) );
 	}
 
 	/**
@@ -700,6 +710,16 @@ class UniVoucher_WC_Order_Manager {
 			return;
 		}
 
+		// Check if we should only send email when order is fully assigned
+		$send_email_only_fully_assigned = get_option( 'univoucher_wc_send_email_only_fully_assigned', true );
+		
+		if ( $send_email_only_fully_assigned ) {
+			// Check if the order is fully assigned
+			if ( ! $this->is_order_fully_assigned( $order ) ) {
+				return;
+			}
+		}
+
 		$gift_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order_id );
 		if ( empty( $gift_cards ) ) {
 			return;
@@ -759,6 +779,45 @@ class UniVoucher_WC_Order_Manager {
 	}
 
 	/**
+	 * Check if an order is fully assigned (all UniVoucher products have their required cards assigned).
+	 *
+	 * @param WC_Order $order The order object.
+	 * @return bool True if the order is fully assigned, false otherwise.
+	 */
+	private function is_order_fully_assigned( $order ) {
+		$ordered_cards = $this->get_ordered_cards_for_order( $order );
+		
+		if ( empty( $ordered_cards ) ) {
+			// No UniVoucher products in this order
+			return true;
+		}
+
+		$assigned_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order->get_id() );
+		
+		// Group assigned cards by product ID
+		$assigned_by_product = array();
+		foreach ( $assigned_cards as $card ) {
+			if ( ! isset( $assigned_by_product[ $card->product_id ] ) ) {
+				$assigned_by_product[ $card->product_id ] = 0;
+			}
+			$assigned_by_product[ $card->product_id ]++;
+		}
+
+		// Check if each product has the required number of cards assigned
+		foreach ( $ordered_cards as $product_id => $ordered_quantity ) {
+			$assigned_quantity = isset( $assigned_by_product[ $product_id ] ) ? $assigned_by_product[ $product_id ] : 0;
+			
+			if ( $assigned_quantity < $ordered_quantity ) {
+				// This product doesn't have enough cards assigned
+				return false;
+			}
+		}
+
+		// All products have their required cards assigned
+		return true;
+	}
+
+	/**
 	 * Enqueue admin scripts.
 	 *
 	 * @param string $hook Current admin page hook.
@@ -776,6 +835,83 @@ class UniVoucher_WC_Order_Manager {
 		}
 		
 		// Scripts are inlined in the display method for simplicity
+	}
+
+	/**
+	 * Display notice for unassigned cards on thank you page.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	public function display_unassigned_cards_notice( $order_id ) {
+		// Check if notice is enabled
+		if ( ! get_option( 'univoucher_wc_show_unassigned_notice', true ) ) {
+			return;
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order || ! $order->has_status( 'completed' ) ) {
+			return;
+		}
+
+		// Check if order is fully assigned
+		if ( $this->is_order_fully_assigned( $order ) ) {
+			return;
+		}
+
+		// Display notice and auto-refresh script
+		?>
+		<div id="univoucher-unassigned-notice" class="woocommerce-message woocommerce-message--info">
+			<span class="dashicons dashicons-clock" style="vertical-align: middle;"></span>
+			<span><?php echo esc_html( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?></span>
+		</div>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			function checkOrderStatus() {
+				$.ajax({
+					url: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
+					type: 'POST',
+					data: {
+						action: 'univoucher_check_order_assignment',
+						order_id: <?php echo esc_js( $order_id ); ?>,
+						nonce: '<?php echo esc_js( wp_create_nonce( 'univoucher_check_order_assignment' ) ); ?>'
+					},
+					success: function(response) {
+						if (response.success && response.data.fully_assigned) {
+							location.reload();
+						}
+					},
+					error: function() {
+						// Continue checking even if there's an error
+					}
+				});
+			}
+
+			// Check every 10 seconds
+			setInterval(checkOrderStatus, 10000);
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * AJAX handler to check if order is fully assigned.
+	 */
+	public function ajax_check_order_assignment() {
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_check_order_assignment' ) ) {
+			wp_die();
+		}
+
+		$order_id = absint( $_POST['order_id'] );
+		$order = wc_get_order( $order_id );
+
+		if ( ! $order ) {
+			wp_send_json_error();
+		}
+
+		$fully_assigned = $this->is_order_fully_assigned( $order );
+		wp_send_json_success( array( 'fully_assigned' => $fully_assigned ) );
 	}
 
 	/**
@@ -799,45 +935,40 @@ class UniVoucher_WC_Order_Manager {
 		
 		if ( $is_univoucher_enabled ) {
 			
-			// If require processing for missing cards is enabled, check for missing cards
-			$require_processing_if_missing = get_option( 'univoucher_wc_require_processing_if_missing_cards', true );
+			// Check for missing cards and determine if processing is needed
+			$backorder_status = get_option( 'univoucher_wc_backorder_initial_status', 'processing' );
 			
-			if ( $require_processing_if_missing ) {
-				$order = wc_get_order( $order_id );
-				if ( $order ) {
-					$ordered_cards = $this->get_ordered_cards_for_order( $order );
-					
-					$product_id = $product->get_id();
-					$ordered_quantity = isset( $ordered_cards[ $product_id ] ) ? $ordered_cards[ $product_id ] : 0;
-					
-					$assigned_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order_id );
-					
-					$assigned_quantity = 0;
-					foreach ( $assigned_cards as $card ) {
-						if ( $card->product_id == $product_id ) {
-							$assigned_quantity++;
-						}
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$ordered_cards = $this->get_ordered_cards_for_order( $order );
+				
+				$product_id = $product->get_id();
+				$ordered_quantity = isset( $ordered_cards[ $product_id ] ) ? $ordered_cards[ $product_id ] : 0;
+				
+				$assigned_cards = $this->gift_card_manager->uv_get_gift_cards_for_order( $order_id );
+				
+				$assigned_quantity = 0;
+				foreach ( $assigned_cards as $card ) {
+					if ( $card->product_id == $product_id ) {
+						$assigned_quantity++;
 					}
-					
-					if ( $ordered_quantity > $assigned_quantity ) {
-						$missing = $ordered_quantity - $assigned_quantity;
-						// Check available inventory for this product
-						global $wpdb;
-						$database = UniVoucher_WC_Database::instance();
-						$table = esc_sql( $database->uv_get_gift_cards_table() );
-						$available_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE product_id = %d AND status = 'available'", $product_id ) );
-						if ( $available_count < $missing ) {
-							return true; // Needs processing if not enough inventory
-						} else {
-						}
-					} else {
-					}
-				} else {
 				}
-			} else {
+				
+				if ( $ordered_quantity > $assigned_quantity ) {
+					$missing = $ordered_quantity - $assigned_quantity;
+					// Check available inventory for this product
+					global $wpdb;
+					$database = UniVoucher_WC_Database::instance();
+					$table = esc_sql( $database->uv_get_gift_cards_table() );
+					$available_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE product_id = %d AND status = 'available'", $product_id ) );
+					if ( $available_count < $missing ) {
+						// Return true for processing, false for completed based on setting
+						return ( $backorder_status === 'processing' );
+					}
+				}
 			}
 			
-			// For UniVoucher products, don't need processing (auto-complete)
+			// For UniVoucher products with sufficient inventory, don't need processing (auto-complete)
 			return false;
 		}
 
