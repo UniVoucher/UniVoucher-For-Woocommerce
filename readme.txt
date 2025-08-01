@@ -138,6 +138,7 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 = 1.1.4 =
 * Enhanced UniVoucher For WooCommerce with Internal Wallet functionality
 * Added new method for card creation using an internal wallet
+
 = 1.1.3 =
 * Enhanced License Manager for WooCommerce integration with improved order processing
 * Fixed order context setup for better email delivery and order details display

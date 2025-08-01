@@ -81,7 +81,7 @@ class UniVoucher_WC_Order_Manager {
 		add_action( 'woocommerce_before_thankyou', array( $this, 'display_unassigned_cards_notice' ) );
 		
 		// Order details page notice for unassigned cards
-		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_unassigned_cards_notice' ) );
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_unassigned_cards_notice' ), 5 );
 	}
 
 	/**
