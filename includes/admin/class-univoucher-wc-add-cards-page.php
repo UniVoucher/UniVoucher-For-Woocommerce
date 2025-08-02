@@ -528,7 +528,7 @@ class UniVoucher_WC_Add_Cards_Page {
 	 */
 	public function ajax_get_products() {
 		// Verify nonce.
-		if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( $_GET['nonce'], 'univoucher_get_products' ) ) {
+		if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'univoucher_get_products' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -569,7 +569,7 @@ class UniVoucher_WC_Add_Cards_Page {
 	 */
 	public function ajax_get_product_settings() {
 		// Verify nonce.
-		if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( $_GET['nonce'], 'univoucher_get_product_settings' ) ) {
+		if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'univoucher_get_product_settings' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -633,7 +633,7 @@ class UniVoucher_WC_Add_Cards_Page {
 	 */
 	public function ajax_validate_single_card() {
 		// Verify nonce.
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -666,7 +666,7 @@ class UniVoucher_WC_Add_Cards_Page {
 	 */
 	public function ajax_verify_cards() {
 		// Verify nonce.
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 
@@ -1024,7 +1024,7 @@ class UniVoucher_WC_Add_Cards_Page {
 	 */
 	public function ajax_add_cards() {
 		// Verify nonce.
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'univoucher_verify_cards' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_verify_cards' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
 		}
 

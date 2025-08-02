@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -130,6 +130,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.2.1 =
+* Enhance security and flexibility in UniVoucher For WooCommerce by sanitizing user inputs
+* Adding a new setting for gift card display position on order details pages
+
 = 1.2.0 =
 * Enhance UniVoucher For WooCommerce with new backorder management features
 * Added automatic creation of backordered cards using the internal wallet
@@ -182,6 +186,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Security and flexibility update. This version enhances input sanitization for improved security and adds a new setting for controlling gift card display position on order details pages.
 
 = 1.2.0 =
 Enhance UniVoucher For WooCommerce with new backorder management features. This update introduces automatic creation of backordered cards using the internal wallet, improved order assignment checks, and new settings for email notifications based on order assignment status.

@@ -1065,7 +1065,7 @@ class UniVoucher_WC_Image_Templates {
 
 		// Validate file type.
 		$allowed_types = array( 'image/png', 'application/x-font-ttf', 'font/ttf', 'application/octet-stream' );
-		$file_ext = strtolower( pathinfo( $_FILES['file']['name'], PATHINFO_EXTENSION ) );
+		$file_ext = strtolower( pathinfo( sanitize_file_name( $_FILES['file']['name'] ), PATHINFO_EXTENSION ) );
 
 		if ( ! in_array( $file_ext, array( 'png', 'ttf' ), true ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type. Only PNG and TTF files are allowed.', 'univoucher-for-woocommerce' ) ) );
@@ -1078,11 +1078,11 @@ class UniVoucher_WC_Image_Templates {
 			if ( $file_ext === 'ttf' ) {
 				// Upload font.
 				$target_dir = $plugin_dir . 'fonts/';
-				$target_filename = basename( $_FILES['file']['name'] );
+				$target_filename = sanitize_file_name( basename( $_FILES['file']['name'] ) );
 			} elseif ( $upload_type === 'template' ) {
 				// Upload template.
 				$target_dir = $plugin_dir . 'images/templates/';
-				$target_filename = basename( $_FILES['file']['name'] );
+				$target_filename = sanitize_file_name( basename( $_FILES['file']['name'] ) );
 			} elseif ( $upload_type === 'token' && ! empty( $token_symbol ) ) {
 				// Upload token logo.
 				$target_dir = $plugin_dir . 'images/tokens/';

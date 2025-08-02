@@ -641,7 +641,7 @@ class UniVoucher_WC_Inventory_Page {
 			</div>
 
 			<form method="get">
-				<input type="hidden" name="page" value="<?php echo esc_attr( wp_unslash( $_REQUEST['page'] ) ); ?>" />
+				<input type="hidden" name="page" value="<?php echo esc_attr( sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) ); ?>" />
 				<?php
 				$list_table->search_box( __( 'Search gift cards...', 'univoucher-for-woocommerce' ), 'gift_card' );
 				$list_table->display();

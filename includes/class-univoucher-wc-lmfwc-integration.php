@@ -60,7 +60,7 @@ class UniVoucher_WC_LMFWC_Integration {
 		}
 
 		// Set up order context before License Manager processes it (priority 5, before LMFWC's priority 10)
-		add_action( 'woocommerce_order_details_after_order_table', array( $this, 'setup_order_context' ), 5, 1 );
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'setup_order_context' ), 5, 1 );
 		add_action( 'woocommerce_email_after_order_table', array( $this, 'setup_order_context' ), 5, 4 );
 		add_action( 'lmfwc_email_order_license_keys', array( $this, 'setup_order_context' ), 5, 4 );
 		

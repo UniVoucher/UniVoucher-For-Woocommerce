@@ -112,6 +112,16 @@ class UniVoucher_WC_Admin_Settings {
 
 		register_setting(
 			'univoucher_wc_delivery_settings',
+			'univoucher_wc_cards_display_position',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => 'before',
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_delivery_settings',
 			'univoucher_wc_auto_complete_orders',
 			array(
 				'type'              => 'boolean',

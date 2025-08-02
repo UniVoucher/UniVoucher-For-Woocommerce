@@ -55,7 +55,13 @@ class UniVoucher_WC_Order_Manager {
 	 */
 	private function init_hooks() {
 		// Customer-facing hooks - show gift cards only for completed orders
-		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_customer_gift_cards' ) );
+		$display_position = get_option( 'univoucher_wc_cards_display_position', 'before' );
+		
+		if ( $display_position === 'before' ) {
+			add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_customer_gift_cards' ) );
+		} else {
+			add_action( 'woocommerce_order_details_after_order_table', array( $this, 'display_customer_gift_cards' ) );
+		}
 
 		// Admin-facing hooks - show gift cards with assignment functionality
 		add_action( 'woocommerce_admin_order_items_after_line_items', array( $this, 'display_admin_gift_cards' ) );
@@ -76,9 +82,6 @@ class UniVoucher_WC_Order_Manager {
 		
 		// Enqueue admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
-		
-		// Thank you page notice for unassigned cards
-		add_action( 'woocommerce_before_thankyou', array( $this, 'display_unassigned_cards_notice' ) );
 		
 		// Order details page notice for unassigned cards
 		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_unassigned_cards_notice' ), 5 );
@@ -899,7 +902,7 @@ class UniVoucher_WC_Order_Manager {
 	 */
 	public function ajax_check_order_assignment() {
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'univoucher_check_order_assignment' ) ) {
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_check_order_assignment' ) ) {
 			wp_die();
 		}
 

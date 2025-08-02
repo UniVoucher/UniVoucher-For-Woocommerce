@@ -230,6 +230,27 @@ function univoucher_show_customer_cards_callback( $args ) {
 			</p>
 		</div>
 
+		<div id="cards-display-position-option" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460; <?php echo $show_cards ? '' : 'display: none;'; ?>">
+			<label for="univoucher_wc_cards_display_position" style="font-weight: bold; display: block; margin-bottom: 8px;">
+				<?php esc_html_e( 'Display Position:', 'univoucher-for-woocommerce' ); ?>
+			</label>
+			<select
+				id="univoucher_wc_cards_display_position"
+				name="univoucher_wc_cards_display_position"
+				style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+			>
+				<option value="before" <?php selected( get_option( 'univoucher_wc_cards_display_position', 'before' ), 'before' ); ?>>
+					<?php esc_html_e( 'Before order table', 'univoucher-for-woocommerce' ); ?>
+				</option>
+				<option value="after" <?php selected( get_option( 'univoucher_wc_cards_display_position', 'before' ), 'after' ); ?>>
+					<?php esc_html_e( 'After order table', 'univoucher-for-woocommerce' ); ?>
+				</option>
+			</select>
+			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
+				<?php esc_html_e( 'Choose where to display gift cards in relation to the order table on order details and thank you pages.', 'univoucher-for-woocommerce' ); ?>
+			</p>
+		</div>
+
 		<div class="univoucher-settings-box-warning" style="margin-top: 15px;">
 			<strong style="color: #856404;">
 				<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
@@ -281,7 +302,25 @@ function univoucher_show_customer_cards_callback( $args ) {
 			</p>
 		</div>
 
-	</div>
+			</div>
+
+	<script type="text/javascript">
+	jQuery(document).ready(function($) {
+		var showCardsCheckbox = $('#<?php echo esc_js( $args['label_for'] ); ?>');
+		var positionOption = $('#cards-display-position-option');
+		
+		function togglePositionOption() {
+			if (showCardsCheckbox.is(':checked')) {
+				positionOption.show();
+			} else {
+				positionOption.hide();
+			}
+		}
+		
+		showCardsCheckbox.on('change', togglePositionOption);
+		togglePositionOption(); // Initial state
+	});
+	</script>
 
 	<?php
 }
