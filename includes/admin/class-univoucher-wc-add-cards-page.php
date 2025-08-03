@@ -150,8 +150,8 @@ class UniVoucher_WC_Add_Cards_Page {
 											<span class="dashicons dashicons-admin-network"></span>
 										</div>
 										<div class="method-content-inline">
-											<h4><?php esc_html_e( 'Internal Wallet', 'univoucher-for-woocommerce' ); ?></h4>
-											<p><?php esc_html_e( 'Create new cards directly using your Internal Wallet private key and add them to inventory.', 'univoucher-for-woocommerce' ); ?></p>
+											<h4><?php esc_html_e( 'Internal Wallet (locally)', 'univoucher-for-woocommerce' ); ?></h4>
+											<p><?php esc_html_e( 'Create new cards locally using your Internal Wallet private key with javascript that runs in your browser.', 'univoucher-for-woocommerce' ); ?></p>
 										</div>
 									</div>
 
@@ -161,21 +161,21 @@ class UniVoucher_WC_Add_Cards_Page {
 											<span class="dashicons dashicons-admin-links"></span>
 										</div>
 										<div class="method-content-inline">
-											<h4><?php esc_html_e( 'Connect Wallet', 'univoucher-for-woocommerce' ); ?> <span class="soon-tag"><?php esc_html_e( 'soon', 'univoucher-for-woocommerce' ); ?></span></h4>
-											<p><?php esc_html_e( 'Connect your wallet to create new cards directly and add them to inventory.', 'univoucher-for-woocommerce' ); ?></p>
+											<h4><?php esc_html_e( 'Internal Wallet (API)', 'univoucher-for-woocommerce' ); ?> <span class="soon-tag"><?php esc_html_e( 'soon', 'univoucher-for-woocommerce' ); ?></span></h4>
+											<p><?php esc_html_e( 'Create new cards remotely using your Internal Wallet private key with the UniVoucher API.', 'univoucher-for-woocommerce' ); ?></p>
 										</div>
 									</div>
 
-									<!-- Create with API Method -->
-									<div class="method-box-inline coming-soon" data-method="api">
+									<!-- On-Demand Feature Call to Action -->
+									<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-settings&tab=backorders' ) ); ?>" target="_blank" class="method-box-inline" data-method="ondemand" style="text-decoration: none; color: inherit; border: 2px solid; border-image: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3) 1; box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);">
 										<div class="method-icon-inline">
-											<span class="dashicons dashicons-rest-api"></span>
+											<span class="dashicons dashicons-star-filled"></span>
 										</div>
 										<div class="method-content-inline">
-											<h4><?php esc_html_e( 'API', 'univoucher-for-woocommerce' ); ?> <span class="soon-tag"><?php esc_html_e( 'soon', 'univoucher-for-woocommerce' ); ?></span></h4>
-											<p><?php esc_html_e( 'Use a third-party API service to create new cards remotely and add automatically to inventory.', 'univoucher-for-woocommerce' ); ?></p>
+											<h4><?php esc_html_e( 'On-Demand Mode', 'univoucher-for-woocommerce' ); ?></h4>
+											<p><?php esc_html_e( 'Automatically create cards after customers place orders using your Internal Wallet private key with the UniVoucher API.', 'univoucher-for-woocommerce' ); ?></p>
 										</div>
-									</div>
+									</a>
 								</div>
 							</div>
 						</div>

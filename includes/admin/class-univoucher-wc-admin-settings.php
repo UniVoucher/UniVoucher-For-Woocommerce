@@ -50,6 +50,7 @@ class UniVoucher_WC_Admin_Settings {
 		require_once plugin_dir_path( __FILE__ ) . 'settings/card-delivery-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/content-templates-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/compatibility-settings.php';
+		require_once plugin_dir_path( __FILE__ ) . 'settings/backorders-settings.php';
 	}
 
 	/**
@@ -130,15 +131,7 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
-		register_setting(
-			'univoucher_wc_delivery_settings',
-			'univoucher_wc_backorder_initial_status',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_text_field',
-				'default'           => 'processing',
-			)
-		);
+
 
 		register_setting(
 			'univoucher_wc_delivery_settings',
@@ -180,13 +173,44 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
+		// Register backorders settings.
 		register_setting(
-			'univoucher_wc_delivery_settings',
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_backorder_initial_status',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => 'processing',
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
 			'univoucher_wc_auto_create_backordered_cards',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
 				'default'           => false,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_show_unassigned_notice',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_unassigned_notice_text',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ),
 			)
 		);
 
@@ -479,6 +503,40 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
+		// Add backorders settings section.
+		add_settings_section(
+			'univoucher_wc_backorders_section',
+			esc_html__( 'On-Demand (Backorders)', 'univoucher-for-woocommerce' ),
+			array( $this, 'backorders_section_callback' ),
+			'univoucher_wc_backorders_settings'
+		);
+
+		// Add auto-create backordered cards field.
+		add_settings_field(
+			'univoucher_wc_auto_create_backordered_cards',
+			esc_html__( 'Auto-Create On-Demand Cards', 'univoucher-for-woocommerce' ),
+			array( $this, 'auto_create_backordered_cards_callback' ),
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_backorders_section',
+			array(
+				'label_for' => 'univoucher_wc_auto_create_backordered_cards',
+				'class'     => 'univoucher-wc-row',
+			)
+		);
+
+		// Add backorder initial status field.
+		add_settings_field(
+			'univoucher_wc_backorder_initial_status',
+			esc_html__( 'On-Demand Order Status', 'univoucher-for-woocommerce' ),
+			array( $this, 'backorder_initial_status_callback' ),
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_backorders_section',
+			array(
+				'label_for' => 'univoucher_wc_backorder_initial_status',
+				'class'     => 'univoucher-wc-row',
+			)
+		);
+
 		// Add compatibility settings section.
 		add_settings_section(
 			'univoucher_wc_compatibility_section',
@@ -700,5 +758,32 @@ class UniVoucher_WC_Admin_Settings {
 	 */
 	public function lmfwc_integration_callback( $args ) {
 		univoucher_lmfwc_integration_callback( $args );
+	}
+
+	/**
+	 * Backorders section callback.
+	 *
+	 * @param array $args Section arguments.
+	 */
+	public function backorders_section_callback( $args ) {
+		univoucher_backorders_section_callback( $args );
+	}
+
+	/**
+	 * Backorder initial status field callback.
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function backorder_initial_status_callback( $args ) {
+		univoucher_backorder_initial_status_callback( $args );
+	}
+
+	/**
+	 * Auto-create backordered cards field callback.
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function auto_create_backordered_cards_callback( $args ) {
+		univoucher_auto_create_backordered_cards_callback( $args );
 	}
 }

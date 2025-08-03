@@ -196,10 +196,24 @@ class UniVoucher_WC_Callback_Manager {
 			$order->add_order_note( $note_message );
 		}
 		
-		// If order is completed, send gift cards email
-		if ( $is_order_completed && ! empty( $assigned_cards ) ) {
-			$order_manager = UniVoucher_WC_Order_Manager::instance();
-			$order_manager->send_gift_cards_email( $order->get_id() );
+		// Handle order status and email sending
+		if ( $is_order_completed ) {
+			// If order is completed and has assigned cards, send gift cards email
+			if ( ! empty( $assigned_cards ) ) {
+				$order_manager = UniVoucher_WC_Order_Manager::instance();
+				$order_manager->send_gift_cards_email( $order->get_id() );
+			}
+		} else {
+			// Update status using official WooCommerce logic only if order is not completed
+			// Force refresh the order to ensure needs_processing() reflects current state
+			$order = wc_get_order( $order->get_id() );
+			
+			// Clear the needs_processing transient to force recalculation
+			$transient_name = 'wc_order_' . $order->get_id() . '_needs_processing';
+			delete_transient( $transient_name );
+			
+			$order->set_status( apply_filters( 'woocommerce_payment_complete_order_status', $order->needs_processing() ? 'processing' : 'completed', $order->get_id(), $order ) );
+			$order->save();
 		}
 	}
 

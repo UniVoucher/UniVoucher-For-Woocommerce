@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,12 +54,10 @@ UniVoucher For WooCommerce integrates the power of decentralized gift cards with
 * Automatic on-demand card creation for backordered orders
 * Real-time wallet balance tracking and management
 
-**🔄 Backorder Automation**
+**⭐ On-Demand Mode**
 
-* Automated stock management for backordered orders
-* Automatic creation of backordered cards using internal wallet and UniVoucher API
-* Smart order assignment checks with improved inventory management
-* Configurable email notifications based on order assignment status
+* Automatically create cards after customers place orders
+* Cards are created on demand using the internal wallet private key with the UniVoucher API
 
 = Supported Networks =
 
@@ -130,6 +128,11 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.2.2 =
+* Introduced On-Demand (Backorders) settings section for automatic creation of backordered cards
+* Improved order status handling and email delivery hooks
+* Enhanced admin interface elements for better user experience
+
 = 1.2.1 =
 * Enhance security and flexibility in UniVoucher For WooCommerce by sanitizing user inputs
 * Adding a new setting for gift card display position on order details pages
@@ -186,6 +189,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.2.2 =
+This update introduces an On-Demand (Backorders) settings page, allowing automatic creation of backordered cards using the internal wallet. It also improves order status handling, updates email delivery hooks, and enhances admin interface elements for better user experience.
 
 = 1.2.1 =
 Security and flexibility update. This version enhances input sanitization for improved security and adds a new setting for controlling gift card display position on order details pages.

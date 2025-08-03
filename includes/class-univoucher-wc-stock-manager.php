@@ -220,7 +220,7 @@ class UniVoucher_WC_Stock_Manager {
 			) );
 		}
 
-		// Handle backordered cards if auto-create is enabled
+		// Handle backordered cards if auto-create on demand is enabled
 		if ( $unassigned_count > 0 && get_option( 'univoucher_wc_auto_create_backordered_cards', false ) ) {
 			$this->handle_backordered_cards( $order, $item, $unassigned_count );
 		}

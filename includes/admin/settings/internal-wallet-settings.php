@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function univoucher_internal_wallet_section_callback( $args ) {
 	?>
 	<p id="<?php echo esc_attr( $args['id'] ); ?>">
-		<?php esc_html_e( 'Configure your crypto wallet for UniVoucher operations. This wallet will be used for blockchain transactions.', 'univoucher-for-woocommerce' ); ?>
+		<?php esc_html_e( 'Configure your crypto wallet for UniVoucher operations. This wallet will be used for manually adding cards to the inventory and creating cards automatically on demand.', 'univoucher-for-woocommerce' ); ?>
 	</p>
 	<?php
 }
@@ -53,13 +53,11 @@ function univoucher_wallet_private_key_callback( $args ) {
 			</p>
 		</div>
 
-		<div class="univoucher-settings-box-warning" style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px;">
-			<strong style="color: #721c24;">
+		<div class="univoucher-settings-box-warning" style="margin-top: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px;">
+			<span style="color: #856404;">
 				<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
-				<?php esc_html_e( 'Security Warning:', 'univoucher-for-woocommerce' ); ?>
-			</strong>
-			<span style="font-size: 13px; color: #721c24;">
-				<?php esc_html_e( 'Never share your private key with anyone. It provides full access to your wallet.', 'univoucher-for-woocommerce' ); ?>
+				<strong><?php esc_html_e( 'Attention:', 'univoucher-for-woocommerce' ); ?></strong>
+				<?php esc_html_e( 'You need to activate "Automatically create cards on demand" option in the On-Demand settings tab. When enabled, this wallet will be used to automatically create required cards on demand for backorders.', 'univoucher-for-woocommerce' ); ?>
 			</span>
 		</div>
 
@@ -95,14 +93,14 @@ function univoucher_wallet_private_key_callback( $args ) {
 			<span id="validation-result" style="font-weight: bold;"></span>
 		</div>
 		
-		<div class="univoucher-settings-box-info" style="margin-top: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; padding: 12px;">
-			<strong style="color: #0c5460;">
-				<span class="dashicons dashicons-info" style="margin-right: 3px;"></span>
-				<?php esc_html_e( 'Auto-Create Cards For Backorders:', 'univoucher-for-woocommerce' ); ?>
+		<div class="univoucher-settings-box-warning" style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px;">
+			<strong style="color: #721c24;">
+				<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
+				<?php esc_html_e( 'Security Warning:', 'univoucher-for-woocommerce' ); ?>
 			</strong>
-			<div style="margin-top: 8px; font-size: 13px; color: #0c5460;">
-				<?php esc_html_e( 'This wallet can be used for the "Auto-create missing cards using internal wallet" feature in Card Delivery settings. When enabled, this wallet will be used to automatically create required cards for backordered orders.', 'univoucher-for-woocommerce' ); ?>
-			</div>
+			<span style="font-size: 13px; color: #721c24;">
+				<?php esc_html_e( 'Never share your private key with anyone. It provides full access to your wallet.', 'univoucher-for-woocommerce' ); ?>
+			</span>
 		</div>
 	
 	</div>

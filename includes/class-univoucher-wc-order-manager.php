@@ -66,8 +66,8 @@ class UniVoucher_WC_Order_Manager {
 		// Admin-facing hooks - show gift cards with assignment functionality
 		add_action( 'woocommerce_admin_order_items_after_line_items', array( $this, 'display_admin_gift_cards' ) );
 		
-		// Email delivery hook
-		add_action( 'woocommerce_order_status_completed', array( $this, 'send_gift_cards_email' ) );
+		// Email delivery hook - use lower priority to run after stock manager
+		add_action( 'woocommerce_order_status_completed', array( $this, 'send_gift_cards_email' ), 20 );
 		
 		// AJAX handlers for admin card assignment and unassignment
 		add_action( 'wp_ajax_univoucher_assign_product_cards', array( $this, 'ajax_assign_product_cards' ) );
@@ -77,8 +77,8 @@ class UniVoucher_WC_Order_Manager {
 		add_action( 'wp_ajax_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
 		add_action( 'wp_ajax_nopriv_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
 		
-		// Auto-complete orders with UniVoucher products
-		add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'auto_complete_univoucher_orders' ), 10, 3 );
+		// check if univoucher order item needs processing or not - Automatically mark orders as "Completed"
+		add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'univoucher_check_item_needs_processing' ), 10, 3 );
 		
 		// Enqueue admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
@@ -778,7 +778,22 @@ class UniVoucher_WC_Order_Manager {
 		    'Content-Type: text/html; charset=UTF-8'
 		);
 
-		wp_mail( $to, $email_subject, $email_content, $headers );
+		$email_sent = wp_mail( $to, $email_subject, $email_content, $headers );
+		
+		// Log email sending in order notes
+		if ( $email_sent ) {
+			$order->add_order_note( sprintf( 
+				// translators: %s is the customer email address
+				__( 'UniVoucher: Gift cards email sent successfully to %s', 'univoucher-for-woocommerce' ),
+				$to
+			) );
+		} else {
+			$order->add_order_note( sprintf( 
+				// translators: %s is the customer email address
+				__( 'UniVoucher: Failed to send gift cards email to %s', 'univoucher-for-woocommerce' ),
+				$to
+			) );
+		}
 	}
 
 	/**
@@ -852,7 +867,7 @@ class UniVoucher_WC_Order_Manager {
 		}
 
 		$order = wc_get_order( $order_id );
-		if ( ! $order || ! $order->has_status( 'completed' ) ) {
+		if ( ! $order ) {
 			return;
 		}
 
@@ -925,7 +940,7 @@ class UniVoucher_WC_Order_Manager {
 	 * @param int        $order_id         The order ID.
 	 * @return bool Whether the item needs processing.
 	 */
-	public function auto_complete_univoucher_orders( $needs_processing, $product, $order_id ) {
+	public function univoucher_check_item_needs_processing( $needs_processing, $product, $order_id ) {
 		// Check if auto-completion is enabled
 		$auto_complete_enabled = get_option( 'univoucher_wc_auto_complete_orders', true );
 		

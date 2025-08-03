@@ -31,7 +31,6 @@ function univoucher_delivery_section_callback( $args ) {
  */
 function univoucher_auto_complete_orders_callback( $args ) {
 	$auto_complete = get_option( 'univoucher_wc_auto_complete_orders', true );
-	$backorder_status = get_option( 'univoucher_wc_backorder_initial_status', 'processing' );
 	?>
 	
 	<div class="univoucher-settings-box">
@@ -76,117 +75,10 @@ function univoucher_auto_complete_orders_callback( $args ) {
 			</div>
 		</div>
 
-		<div id="inventory-processing-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e5e9; <?php echo $auto_complete ? '' : 'display: none;'; ?>">
-			<h5 style="margin: 0 0 10px 0; color: #495057; font-size: 14px;">
-				<?php esc_html_e( 'Backorder Initial Status', 'univoucher-for-woocommerce' ); ?>
-			</h5>
-			
-			<div style="margin-bottom: 15px;">
-				<p style="margin: 5px 0 8px 0; font-size: 13px;">
-					<?php esc_html_e( 'Set the initial order status when inventory is insufficient for UniVoucher products.', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
 
-			<div class="univoucher-settings-box-info">
-				<label for="univoucher_wc_backorder_initial_status" style="display: block; margin: 0 0 10px 0;">
-					<strong style="color: #0c5460;">
-						<?php esc_html_e( 'Initial status for backordered items:', 'univoucher-for-woocommerce' ); ?>
-					</strong>
-				</label>
-				<select
-					id="univoucher_wc_backorder_initial_status"
-					name="univoucher_wc_backorder_initial_status"
-					style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-				>
-					<option value="processing" <?php selected( $backorder_status, 'processing' ); ?>>
-						<?php esc_html_e( 'Processing', 'univoucher-for-woocommerce' ); ?>
-					</option>
-					<option value="completed" <?php selected( $backorder_status, 'completed' ); ?>>
-						<?php esc_html_e( 'Completed', 'univoucher-for-woocommerce' ); ?>
-					</option>
-				</select>
-				<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-					<?php esc_html_e( 'Choose whether orders with insufficient inventory should be marked as "Processing" (requires manual intervention) or "Completed" (auto-completes but may have unassigned cards).', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
-
-			<div class="univoucher-settings-box-warning" style="margin-top: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px;">
-				<strong style="color: #721c24;">
-					<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
-					<?php esc_html_e( 'Warning:', 'univoucher-for-woocommerce' ); ?>
-				</strong>
-				<span style="font-size: 13px; color: #721c24;">
-					<?php esc_html_e( 'If set to "Completed", orders will auto-complete regardless of inventory availability, make sure to enable auto-create backordered cards to avoid orders with unassigned gift cards.', 'univoucher-for-woocommerce' ); ?>
-				</span>
-			</div>
-		</div>
-
-		<!-- Line spacer -->
-		<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e5e9;">
-			<h5 style="margin: 0 0 10px 0; color: #495057; font-size: 14px;">
-				<?php esc_html_e( 'Auto-Create Backordered Cards', 'univoucher-for-woocommerce' ); ?>
-			</h5>
-			
-			<div style="margin-bottom: 15px;">
-				<p style="margin: 5px 0 8px 0; font-size: 13px;">
-					<?php esc_html_e( 'For UniVoucher products that have backorder feature enabled, automatically create missing gift cards (backordered) using your internal wallet private key. Cards will be created via UniVoucher API and assigned to orders once confirmed.', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
-
-			<div class="univoucher-settings-box-info">
-				<label for="univoucher_wc_auto_create_backordered_cards" style="display: flex; align-items: center; margin: 0;">
-					<input
-						type="checkbox"
-						id="univoucher_wc_auto_create_backordered_cards"
-						name="univoucher_wc_auto_create_backordered_cards"
-						value="1"
-						<?php checked( get_option( 'univoucher_wc_auto_create_backordered_cards', false ), true ); ?>
-					/>
-					<strong style="color: #0c5460;">
-						<?php esc_html_e( 'Auto-create missing cards using internal wallet', 'univoucher-for-woocommerce' ); ?>
-					</strong>
-				</label>
-				<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-					<?php esc_html_e( 'When enabled, missing cards (backordered) will be automatically created via UniVoucher API using your configured internal wallet private key.', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
-
-			<div class="univoucher-settings-box-warning" style="margin-top: 15px;">
-				<strong style="color: #856404;">
-					<span class="dashicons dashicons-info" style="margin-right: 3px;"></span>
-					<?php esc_html_e( 'How it works:', 'univoucher-for-woocommerce' ); ?>
-				</strong>
-				<div style="margin-top: 8px; font-size: 12px; color: #856404;">
-					<div style="margin: 2px 0;">• <?php esc_html_e( 'This feature is only available for UniVoucher products that have backorder feature enabled', 'univoucher-for-woocommerce' ); ?></div>
-					<div style="margin: 2px 0;">• <?php esc_html_e( 'When inventory is insufficient and backordered cards are requested, the system will request card creation via UniVoucher API', 'univoucher-for-woocommerce' ); ?></div>
-					<div style="margin: 2px 0;">• <?php esc_html_e( 'Once cards are created, they will be automatically added to inventory and assigned to the order', 'univoucher-for-woocommerce' ); ?></div>
-					<div style="margin: 2px 0;">• <?php esc_html_e( 'Requires a valid internal wallet private key to be configured in the internal wallet settings', 'univoucher-for-woocommerce' ); ?></div>
-				</div>
-			</div>
-
-			<div class="univoucher-settings-box-warning" style="margin-top: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px;">
-				<strong style="color: #721c24;">
-					<span class="dashicons dashicons-warning" style="margin-right: 3px;"></span>
-					<?php esc_html_e( 'Important:', 'univoucher-for-woocommerce' ); ?>
-				</strong>
-				<span style="font-size: 13px; color: #721c24;">
-					<?php esc_html_e( 'This feature requires your internal wallet to have sufficient balance for card creation fees and gas costs. Make sure your wallet is properly configured in the Internal Wallet settings.', 'univoucher-for-woocommerce' ); ?>
-				</span>
-			</div>
-		</div>
 	</div>
 
-	<script type="text/javascript">
-	jQuery(document).ready(function($) {
-		$('#<?php echo esc_js( $args['label_for'] ); ?>').on('change', function() {
-			if ($(this).is(':checked')) {
-				$('#inventory-processing-section').show();
-			} else {
-				$('#inventory-processing-section').hide();
-			}
-		});
-	});
-	</script>
+
 
 	<?php
 }
@@ -260,49 +152,7 @@ function univoucher_show_customer_cards_callback( $args ) {
 				<?php esc_html_e( 'If disabled, customers will not see their gift card details on the website. Ensure you have an alternative delivery method in place.', 'univoucher-for-woocommerce' ); ?>
 			</span>
 		</div>
-		<!-- Line spacer -->
-		<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e5e9;">
-		<h5 style="margin: 0 0 10px 0; color: #495057; font-size: 14px;">
-			<?php esc_html_e( 'Backorder notice (if order status is completed)', 'univoucher-for-woocommerce' ); ?>
-		</h5>
-		<div class="univoucher-settings-box-info" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460;">
-			<label for="univoucher_wc_show_unassigned_notice" style="display: flex; align-items: center; margin: 0;">
-				<input
-					type="checkbox"
-					id="univoucher_wc_show_unassigned_notice"
-					name="univoucher_wc_show_unassigned_notice"
-					value="1"
-					<?php checked( get_option( 'univoucher_wc_show_unassigned_notice', true ), true ); ?>
-					style="margin-right: 10px;"
-				/>
-				<strong style="color: #0c5460;">
-					<?php esc_html_e( 'Show processing notice for unassigned cards', 'univoucher-for-woocommerce' ); ?>
-				</strong>
-			</label>
-			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-				<?php esc_html_e( 'When enabled, customers will see a notice on order details and thank you pages when their order contains gift cards that are still being processed (only if order status is completed).', 'univoucher-for-woocommerce' ); ?>
-			</p>
-		</div>
 
-		<div style="margin-top: 15px; padding-left: 20px;">
-			<label for="univoucher_wc_unassigned_notice_text" style="font-weight: bold; display: block; margin-bottom: 8px;">
-				<?php esc_html_e( 'Notice text:', 'univoucher-for-woocommerce' ); ?>
-			</label>
-			<input
-				type="text"
-				id="univoucher_wc_unassigned_notice_text"
-				name="univoucher_wc_unassigned_notice_text"
-				value="<?php echo esc_attr( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?>"
-				class="large-text"
-				style="width: 100%; max-width: 600px; font-size: 14px; padding: 8px;"
-				placeholder="<?php esc_attr_e( 'Enter notice text...', 'univoucher-for-woocommerce' ); ?>"
-			/>
-			<p class="description" style="margin-top: 5px; font-size: 12px; color: #666;">
-				<?php esc_html_e( 'Customize the text shown to customers when their order has unassigned gift cards but order status is completed.', 'univoucher-for-woocommerce' ); ?>
-			</p>
-		</div>
-
-			</div>
 
 	<script type="text/javascript">
 	jQuery(document).ready(function($) {

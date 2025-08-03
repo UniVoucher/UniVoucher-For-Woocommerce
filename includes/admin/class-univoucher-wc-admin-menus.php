@@ -142,6 +142,11 @@ class UniVoucher_WC_Admin_Menus {
 				'settings_group' => 'univoucher_wc_delivery_settings',
 				'sections' => array( 'univoucher_wc_delivery_section' ),
 			),
+			'backorders' => array(
+				'title' => esc_html__( 'On-Demand (Backorders)', 'univoucher-for-woocommerce' ),
+				'settings_group' => 'univoucher_wc_backorders_settings',
+				'sections' => array( 'univoucher_wc_backorders_section' ),
+			),
 			'templates' => array(
 				'title' => esc_html__( 'Content Templates', 'univoucher-for-woocommerce' ),
 				'settings_group' => 'univoucher_wc_templates_settings',
