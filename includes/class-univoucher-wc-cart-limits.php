@@ -42,14 +42,20 @@ class UniVoucher_WC_Cart_Limits {
 	 * Initialize hooks.
 	 */
 	private function init_hooks() {
-		// Only initialize hooks if cart limits are enabled
-		if ( get_option( 'univoucher_wc_enable_cart_limits', true ) ) {
-			// Hook into WooCommerce's core stock calculation (for cart/checkout)
-			add_filter( 'woocommerce_store_api_product_quantity_limit', array( $this, 'modify_product_quantity_limit' ), 10, 2 );
-			// Hook into quantity input max (for single product pages)
-			add_filter( 'woocommerce_quantity_input_max', array( $this, 'modify_quantity_input_max' ), 10, 2 );
-			// Validate add to cart
-			add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_add_to_cart' ), 10, 5 );
+		// Only initialize hooks if on-demand order limits are enabled
+		if ( get_option( 'univoucher_wc_on_demand_order_limit', true ) ) {
+			// Hook into order creation
+			add_action( 'woocommerce_checkout_create_order', array( $this, 'handle_checkout_create_order' ), 10, 2 );
+			
+			// Only initialize cart hooks if on-demand cart limits are enabled (and order limits are enabled)
+			if ( get_option( 'univoucher_wc_on_demand_cart_limit', true ) ) {
+				// Hook into WooCommerce's core stock calculation (for cart/checkout)
+				add_filter( 'woocommerce_store_api_product_quantity_limit', array( $this, 'modify_product_quantity_limit' ), 10, 2 );
+				// Hook into quantity input max (for single product pages)
+				add_filter( 'woocommerce_quantity_input_max', array( $this, 'modify_quantity_input_max' ), 10, 2 );
+				// Validate add to cart
+				add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_add_to_cart' ), 10, 5 );
+			}
 		}
 	}
 
@@ -153,24 +159,19 @@ class UniVoucher_WC_Cart_Limits {
 		if ( ! $product_id || ! is_numeric( $product_id ) || ! $quantity || ! is_numeric( $quantity ) ) {
 			return $passed;
 		}
-
-		error_log( "UniVoucher: validate_add_to_cart called - product_id: $product_id, quantity: $quantity, variation_id: $variation_id" );
 		
 		// Check if this is a UniVoucher product
 		if ( ! UniVoucher_WC_Product_Manager::instance()->is_univoucher_enabled( $product_id ) ) {
-			error_log( "UniVoucher: Not a UniVoucher product" );
 			return $passed;
 		}
 
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
-			error_log( "UniVoucher: Invalid product" );
 			return $passed;
 		}
 
 		// Check if backorder is enabled
 		if ( ! $product->backorders_allowed() ) {
-			error_log( "UniVoucher: Backorder not allowed" );
 			return $passed;
 		}
 
@@ -179,7 +180,6 @@ class UniVoucher_WC_Cart_Limits {
 		$on_demand_limit = uv_get_on_demand_limit( $product_id );
 
 		if ( is_wp_error( $on_demand_limit ) ) {
-			error_log( "UniVoucher: On-demand limit error: " . $on_demand_limit->get_error_message() );
 			return $passed;
 		}
 
@@ -202,22 +202,95 @@ class UniVoucher_WC_Cart_Limits {
 		// Check if cart quantity + requested quantity exceeds available stock + on-demand limit
 		$total_available = $remaining_stock + $on_demand_limit;
 		$total_requested = $cart_quantity + $quantity;
-		error_log( "UniVoucher: remaining_stock: $remaining_stock, on_demand_limit: $on_demand_limit, total_available: $total_available, cart_quantity: $cart_quantity, requested_quantity: $quantity, total_requested: $total_requested" );
 		
 		if ( $total_requested > $total_available ) {
-			error_log( "UniVoucher: Total quantity exceeds limit - blocking add to cart" );
+			$error_message = get_option( 'univoucher_wc_on_demand_error_message', 'Sorry, but the maximum available quantity from {product_name} is {maximum_quantity}. You have {cart_quantity} in cart.' );
+			$error_message = str_replace( 
+				array( '{product_name}', '{maximum_quantity}', '{cart_quantity}' ),
+				array( $product->get_name(), $total_available, $cart_quantity ),
+				$error_message
+			);
 			wc_add_notice( 
-				sprintf( 
-					__( 'Maximum quantity allowed is %d. You already have %d in cart.', 'univoucher-for-woocommerce' ), 
-					$total_available,
-					$cart_quantity
-				), 
+				__( $error_message, 'univoucher-for-woocommerce' ), 
 				'error' 
 			);
 			return false;
 		}
 
-		error_log( "UniVoucher: Validation passed" );
 		return $passed;
+	}
+
+	/**
+	 * Handle checkout order creation for UniVoucher products.
+	 * 
+	 * This hook is called by WooCommerce when creating an order during checkout.
+	 * For UniVoucher products with backorder enabled, we validate that the order
+	 * quantities don't exceed the on-demand limits.
+	 *
+	 * @param WC_Order $order The order being created.
+	 * @param array $data The checkout data.
+	 */
+	public function handle_checkout_create_order( $order, $data ) {
+		// Check if order has items
+		if ( ! $order->get_item_count() ) {
+			return;
+		}
+		
+		foreach ( $order->get_items() as $item ) {
+			$product_id = $item->get_product_id();
+			$product = wc_get_product( $product_id );
+			
+			if ( ! $product ) {
+				continue;
+			}
+
+			// Check if this is a UniVoucher product
+			if ( ! UniVoucher_WC_Product_Manager::instance()->is_univoucher_enabled( $product ) ) {
+				continue;
+			}
+
+			// Check if backorder is enabled
+			if ( ! $product->backorders_allowed() ) {
+				continue;
+			}
+
+			// Get the on-demand limit with retry logic
+			require_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-on-demand-manager.php';
+			$on_demand_limit = uv_get_on_demand_limit( $product_id );
+
+			if ( is_wp_error( $on_demand_limit ) ) {
+				// Wait for 1 second and try again
+				sleep( 1 );
+				$on_demand_limit = uv_get_on_demand_limit( $product_id );
+				
+				if ( is_wp_error( $on_demand_limit ) ) {
+					continue;
+				}
+			}
+
+			// Get remaining stock
+			$remaining_stock = $product->get_stock_quantity();
+			if ( $remaining_stock === null ) {
+				$remaining_stock = 0;
+			}
+
+			// Calculate total available
+			$total_available = $remaining_stock + $on_demand_limit;
+			$requested_quantity = $item->get_quantity();
+
+			// Check if quantity exceeds available stock + on-demand limit
+			if ( $requested_quantity > $total_available ) {
+				// Prevent order creation by throwing an exception
+				$error_message = get_option( 'univoucher_wc_on_demand_error_message', 'Sorry, but the maximum available quantity from {product_name} is {maximum_quantity}. You have {cart_quantity} in cart.' );
+				$error_message = str_replace( 
+					array( '{product_name}', '{maximum_quantity}', '{cart_quantity}' ),
+					array( $product->get_name(), $total_available, $requested_quantity ),
+					$error_message
+				);
+				throw new Exception( 
+					__( $error_message, 'univoucher-for-woocommerce' )
+				);
+			}
+		}
 	}
 } 

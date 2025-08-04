@@ -92,7 +92,7 @@ function univoucher_backorder_initial_status_callback( $args ) {
 				</p>
 			</div>
 
-			<div style="margin-top: 15px; padding-left: 20px;">
+			<div id="univoucher-notice-text-options" style="margin-top: 15px; padding-left: 20px; <?php echo get_option( 'univoucher_wc_show_unassigned_notice', true ) ? '' : 'display: none;'; ?>">
 				<label for="univoucher_wc_unassigned_notice_text" style="font-weight: bold; display: block; margin-bottom: 8px;">
 					<?php esc_html_e( 'Notice text:', 'univoucher-for-woocommerce' ); ?>
 				</label>
@@ -102,13 +102,25 @@ function univoucher_backorder_initial_status_callback( $args ) {
 					name="univoucher_wc_unassigned_notice_text"
 					value="<?php echo esc_attr( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?>"
 					class="large-text"
-					style="width: 100%; max-width: 600px; font-size: 14px; padding: 8px;"
+					style="width: 100%; max-width: 1000px; font-size: 14px; padding: 8px;"
 					placeholder="<?php esc_attr_e( 'Enter notice text...', 'univoucher-for-woocommerce' ); ?>"
 				/>
 				<p class="description" style="margin-top: 5px; font-size: 12px; color: #666;">
 					<?php esc_html_e( 'Customize the text shown to customers when their order has cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
 				</p>
 			</div>
+
+			<script>
+			jQuery(document).ready(function($) {
+				$('#univoucher_wc_show_unassigned_notice').on('change', function() {
+					if ($(this).is(':checked')) {
+						$('#univoucher-notice-text-options').show();
+					} else {
+						$('#univoucher-notice-text-options').hide();
+					}
+				});
+			});
+			</script>
 		</div>
 
 
@@ -127,7 +139,7 @@ function univoucher_auto_create_backordered_cards_callback( $args ) {
 	
 	<div class="univoucher-settings-box">
 		<h4>
-			<?php esc_html_e( 'Enable On-Demand Mode', 'univoucher-for-woocommerce' ); ?>
+			<?php esc_html_e( 'Enable On-Demand Automation', 'univoucher-for-woocommerce' ); ?>
 		</h4>
 		
 		<div style="margin-bottom: 15px;">
@@ -277,23 +289,74 @@ function univoucher_on_demand_limit_settings_callback( $args ) {
 		</div>
 
 		<div class="univoucher-settings-box-info" style="margin-top: 15px;">
-			<label for="univoucher_wc_enable_cart_limits" style="display: flex; align-items: center; margin: 0;">
+			<label for="univoucher_wc_on_demand_order_limit" style="display: flex; align-items: center; margin: 0;">
 				<input
 					type="checkbox"
-					id="univoucher_wc_enable_cart_limits"
-					name="univoucher_wc_enable_cart_limits"
+					id="univoucher_wc_on_demand_order_limit"
+					name="univoucher_wc_on_demand_order_limit"
 					value="1"
-					<?php checked( get_option( 'univoucher_wc_enable_cart_limits', true ), true ); ?>
+					<?php checked( get_option( 'univoucher_wc_on_demand_order_limit', true ), true ); ?>
 					style="margin-right: 10px;"
 				/>
 				<strong style="color: #0c5460;">
-					<?php esc_html_e( 'Prevent users from ordering more than (available stock + on-demand limit)', 'univoucher-for-woocommerce' ); ?>
+					<?php esc_html_e( 'Limit orders to (available stock + on-demand limit)', 'univoucher-for-woocommerce' ); ?>
 				</strong>
 			</label>
 			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
 				<?php esc_html_e( 'Example: If you have 5 cards in stock and 10 cards on-demand limit, customers can order a maximum of 15 cards.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 		</div>
+
+		<div id="univoucher-order-limit-options" style="margin-top: 15px; padding-left: 20px; <?php echo get_option( 'univoucher_wc_on_demand_order_limit', true ) ? '' : 'display: none;'; ?>">
+			<div style="margin-bottom: 15px;">
+				<label for="univoucher_wc_on_demand_cart_limit" style="display: flex; align-items: center; margin: 0;">
+					<input
+						type="checkbox"
+						id="univoucher_wc_on_demand_cart_limit"
+						name="univoucher_wc_on_demand_cart_limit"
+						value="1"
+						<?php checked( get_option( 'univoucher_wc_on_demand_cart_limit', true ), true ); ?>
+						style="margin-right: 10px;"
+					/>
+					<strong>
+						<?php esc_html_e( 'Limit cart to (available stock + on-demand limit)', 'univoucher-for-woocommerce' ); ?>
+					</strong>
+				</label>
+				<p style="margin: 10px 0 0 0; font-size: 12px; color: #dc3545; font-style: italic;">
+					<?php esc_html_e( 'Note: The limit cart option may not be supported by all themes, templates, and UI blocks.', 'univoucher-for-woocommerce' ); ?>
+				</p>
+			</div>
+
+			<div>
+				<label for="univoucher_wc_on_demand_error_message" style="font-weight: bold; display: block; margin-bottom: 8px;">
+					<?php esc_html_e( 'Error message:', 'univoucher-for-woocommerce' ); ?>
+				</label>
+				<input
+					type="text"
+					id="univoucher_wc_on_demand_error_message"
+					name="univoucher_wc_on_demand_error_message"
+					value="<?php echo esc_attr( get_option( 'univoucher_wc_on_demand_error_message', 'Sorry, but the maximum available quantity from {product_name} is {maximum_quantity}. You have {cart_quantity} in cart.' ) ); ?>"
+					class="large-text"
+					style="width: 100%; max-width: 1000px; font-size: 14px; padding: 8px;"
+					placeholder="<?php esc_attr_e( 'Enter error message...', 'univoucher-for-woocommerce' ); ?>"
+				/>
+				<p class="description" style="margin-top: 5px; font-size: 12px; color: #666;">
+					<?php esc_html_e( 'Message shown when customers try to order more than the available limit. Use {product_name} for product name, {maximum_quantity} for maximum quantity, and {cart_quantity} for current cart quantity.', 'univoucher-for-woocommerce' ); ?>
+				</p>
+			</div>
+		</div>
+
+		<script>
+		jQuery(document).ready(function($) {
+			$('#univoucher_wc_on_demand_order_limit').on('change', function() {
+				if ($(this).is(':checked')) {
+					$('#univoucher-order-limit-options').show();
+				} else {
+					$('#univoucher-order-limit-options').hide();
+				}
+			});
+		});
+		</script>
 
 		<div class="univoucher-settings-box-warning" style="margin-top: 20px;">
 			<strong style="color: #856404;">

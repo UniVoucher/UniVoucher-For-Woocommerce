@@ -236,7 +236,27 @@ class UniVoucher_WC_Admin_Settings {
 
 		register_setting(
 			'univoucher_wc_backorders_settings',
-			'univoucher_wc_enable_cart_limits',
+			'univoucher_wc_on_demand_order_limit',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_on_demand_error_message',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => 'Sorry, but the maximum available quantity from {product_name} is {maximum_quantity}. You have {cart_quantity} in cart.',
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_on_demand_cart_limit',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -544,7 +564,7 @@ class UniVoucher_WC_Admin_Settings {
 		// Add auto-create backordered cards field.
 		add_settings_field(
 			'univoucher_wc_auto_create_backordered_cards',
-			esc_html__( 'Enable On-Demand', 'univoucher-for-woocommerce' ),
+			esc_html__( 'On-Demand automation', 'univoucher-for-woocommerce' ),
 			array( $this, 'auto_create_backordered_cards_callback' ),
 			'univoucher_wc_backorders_settings',
 			'univoucher_wc_backorders_section',
