@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.2.2
+	 * @version 1.2.3
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.2.2';
+		public $version = '1.2.3';
 
 		/**
 		 * The single instance of the class.
@@ -98,6 +98,12 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 
 			// Include gift card and stock management classes (needed for both admin and frontend).
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-gift-card-manager.php';
+			
+			// Include on-demand manager
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-on-demand-manager.php';
+			
+			// Include cart limits
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-cart-limits.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-stock-manager.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-callback-manager.php';
 
@@ -108,6 +114,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			if ( is_admin() ) {
 				include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin.php';
 				include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-internal-wallet.php';
+				include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin-products.php';
 			}
 		}
 
@@ -394,10 +401,12 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 				UniVoucher_WC_Stock_Manager::instance();
 				UniVoucher_WC_Order_Manager::instance();
 				UniVoucher_WC_LMFWC_Integration::instance();
+				UniVoucher_WC_Cart_Limits::instance();
 				
 				// Initialize admin components
 				if ( is_admin() ) {
 					UniVoucher_WC_Internal_Wallet::instance();
+					UniVoucher_WC_Admin_Products::instance();
 				}
 			}
 		}

@@ -127,7 +127,7 @@ function univoucher_auto_create_backordered_cards_callback( $args ) {
 	
 	<div class="univoucher-settings-box">
 		<h4>
-			<?php esc_html_e( 'Auto-Create On-Demand Cards', 'univoucher-for-woocommerce' ); ?>
+			<?php esc_html_e( 'Enable On-Demand Mode', 'univoucher-for-woocommerce' ); ?>
 		</h4>
 		
 		<div style="margin-bottom: 15px;">
@@ -231,6 +231,81 @@ function univoucher_auto_create_backordered_cards_callback( $args ) {
 						</ul>
 					</div>
 				<?php endif; ?>
+			</div>
+		</div>
+	</div>
+
+	<?php
+}
+
+/**
+ * On-demand limit settings field callback.
+ *
+ * @param array $args Field arguments.
+ */
+function univoucher_on_demand_limit_settings_callback( $args ) {
+	?>
+	
+	<div class="univoucher-settings-box">
+		<h4>
+			<?php esc_html_e( 'On-Demand Limit', 'univoucher-for-woocommerce' ); ?>
+		</h4>
+		
+		<div style="margin-bottom: 15px;">
+			<p style="margin: 5px 0 8px 0; font-size: 13px;">
+				<?php esc_html_e( 'The on-demand limit is calculated based on the available balance in your internal wallet for the specific token used by each UniVoucher product. This limit represents the maximum number of cards that can be created on-demand using your current wallet balance.', 'univoucher-for-woocommerce' ); ?>
+			</p>
+		</div>
+
+		<div class="univoucher-settings-box-info" style="margin-top: 15px;">
+			<label for="univoucher_wc_show_on_demand_limit" style="display: flex; align-items: center; margin: 0;">
+				<input
+					type="checkbox"
+					id="univoucher_wc_show_on_demand_limit"
+					name="univoucher_wc_show_on_demand_limit"
+					value="1"
+					<?php checked( get_option( 'univoucher_wc_show_on_demand_limit', true ), true ); ?>
+					style="margin-right: 10px;"
+				/>
+				<strong style="color: #0c5460;">
+					<?php esc_html_e( 'Show on-demand limit in WooCommerce products admin page', 'univoucher-for-woocommerce' ); ?>
+				</strong>
+			</label>
+			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
+				<?php esc_html_e( 'When enabled, the on-demand limit will be displayed in the Stock column of the WooCommerce products admin page for UniVoucher products with backorder enabled.', 'univoucher-for-woocommerce' ); ?>
+			</p>
+		</div>
+
+		<div class="univoucher-settings-box-info" style="margin-top: 15px;">
+			<label for="univoucher_wc_enable_cart_limits" style="display: flex; align-items: center; margin: 0;">
+				<input
+					type="checkbox"
+					id="univoucher_wc_enable_cart_limits"
+					name="univoucher_wc_enable_cart_limits"
+					value="1"
+					<?php checked( get_option( 'univoucher_wc_enable_cart_limits', true ), true ); ?>
+					style="margin-right: 10px;"
+				/>
+				<strong style="color: #0c5460;">
+					<?php esc_html_e( 'Prevent users from ordering more than (available stock + on-demand limit)', 'univoucher-for-woocommerce' ); ?>
+				</strong>
+			</label>
+			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
+				<?php esc_html_e( 'Example: If you have 5 cards in stock and 10 cards on-demand limit, customers can order a maximum of 15 cards.', 'univoucher-for-woocommerce' ); ?>
+			</p>
+		</div>
+
+		<div class="univoucher-settings-box-warning" style="margin-top: 20px;">
+			<strong style="color: #856404;">
+				<span class="dashicons dashicons-info" style="margin-right: 3px;"></span>
+				<?php esc_html_e( 'How it Works:', 'univoucher-for-woocommerce' ); ?>
+			</strong>
+			<div style="margin-top: 8px; font-size: 12px; color: #856404;">
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'On-Demand Limit = Internal Wallet balance ÷ Card amount', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'Example: 500 USDT wallet balance ÷ 50 USDT card amount = 10 cards maximum', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'On-demand limits are calculated in real-time based on your current wallet balance', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'Gas fees required for blockchain transactions are not included in the limit calculation', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'If your wallet balance changes, the on-demand limit will automatically update', 'univoucher-for-woocommerce' ); ?></div>
 			</div>
 		</div>
 	</div>

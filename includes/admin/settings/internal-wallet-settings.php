@@ -211,6 +211,12 @@ function univoucher_wallet_details_callback( $args ) {
 							readonly
 							style="width: 100%; max-width: 500px; margin-bottom: 10px;"
 						/>
+						<input
+							type="hidden"
+							id="univoucher_wc_wallet_public_key"
+							name="univoucher_wc_wallet_public_key"
+							value="<?php echo esc_attr( get_option( 'univoucher_wc_wallet_public_key', '' ) ); ?>"
+						/>
 						<div style="display: flex; gap: 10px;">
 							<button type="button" class="button" id="copy-address-btn">
 								<?php esc_html_e( 'Copy', 'univoucher-for-woocommerce' ); ?>
@@ -261,6 +267,7 @@ function univoucher_wallet_details_callback( $args ) {
 			var privateKey = $('#univoucher_wc_wallet_private_key').val();
 			if (!privateKey) {
 				$('#wallet-address-display').val('<?php esc_html_e( 'No private key set', 'univoucher-for-woocommerce' ); ?>');
+				$('#univoucher_wc_wallet_public_key').val('');
 				return;
 			}
 
@@ -274,6 +281,7 @@ function univoucher_wallet_details_callback( $args ) {
 				// Validate format
 				if (cleanKey.length !== 64 || !/^[0-9a-fA-F]+$/.test(cleanKey)) {
 					$('#wallet-address-display').val('<?php esc_html_e( 'Invalid private key format', 'univoucher-for-woocommerce' ); ?>');
+					$('#univoucher_wc_wallet_public_key').val('');
 					return;
 				}
 
@@ -282,6 +290,7 @@ function univoucher_wallet_details_callback( $args ) {
 					var wallet = new ethers.Wallet('0x' + cleanKey);
 					walletAddress = wallet.address;
 					$('#wallet-address-display').val(walletAddress);
+					$('#univoucher_wc_wallet_public_key').val(walletAddress);
 					
 					// Generate QR code for the address
 					generateQRCode(walletAddress);
@@ -292,10 +301,12 @@ function univoucher_wallet_details_callback( $args ) {
 					}
 				} else {
 					$('#wallet-address-display').val('<?php esc_html_e( 'Ethers.js not loaded', 'univoucher-for-woocommerce' ); ?>');
+					$('#univoucher_wc_wallet_public_key').val('');
 					generateQRCode('<?php esc_html_e( 'Ethers.js not loaded', 'univoucher-for-woocommerce' ); ?>');
 				}
 			} catch (error) {
 				$('#wallet-address-display').val('<?php esc_html_e( 'Error generating address', 'univoucher-for-woocommerce' ); ?>');
+				$('#univoucher_wc_wallet_public_key').val('');
 				generateQRCode('<?php esc_html_e( 'Error generating address', 'univoucher-for-woocommerce' ); ?>');
 			}
 		}

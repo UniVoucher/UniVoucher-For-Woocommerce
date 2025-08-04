@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.2.3 =
+* Enhanced new On-Demand management features
+* Introduced settings for on-demand limits and cart limits
+* Improved admin interface for better usability
 = 1.2.2 =
 * Introduced On-Demand (Backorders) settings section for automatic creation of backordered cards
 * Improved order status handling and email delivery hooks
@@ -189,6 +193,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+Enhance UniVoucher For WooCommerce with new On-Demand management features. This update introduces settings for on-demand limits and cart limits, improves the admin interface for better usability.
 
 = 1.2.2 =
 This update introduces an On-Demand (Backorders) settings page, allowing automatic creation of backordered cards using the internal wallet. It also improves order status handling, updates email delivery hooks, and enhances admin interface elements for better user experience.

@@ -1,0 +1,14 @@
+/**
+ * UniVoucher Admin Products Styles
+ *
+ * @package UniVoucher_For_WooCommerce
+ * @subpackage Admin
+ */
+
+/* Stock column width for on-demand information */
+.wp-list-table .column-is_in_stock,
+.wp-list-table th.column-is_in_stock,
+.wp-list-table td.column-is_in_stock {
+	min-width: 120px !important;
+	width: 120px !important;
+} 

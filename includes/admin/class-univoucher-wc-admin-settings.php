@@ -100,6 +100,16 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
+		register_setting(
+			'univoucher_wc_wallet_settings',
+			'univoucher_wc_wallet_public_key',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => '',
+			)
+		);
+
 		// Register card delivery settings.
 		register_setting(
 			'univoucher_wc_delivery_settings',
@@ -211,6 +221,26 @@ class UniVoucher_WC_Admin_Settings {
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
 				'default'           => __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ),
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_show_on_demand_limit',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_enable_cart_limits',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
 			)
 		);
 
@@ -514,7 +544,7 @@ class UniVoucher_WC_Admin_Settings {
 		// Add auto-create backordered cards field.
 		add_settings_field(
 			'univoucher_wc_auto_create_backordered_cards',
-			esc_html__( 'Auto-Create On-Demand Cards', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Enable On-Demand', 'univoucher-for-woocommerce' ),
 			array( $this, 'auto_create_backordered_cards_callback' ),
 			'univoucher_wc_backorders_settings',
 			'univoucher_wc_backorders_section',
@@ -534,6 +564,18 @@ class UniVoucher_WC_Admin_Settings {
 			array(
 				'label_for' => 'univoucher_wc_backorder_initial_status',
 				'class'     => 'univoucher-wc-row',
+			)
+		);
+
+		// Add on-demand limit settings field.
+		add_settings_field(
+			'univoucher_wc_on_demand_limit_settings',
+			esc_html__( 'On-Demand Limit', 'univoucher-for-woocommerce' ),
+			array( $this, 'on_demand_limit_settings_callback' ),
+			'univoucher_wc_backorders_settings',
+			'univoucher_wc_backorders_section',
+			array(
+				'class' => 'univoucher-wc-row',
 			)
 		);
 
@@ -785,5 +827,14 @@ class UniVoucher_WC_Admin_Settings {
 	 */
 	public function auto_create_backordered_cards_callback( $args ) {
 		univoucher_auto_create_backordered_cards_callback( $args );
+	}
+
+	/**
+	 * On-demand limit settings field callback.
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function on_demand_limit_settings_callback( $args ) {
+		univoucher_on_demand_limit_settings_callback( $args );
 	}
 }
