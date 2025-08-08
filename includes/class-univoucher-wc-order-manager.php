@@ -147,7 +147,7 @@ class UniVoucher_WC_Order_Manager {
 							<?php esc_html_e( 'Redeem at:', 'univoucher-for-woocommerce' ); ?> 
 							<a href="https://univoucher.com" target="_blank" rel="noopener noreferrer">univoucher.com</a> 
 							<?php esc_html_e( 'or', 'univoucher-for-woocommerce' ); ?> 
-							<a href="https://redeemnow.xyz" target="_blank" rel="noopener noreferrer">redeemnow.xyz</a>
+							<a href="https://redeembase.com" target="_blank" rel="noopener noreferrer">redeembase.com</a>
 						</div>
 					</div>
 				<?php endforeach; ?>
@@ -729,7 +729,7 @@ class UniVoucher_WC_Order_Manager {
 		}
 
 		// Get email template and subject
-		$template = get_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeemnow.xyz" target="_blank">https://redeemnow.xyz</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
+		$template = get_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeembase.com" target="_blank">https://redeembase.com</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
 		$subject_template = get_option( 'univoucher_wc_email_subject', 'Your UniVoucher Gift Cards - Order #{order_number}' );
 
 		// Build cards content
@@ -860,13 +860,20 @@ class UniVoucher_WC_Order_Manager {
 	 *
 	 * @param int $order_id Order ID.
 	 */
-	public function display_unassigned_cards_notice( $order_id ) {
+	public function display_unassigned_cards_notice( $order ) {
+		// Handle both order object and order ID
+		if ( is_numeric( $order ) ) {
+			$order_id = $order;
+			$order = wc_get_order( $order );
+		} else {
+			$order_id = $order->get_id();
+		}
+		
 		// Check if notice is enabled
 		if ( ! get_option( 'univoucher_wc_show_unassigned_notice', true ) ) {
 			return;
 		}
 
-		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			return;
 		}
@@ -887,7 +894,7 @@ class UniVoucher_WC_Order_Manager {
 		jQuery(document).ready(function($) {
 			function checkOrderStatus() {
 				$.ajax({
-					url: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
+					url: '<?php echo esc_js( home_url( '/wp-admin/admin-ajax.php' ) ); ?>',
 					type: 'POST',
 					data: {
 						action: 'univoucher_check_order_assignment',
@@ -907,6 +914,9 @@ class UniVoucher_WC_Order_Manager {
 
 			// Check every 10 seconds
 			setInterval(checkOrderStatus, 10000);
+			
+			// Initial check
+			checkOrderStatus();
 		});
 		</script>
 		<?php

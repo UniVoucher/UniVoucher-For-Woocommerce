@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.2.5 =
+* General improvements and bug fixes
+* Minor UI/UX refinements
+
 = 1.2.4 =
 * Introduced new settings for on-demand order and cart limits
 * Improved error messaging for exceeding limits
@@ -200,6 +204,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.2.5 =
+Minor update with general improvements and bug fixes. This version enhances error handling and includes minor UI/UX refinements for better user experience.
 
 = 1.2.4 =
 This update introduces new settings for on-demand order and cart limits, improves error messaging for exceeding limits, and refines the admin interface for better usability.
