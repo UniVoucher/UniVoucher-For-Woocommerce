@@ -1022,4 +1022,9 @@
     // Make it globally accessible
     window.UniVoucherAddCards = UniVoucherAddCards;
 
+    // Auto-initialize when DOM is ready
+    $(document).ready(function() {
+        UniVoucherAddCards.init();
+    });
+
 })(jQuery); 

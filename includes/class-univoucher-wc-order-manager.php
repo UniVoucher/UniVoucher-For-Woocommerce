@@ -66,6 +66,9 @@ class UniVoucher_WC_Order_Manager {
 		// Admin-facing hooks - show gift cards with assignment functionality
 		add_action( 'woocommerce_admin_order_items_after_line_items', array( $this, 'display_admin_gift_cards' ) );
 		
+		// Enqueue admin assets when displaying admin gift cards
+		add_action( 'woocommerce_admin_order_items_after_line_items', array( $this, 'enqueue_admin_order_assets_inline' ), 5 );
+		
 		// Email delivery hook - use lower priority to run after stock manager
 		add_action( 'woocommerce_order_status_completed', array( $this, 'send_gift_cards_email' ), 20 );
 		
@@ -82,6 +85,9 @@ class UniVoucher_WC_Order_Manager {
 		
 		// Enqueue admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		
+		// Enqueue frontend scripts and styles
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
 		
 		// Order details page notice for unassigned cards
 		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_unassigned_cards_notice' ), 5 );
@@ -153,16 +159,6 @@ class UniVoucher_WC_Order_Manager {
 				<?php endforeach; ?>
 			</div>
 		</section>
-		<style>
-		.univoucher-card{border:1px solid #ddd;border-radius:8px;padding:20px;margin:15px 0;background:#fff}
-		.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-		.card-amount,.card-network{display:flex;align-items:center;gap:8px}
-		.card-amount img,.card-network img{width:24px;height:24px}
-		.card-details{margin:15px 0}
-		.card-id,.card-secret{margin:8px 0}
-		.card-id code,.card-secret code{background:#f5f5f5;padding:4px 8px;border-radius:4px;font-family:monospace;word-break:break-all;display:block;margin-top:4px}
-		.card-redeem{margin-top:15px;padding-top:15px;border-top:1px solid #eee}
-		</style>
 		<?php
 	}
 
@@ -321,112 +317,6 @@ class UniVoucher_WC_Order_Manager {
 			</table>
 		</div>
 
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			// Assign cards functionality
-			$('.assign-product-cards-btn').on('click', function() {
-				var $btn = $(this);
-				var $spinner = $btn.find('.spinner');
-				var productId = $btn.data('product-id');
-				var $result = $('#assign-result-' + productId);
-				var orderId = $btn.data('order-id');
-				var missing = $btn.data('missing');
-				
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-				$result.empty();
-				
-				$.ajax({
-					url: ajaxurl,
-					method: 'POST',
-					data: {
-						action: 'univoucher_assign_product_cards',
-						order_id: orderId,
-						product_id: productId,
-						missing_quantity: missing,
-						nonce: '<?php echo esc_attr( wp_create_nonce( 'univoucher_assign_product_cards' ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success) {
-							$result.html('<div style="color: #28a745; padding: 8px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Success:</strong> ' + response.data.message + '</div>');
-							// Reload page after 2 seconds to show updated cards
-							setTimeout(function() {
-								location.reload();
-							}, 2000);
-						} else {
-							$result.html('<div style="color: #721c24; padding: 8px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Error:</strong> ' + response.data.message + '</div>');
-						}
-					},
-					error: function() {
-						$result.html('<div style="color: #721c24; padding: 8px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Error:</strong> Failed to assign cards. Please try again.</div>');
-					},
-					complete: function() {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-					}
-				});
-			});
-
-			// Unassign card functionality
-			$('.unassign-card-btn').on('click', function() {
-				var $btn = $(this);
-				var $spinner = $btn.find('.spinner');
-				var cardId = $btn.data('card-id');
-				var orderId = $btn.data('order-id');
-				var productId = $btn.data('product-id');
-				var $result = $('#assign-result-' + productId);
-				var $row = $btn.closest('tr');
-				var deliveryStatus = $row.find('td:nth-child(4)').text().trim().toLowerCase();
-				
-				// Different confirmation messages based on delivery status
-				var confirmMessage;
-				if (deliveryStatus.includes('delivered') && !deliveryStatus.includes('never')) {
-					confirmMessage = '<?php esc_html_e( 'Are you sure you want to unassign this delivered card? It will be marked as INACTIVE (not available for other orders).', 'univoucher-for-woocommerce' ); ?>';
-				} else {
-					confirmMessage = '<?php esc_html_e( 'Are you sure you want to unassign this card? It will become available for assignment to other orders.', 'univoucher-for-woocommerce' ); ?>';
-				}
-				
-				// Confirm action
-				if (!confirm(confirmMessage)) {
-					return;
-				}
-				
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-				$result.empty();
-				
-				$.ajax({
-					url: ajaxurl,
-					method: 'POST',
-					data: {
-						action: 'univoucher_unassign_card',
-						card_id: cardId,
-						order_id: orderId,
-						product_id: productId,
-						nonce: '<?php echo esc_attr( wp_create_nonce( 'univoucher_unassign_card' ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success) {
-							$result.html('<div style="color: #28a745; padding: 8px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Success:</strong> ' + response.data.message + '</div>');
-							// Reload page after 2 seconds to show updated cards
-							setTimeout(function() {
-								location.reload();
-							}, 2000);
-						} else {
-							$result.html('<div style="color: #721c24; padding: 8px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Error:</strong> ' + response.data.message + '</div>');
-						}
-					},
-					error: function() {
-						$result.html('<div style="color: #721c24; padding: 8px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; font-size: 12px; margin-top: 5px;"><strong>Error:</strong> Failed to unassign card. Please try again.</div>');
-					},
-					complete: function() {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-					}
-				});
-			});
-		});
-		</script>
 		</div>
 		
 		<table class="woocommerce_order_items">
@@ -842,17 +732,110 @@ class UniVoucher_WC_Order_Manager {
 	 */
 	public function enqueue_admin_scripts( $hook ) {
 		// Only on order edit pages
-		if ( 'post.php' !== $hook || ! isset( $_GET['post'] ) ) {
-			return;
+		if ( 'post.php' === $hook && isset( $_GET['post'] ) ) {
+			$post_id = absint( wp_unslash( $_GET['post'] ) );
+			$post = get_post( $post_id );
+			if ( ! $post || 'shop_order' !== $post->post_type ) {
+				return;
+			}
+			
+			// Enqueue admin order manager scripts and styles
+			$this->enqueue_admin_order_assets();
 		}
-		
-		$post_id = absint( wp_unslash( $_GET['post'] ) );
-		$post = get_post( $post_id );
-		if ( ! $post || 'shop_order' !== $post->post_type ) {
-			return;
+	}
+
+	/**
+	 * Enqueue frontend scripts and styles.
+	 */
+	public function enqueue_frontend_scripts() {
+		// Enqueue customer-facing styles on order details pages
+		if ( is_wc_endpoint_url( 'order-received' ) || is_wc_endpoint_url( 'view-order' ) ) {
+			$this->enqueue_customer_styles();
 		}
+	}
+
+	/**
+	 * Enqueue admin order management assets.
+	 */
+	private function enqueue_admin_order_assets() {
+		$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
 		
-		// Scripts are inlined in the display method for simplicity
+		// Enqueue order manager JavaScript
+		wp_enqueue_script(
+			'univoucher-order-manager',
+			$plugin_url . 'assets/js/order-manager.js',
+			array( 'jquery' ),
+			'1.0.0',
+			true
+		);
+		
+		// Localize script with nonces and translations
+		wp_localize_script(
+			'univoucher-order-manager',
+			'univoucher_order_manager_vars',
+			array(
+				'assign_nonce' => wp_create_nonce( 'univoucher_assign_product_cards' ),
+				'unassign_nonce' => wp_create_nonce( 'univoucher_unassign_card' ),
+				'confirm_delivered_unassign' => esc_js( __( 'Are you sure you want to unassign this delivered card? It will be marked as INACTIVE (not available for other orders).', 'univoucher-for-woocommerce' ) ),
+				'confirm_unassign' => esc_js( __( 'Are you sure you want to unassign this card? It will become available for assignment to other orders.', 'univoucher-for-woocommerce' ) ),
+			)
+		);
+	}
+
+	/**
+	 * Enqueue customer-facing styles.
+	 */
+	private function enqueue_customer_styles() {
+		$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+		
+		// Enqueue customer gift cards CSS
+		wp_enqueue_style(
+			'univoucher-order-manager',
+			$plugin_url . 'assets/css/order-manager.css',
+			array(),
+			'1.0.0'
+		);
+	}
+
+	/**
+	 * Enqueue assignment checker script for customer order pages.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	private function enqueue_assignment_checker( $order_id ) {
+		$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+		
+		// Enqueue assignment checker JavaScript
+		wp_enqueue_script(
+			'univoucher-assignment-checker',
+			$plugin_url . 'assets/js/order-assignment-checker.js',
+			array( 'jquery' ),
+			'1.0.0',
+			true
+		);
+		
+		// Localize script with order data
+		wp_localize_script(
+			'univoucher-assignment-checker',
+			'univoucher_assignment_checker_vars',
+			array(
+				'order_id' => $order_id,
+				'check_nonce' => wp_create_nonce( 'univoucher_check_order_assignment' ),
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+			)
+		);
+	}
+
+	/**
+	 * Enqueue admin order assets inline (called from admin hooks).
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	public function enqueue_admin_order_assets_inline( $order_id ) {
+		// Only enqueue if not already enqueued
+		if ( ! wp_script_is( 'univoucher-order-manager', 'enqueued' ) ) {
+			$this->enqueue_admin_order_assets();
+		}
 	}
 
 	/**
@@ -883,42 +866,15 @@ class UniVoucher_WC_Order_Manager {
 			return;
 		}
 
-		// Display notice and auto-refresh script
+		// Enqueue assignment checker script
+		$this->enqueue_assignment_checker( $order_id );
+		
+		// Display notice
 		?>
 		<div id="univoucher-unassigned-notice" class="woocommerce-message woocommerce-message--info">
 			<span class="dashicons dashicons-clock" style="vertical-align: middle;"></span>
 			<span><?php echo esc_html( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?></span>
 		</div>
-
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			function checkOrderStatus() {
-				$.ajax({
-					url: '<?php echo esc_js( home_url( '/wp-admin/admin-ajax.php' ) ); ?>',
-					type: 'POST',
-					data: {
-						action: 'univoucher_check_order_assignment',
-						order_id: <?php echo esc_js( $order_id ); ?>,
-						nonce: '<?php echo esc_js( wp_create_nonce( 'univoucher_check_order_assignment' ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success && response.data.fully_assigned) {
-							location.reload();
-						}
-					},
-					error: function() {
-						// Continue checking even if there's an error
-					}
-				});
-			}
-
-			// Check every 10 seconds
-			setInterval(checkOrderStatus, 10000);
-			
-			// Initial check
-			checkOrderStatus();
-		});
-		</script>
 		<?php
 	}
 

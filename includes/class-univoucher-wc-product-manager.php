@@ -49,10 +49,10 @@ class UniVoucher_WC_Product_Manager {
 		if ( class_exists( 'WooCommerce' ) ) {
 			// Add admin notices for UniVoucher stock management
 			add_action( 'woocommerce_product_options_inventory_product_data', array( $this, 'add_univoucher_stock_notice' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_univoucher_admin_styles' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_univoucher_admin_assets' ) );
 			
-			// Disable quick edit stock fields
-			add_action( 'admin_footer-edit.php', array( $this, 'uv_disable_quick_edit_stock_fields' ) );
+			// Enqueue quick edit scripts
+			add_action( 'admin_enqueue_scripts', array( $this, 'uv_enqueue_quick_edit_scripts' ) );
 			
 			// Handle product save, update, and creation events (WordPress hooks)
 			add_action( 'save_post', array( $this, 'uv_handle_product_save' ) );
@@ -93,34 +93,13 @@ class UniVoucher_WC_Product_Manager {
 				</a>
 			</p>
 		</div>
-		
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			// Make stock fields disabled for UniVoucher products but preserve values with hidden fields
-			$('#_manage_stock, #_stock, #_stock_status').prop('disabled', true);
-			
-			// Add hidden fields to preserve values during form submission
-			$('#_stock').after('<input type="hidden" name="_stock" value="' + $('#_stock').val() + '">');
-			$('#_manage_stock').after('<input type="hidden" name="_manage_stock" value="yes">');
-			$('#_stock_status').after('<input type="hidden" name="_stock_status" value="' + $('#_stock_status').val() + '">');
-			
-			// Add visual indication
-			$('#_stock').css({
-				'background-color': '#f9f9f9',
-				'color': '#666'
-			}).attr('title', '<?php esc_attr_e( 'This value is automatically managed by UniVoucher', 'univoucher-for-woocommerce' ); ?>');
-			
-			// Add notice to stock field
-			$('#_stock').after('<span style="color: #666; font-size: 11px; margin-left: 8px;"><?php esc_html_e( '(Auto-managed by UniVoucher)', 'univoucher-for-woocommerce' ); ?></span>');
-		});
-		</script>
 		<?php
 	}
 
 	/**
-	 * Enqueue admin styles for UniVoucher notices.
+	 * Enqueue admin assets for UniVoucher notices.
 	 */
-	public function enqueue_univoucher_admin_styles( $hook ) {
+	public function enqueue_univoucher_admin_assets( $hook ) {
 		global $post;
 		
 		// Only on product edit pages
@@ -132,6 +111,21 @@ class UniVoucher_WC_Product_Manager {
 		if ( ! $product || ! $this->is_univoucher_enabled( $product ) ) {
 			return;
 		}
+		
+		// Enqueue the UniVoucher product manager JavaScript
+		wp_enqueue_script(
+			'univoucher-product-manager',
+			plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/univoucher-product-manager.js',
+			array( 'jquery' ),
+			filemtime( plugin_dir_path( dirname( __FILE__ ) ) . 'assets/js/univoucher-product-manager.js' ),
+			true
+		);
+		
+		// Localize script for translations
+		wp_localize_script( 'univoucher-product-manager', 'univoucherProductManager', array(
+			'autoManagedText'  => esc_attr__( 'This value is automatically managed by UniVoucher', 'univoucher-for-woocommerce' ),
+			'autoManagedLabel' => esc_html__( 'Auto-managed by UniVoucher', 'univoucher-for-woocommerce' ),
+		));
 		
 		// Add inline CSS for better notice styling
 		$css = '
@@ -148,12 +142,16 @@ class UniVoucher_WC_Product_Manager {
 	}
 
 	/**
-	 * Disable quick edit stock fields.
+	 * Enqueue quick edit scripts on product list pages.
 	 */
-	public function uv_disable_quick_edit_stock_fields() {
-		global $current_screen;
+	public function uv_enqueue_quick_edit_scripts( $hook ) {
+		// Only on product list edit page
+		if ( 'edit.php' !== $hook ) {
+			return;
+		}
 		
-		if ( ! $current_screen || 'edit-product' !== $current_screen->id ) {
+		global $typenow;
+		if ( 'product' !== $typenow ) {
 			return;
 		}
 		
@@ -176,35 +174,22 @@ class UniVoucher_WC_Product_Manager {
 		if ( empty( $univoucher_products ) ) {
 			return;
 		}
+		
+		// Enqueue the quick edit script
+		wp_enqueue_script(
+			'univoucher-quick-edit',
+			plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/univoucher-quick-edit.js',
+			array( 'jquery' ),
+			filemtime( plugin_dir_path( dirname( __FILE__ ) ) . 'assets/js/univoucher-quick-edit.js' ),
+			true
+		);
+		
+		// Localize script with UniVoucher product IDs and translations
+		wp_localize_script( 'univoucher-quick-edit', 'univoucherQuickEdit', array(
+			'univoucherIds'      => $univoucher_products,
+			'autoManagedLabel'   => esc_html__( 'Auto-managed by UniVoucher', 'univoucher-for-woocommerce' ),
+		));
 		?>
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			var univoucherIds = <?php echo wp_json_encode( $univoucher_products ); ?>;
-			
-			$(document).on('click', '.editinline', function() {
-				var postId = parseInt($(this).closest('tr').attr('id').replace('post-', ''));
-				
-				if (univoucherIds.includes(postId)) {
-					setTimeout(function() {
-						var $stockField = $('.inline-edit-product').find('input[name="_stock"]');
-						var $manageStockField = $('.inline-edit-product').find('input[name="_manage_stock"]');
-						
-						// Only modify if not already processed
-						if (!$stockField.prop('disabled')) {
-							// Disable the fields and add hidden fields to preserve values
-							$stockField.prop('disabled', true)
-								.css('background-color', '#f9f9f9')
-								.after('<input type="hidden" name="_stock" value="' + $stockField.val() + '">')
-								.after('<br><small style="color:#666;">Auto-managed by UniVoucher</small>');
-							$manageStockField.prop('disabled', true)
-								.css('opacity', '0.5')
-								.after('<input type="hidden" name="_manage_stock" value="yes">');
-						}
-					}, 100);
-				}
-			});
-		});
-		</script>
 		<?php
 	}
 

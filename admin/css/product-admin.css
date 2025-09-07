@@ -1,0 +1,19 @@
+/**
+ * UniVoucher for WooCommerce - Product Admin Styles
+ *
+ * Styles for UniVoucher product tab and settings in WooCommerce admin
+ */
+
+/* Remove default tab icon */
+.wc-tabs li.univoucher_gift_card_options a:before {
+	display: none !important;
+}
+
+/* Add UniVoucher icon */
+.wc-tabs li.univoucher_gift_card_options a {
+	background-image: url('../images/univoucher-icon-100px.png') !important;
+	background-size: 14px 14px !important;
+	background-repeat: no-repeat !important;
+	background-position: 8px center !important;
+	padding-left: 20px !important;
+}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.2.5
+ * Version: 1.2.6
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.2.5
+	 * @version 1.2.6
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.2.5';
+		public $version = '1.2.6';
 
 		/**
 		 * The single instance of the class.
@@ -177,74 +177,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			$database = UniVoucher_WC_Database::instance();
 			$database->create_tables();
 
-			// Set default options.
-			add_option( 'univoucher_wc_alchemy_api_key', '' );
-			add_option( 'univoucher_wc_database_key_backup_confirmed', false );
 
-			// Set default image template settings
-			add_option( 'univoucher_wc_image_template', 'UniVoucher-wide-4x3.png' );
-			
-			// Set default visibility settings
-			add_option( 'univoucher_wc_image_show_amount_with_symbol', true );
-			add_option( 'univoucher_wc_image_show_amount', false );
-			add_option( 'univoucher_wc_image_show_token_symbol', false );
-			add_option( 'univoucher_wc_image_show_network_name', true );
-			add_option( 'univoucher_wc_image_show_token_logo', true );
-			add_option( 'univoucher_wc_image_show_network_logo', true );
-			
-			// Set default amount with symbol text styling settings
-			add_option( 'univoucher_wc_image_amount_with_symbol_font', 'Inter-Bold.ttf' );
-			add_option( 'univoucher_wc_image_amount_with_symbol_size', 69 );
-			add_option( 'univoucher_wc_image_amount_with_symbol_color', '#1f2937' );
-			add_option( 'univoucher_wc_image_amount_with_symbol_align', 'center' );
-			add_option( 'univoucher_wc_image_amount_with_symbol_x', 411 );
-			add_option( 'univoucher_wc_image_amount_with_symbol_y', 315 );
-			
-			// Set default amount text styling settings
-			add_option( 'univoucher_wc_image_amount_font', 'Inter-Bold.ttf' );
-			add_option( 'univoucher_wc_image_amount_size', 20 );
-			add_option( 'univoucher_wc_image_amount_color', '#dd3333' );
-			add_option( 'univoucher_wc_image_amount_align', 'right' );
-			add_option( 'univoucher_wc_image_amount_x', 53 );
-			add_option( 'univoucher_wc_image_amount_y', 21 );
-			
-			// Set default token symbol text styling settings
-			add_option( 'univoucher_wc_image_token_symbol_font', 'Inter-Bold.ttf' );
-			add_option( 'univoucher_wc_image_token_symbol_size', 20 );
-			add_option( 'univoucher_wc_image_token_symbol_color', '#dd3333' );
-			add_option( 'univoucher_wc_image_token_symbol_align', 'left' );
-			add_option( 'univoucher_wc_image_token_symbol_x', 33 );
-			add_option( 'univoucher_wc_image_token_symbol_y', 48 );
-			
-			// Set default network name text styling settings
-			add_option( 'univoucher_wc_image_network_name_font', 'Inter-Bold.ttf' );
-			add_option( 'univoucher_wc_image_network_name_size', 27 );
-			add_option( 'univoucher_wc_image_network_name_color', '#1f2937' );
-			add_option( 'univoucher_wc_image_network_name_align', 'left' );
-			add_option( 'univoucher_wc_image_network_name_x', 147 );
-			add_option( 'univoucher_wc_image_network_name_y', 452 );
-			
-			// Set default network logo settings
-			add_option( 'univoucher_wc_image_logo_height', 33 );
-			add_option( 'univoucher_wc_image_logo_x', 125 );
-			add_option( 'univoucher_wc_image_logo_y', 452 );
-
-			// Set default token logo settings
-			add_option( 'univoucher_wc_image_token_height', 68 );
-			add_option( 'univoucher_wc_image_token_x', 649 );
-			add_option( 'univoucher_wc_image_token_y', 177 );
-
-			// Set content generation template settings
-			add_option( 'univoucher_wc_title_template', 'UniVoucher {amount} {symbol} Gift Card on {network}' );
-			add_option( 'univoucher_wc_short_description_template', 'UniVoucher gift card worth {amount} {symbol} on {network} network. instantly redeemable to any crypto wallet and globally supported' );
-			add_option( 'univoucher_wc_description_template', "<p>UniVoucher enables anyone to gift crypto across multiple blockchain networks with a redeemable crypto gift cards. Whether you want to gift ETH to a friend, distribute USDC rewards to your team, or create promotional crypto codes, UniVoucher provides a decentralized, transparent, and user-friendly solution.</p>\n\n<p><strong>Features:</strong></p>\n<ul>\n<li>Globally supported</li>\n<li>Redeemable to any crypto wallet</li>\n<li>Issued on {network} network</li>\n</ul>\n\n<p>After purchase, you will receive your gift card details in format of card ID and card Secret XXXXX-XXXXX-XXXXX-XXXXX that can be redeemed instantly.</p>\n\n<h3>HOW TO REDEEM</h3>\n\n<p><strong>Option 1 - Regular Redemption (gas fees required):</strong></p>\n<ol>\n<li>Visit: <a href=\"https://univoucher.com\" target=\"_blank\">https://univoucher.com</a></li>\n<li>Connect your wallet</li>\n<li>Click Redeem</li>\n<li>Enter the Card ID and Card Secret above</li>\n<li>Click \"Redeem Card\"</li>\n</ol>\n\n<p><strong>Option 2 - Gasless Redemption (no fees):</strong></p>\n<ol>\n<li>Visit: <a href=\"https://redeembase.com\" target=\"_blank\">https://redeembase.com</a></li>\n<li>Enter the Card ID and Card Secret above</li>\n<li>Enter your wallet address</li>\n<li>Get tokens without paying gas fees</li>\n</ol>" );
-
-			// Set email delivery settings
-			add_option( 'univoucher_wc_send_email_cards', true );
-			add_option( 'univoucher_wc_send_email_only_fully_assigned', true );
-			add_option( 'univoucher_wc_show_in_order_details', true );
-			add_option( 'univoucher_wc_email_subject', 'Your UniVoucher Gift Cards - Order #{order_number}' );
-			add_option( 'univoucher_wc_email_template', '<h2>Hello {customer_name},</h2><p>Your UniVoucher gift cards are ready!</p><p><strong>Order:</strong> #{order_number}</p><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">{cards_content}</div><p><strong>Redeem your cards at:</strong></p><ul><li><a href="https://univoucher.com" target="_blank">https://univoucher.com</a></li><li><a href="https://redeembase.com" target="_blank">https://redeembase.com</a></li></ul><p>Thank you for your purchase!</p><p>Best regards,<br>{site_name}</p>' );
 
 			// Set plugin version.
 			update_option( 'univoucher_wc_version', UNIVOUCHER_WC_VERSION );

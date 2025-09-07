@@ -513,13 +513,6 @@ class UniVoucher_WC_Add_Cards_Page {
 		<input type="hidden" id="alchemy-api-key" value="<?php echo esc_attr( get_option( 'univoucher_wc_alchemy_api_key', '' ) ); ?>" />
 		<input type="hidden" id="current-method" value="" />
 		<input type="hidden" id="internal-wallet-step" value="1" />
-
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			// Initialize the add cards page functionality
-			UniVoucherAddCards.init();
-		});
-		</script>
 		<?php
 	}
 

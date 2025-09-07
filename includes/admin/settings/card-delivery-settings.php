@@ -154,23 +154,6 @@ function univoucher_show_customer_cards_callback( $args ) {
 		</div>
 
 
-	<script type="text/javascript">
-	jQuery(document).ready(function($) {
-		var showCardsCheckbox = $('#<?php echo esc_js( $args['label_for'] ); ?>');
-		var positionOption = $('#cards-display-position-option');
-		
-		function togglePositionOption() {
-			if (showCardsCheckbox.is(':checked')) {
-				positionOption.show();
-			} else {
-				positionOption.hide();
-			}
-		}
-		
-		showCardsCheckbox.on('change', togglePositionOption);
-		togglePositionOption(); // Initial state
-	});
-	</script>
 
 	<?php
 }
@@ -236,23 +219,6 @@ function univoucher_send_email_cards_callback( $args ) {
 			</p>
 		</div>
 
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			var emailCheckbox = $('#<?php echo esc_js( $args['label_for'] ); ?>');
-			var fullyAssignedOption = $('#email-fully-assigned-option');
-			
-			function toggleFullyAssignedOption() {
-				if (emailCheckbox.is(':checked')) {
-					fullyAssignedOption.show();
-				} else {
-					fullyAssignedOption.hide();
-				}
-			}
-			
-			emailCheckbox.on('change', toggleFullyAssignedOption);
-			toggleFullyAssignedOption(); // Initial state
-		});
-		</script>
 
 		<div class="univoucher-settings-highlight" style="margin-top: 15px;">
 			<strong>

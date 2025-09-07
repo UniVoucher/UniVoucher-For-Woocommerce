@@ -93,7 +93,15 @@ class UniVoucher_WC_Admin {
 	 * @param string $hook The current admin page.
 	 */
 	public function admin_scripts( $hook ) {
-		// Only load on UniVoucher admin pages.
+		// Always enqueue menu styles for consistent icon display across all admin pages.
+		wp_enqueue_style(
+			'univoucher-wc-admin-menu',
+			plugins_url( 'admin/css/admin-menu.css', UNIVOUCHER_WC_PLUGIN_FILE ),
+			array(),
+			UNIVOUCHER_WC_VERSION
+		);
+
+		// Only load other styles/scripts on UniVoucher admin pages.
 		if ( false === strpos( $hook, 'univoucher' ) ) {
 			return;
 		}
@@ -126,6 +134,33 @@ class UniVoucher_WC_Admin {
 
 		// Localize script for AJAX on settings page.
 		if ( strpos( $hook, 'univoucher-settings' ) !== false ) {
+			// Enqueue backorders settings script
+			wp_enqueue_script(
+				'univoucher-wc-backorders-settings',
+				plugins_url( 'assets/js/admin/backorders-settings.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
+			// Enqueue card delivery settings script
+			wp_enqueue_script(
+				'univoucher-wc-card-delivery-settings',
+				plugins_url( 'assets/js/admin/card-delivery-settings.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
+			// Enqueue content templates settings script
+			wp_enqueue_script(
+				'univoucher-wc-content-templates-settings',
+				plugins_url( 'assets/js/admin/content-templates-settings.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
 			// Enqueue ethers.js for wallet functionality
 			wp_enqueue_script(
 				'univoucher-wc-ethers',
@@ -144,12 +179,74 @@ class UniVoucher_WC_Admin {
 				true
 			);
 
+			// Enqueue wallet settings scripts
+			wp_enqueue_script(
+				'univoucher-internal-wallet-settings',
+				plugins_url( 'assets/js/internal-wallet-settings.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery', 'univoucher-wc-ethers' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
+			wp_enqueue_script(
+				'univoucher-wallet-details',
+				plugins_url( 'assets/js/wallet-details.js', UNIVOUCHER_WC_PLUGIN_FILE ),
+				array( 'jquery', 'univoucher-wc-ethers', 'univoucher-wc-qrcode' ),
+				UNIVOUCHER_WC_VERSION,
+				true
+			);
+
+			// Localize wallet settings scripts
+			wp_localize_script( 'univoucher-internal-wallet-settings', 'walletSettings', array(
+				'i18n' => array(
+					'hide'                     => esc_html__( 'Hide', 'univoucher-for-woocommerce' ),
+					'show'                     => esc_html__( 'Show', 'univoucher-for-woocommerce' ),
+					'enterPrivateKeyFirst'     => esc_html__( 'Please enter a private key first.', 'univoucher-for-woocommerce' ),
+					'validating'               => esc_html__( 'Validating...', 'univoucher-for-woocommerce' ),
+					'invalidPrivateKey'        => esc_html__( 'Invalid private key format. Must be 64 hex characters.', 'univoucher-for-woocommerce' ),
+					'validAddress'             => esc_html__( 'Valid! Address: ', 'univoucher-for-woocommerce' ),
+					'ethersNotLoaded'          => esc_html__( 'Ethers.js not loaded. Please refresh the page.', 'univoucher-for-woocommerce' ),
+					'invalidPrivateKeyError'   => esc_html__( 'Invalid private key: ', 'univoucher-for-woocommerce' ),
+					'validatePrivateKey'       => esc_html__( 'Validate Private Key', 'univoucher-for-woocommerce' ),
+				),
+			));
+
+			wp_localize_script( 'univoucher-wallet-details', 'walletDetails', array(
+				'alchemyApiKey' => esc_js( get_option( 'univoucher_wc_alchemy_api_key', '' ) ),
+				'i18n' => array(
+					'noPrivateKey'      => esc_html__( 'No private key set', 'univoucher-for-woocommerce' ),
+					'invalidPrivateKey' => esc_html__( 'Invalid private key format', 'univoucher-for-woocommerce' ),
+					'ethersNotLoaded'   => esc_html__( 'Ethers.js not loaded', 'univoucher-for-woocommerce' ),
+					'errorGenerating'   => esc_html__( 'Error generating address', 'univoucher-for-woocommerce' ),
+					'copied'            => esc_html__( 'Copied!', 'univoucher-for-woocommerce' ),
+					'noApiKey'          => esc_html__( 'Alchemy API key not configured. Please set it in the API Configuration section.', 'univoucher-for-woocommerce' ),
+					'errorLoading'      => esc_html__( 'Error loading balances: ', 'univoucher-for-woocommerce' ),
+					'noBalances'        => esc_html__( 'No balances found.', 'univoucher-for-woocommerce' ),
+					'nativeToken'       => esc_html__( 'Native Token', 'univoucher-for-woocommerce' ),
+					'erc20Tokens'       => esc_html__( 'ERC-20 Tokens', 'univoucher-for-woocommerce' ),
+					'noErc20Tokens'     => esc_html__( 'No ERC-20 tokens found', 'univoucher-for-woocommerce' ),
+					'noValidAddress'    => esc_html__( 'No valid address', 'univoucher-for-woocommerce' ),
+				),
+			));
+
 			wp_localize_script(
 				'univoucher-wc-admin',
 				'univoucher_settings_vars',
 				array(
 					'nonce' => wp_create_nonce( 'univoucher_stock_sync' ),
 					'ajaxurl' => admin_url( 'admin-ajax.php' ),
+					'reset_template_confirm' => __( 'Are you sure you want to reset the Template to its default value?', 'univoucher-for-woocommerce' ),
+					'reset_template_success' => __( 'Template has been reset to default. Save Changes to apply.', 'univoucher-for-woocommerce' ),
+				)
+			);
+
+			// Localize content templates script
+			wp_localize_script(
+				'univoucher-wc-content-templates-settings',
+				'univoucherContentTemplates',
+				array(
+					'confirmMessage' => __( 'Are you sure you want to reset all templates to default values? This action cannot be undone.', 'univoucher-for-woocommerce' ),
+					'successMessage' => __( 'Templates have been reset to default values. Save Changes to apply.', 'univoucher-for-woocommerce' ),
 				)
 			);
 		}

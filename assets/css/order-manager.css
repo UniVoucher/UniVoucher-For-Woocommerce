@@ -1,0 +1,67 @@
+/* UniVoucher Order Manager CSS */
+
+/* Customer gift cards styling */
+.univoucher-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    background: #fff;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.card-amount,
+.card-network {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-amount img,
+.card-network img {
+    width: 24px;
+    height: 24px;
+}
+
+.card-details {
+    margin: 15px 0;
+}
+
+.card-id,
+.card-secret {
+    margin: 8px 0;
+}
+
+.card-id code,
+.card-secret code {
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    word-break: break-all;
+    display: block;
+    margin-top: 4px;
+}
+
+.card-redeem {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* Unassigned cards notice styling */
+#univoucher-unassigned-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#univoucher-unassigned-notice .dashicons {
+    color: #0073aa;
+}

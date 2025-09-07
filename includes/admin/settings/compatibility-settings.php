@@ -203,35 +203,5 @@ function univoucher_lmfwc_integration_callback( $args ) {
 			</p>
 		</div>
 	</div>
-
-	<script type="text/javascript">
-	jQuery(document).ready(function($) {
-		$('#<?php echo esc_js( $args['label_for'] ); ?>').on('change', function() {
-			var isChecked = $(this).is(':checked');
-			var isLmfwcActive = <?php echo $lmfwc_active ? 'true' : 'false'; ?>;
-			
-			if (isChecked && isLmfwcActive) {
-				$('#lmfwc-template-box, #lmfwc-abandoned-box, #lmfwc-all-licenses-box').show();
-			} else {
-				$('#lmfwc-template-box, #lmfwc-abandoned-box, #lmfwc-all-licenses-box').hide();
-			}
-		});
-		
-		// Reset License Key Template to Default
-		$('#reset-license-key-template').on('click', function() {
-			if (confirm('<?php echo esc_js( __( 'Are you sure you want to reset the License Key Template to its default value?', 'univoucher-for-woocommerce' ) ); ?>')) {
-				var defaultTemplate = 'Card ID: {card_id} Card Secret: {card_secret} Network: {card_network} Abandoned on {card_abandoned}';
-				$('#univoucher_wc_lmfwc_license_key_template').val(defaultTemplate);
-				
-				// Trigger the height adjustment
-				var textarea = $('#univoucher_wc_lmfwc_license_key_template')[0];
-				textarea.style.height = '50px';
-				textarea.style.height = textarea.scrollHeight + 'px';
-				
-				alert('<?php echo esc_js( __( 'License Key Template has been reset to default. Save Changes to apply.', 'univoucher-for-woocommerce' ) ); ?>');
-			}
-		});
-	});
-	</script>
 	<?php
 } 

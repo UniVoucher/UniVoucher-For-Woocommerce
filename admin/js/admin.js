@@ -31,6 +31,14 @@
 		 * Initialize settings page functionality
 		 */
 		initSettingsPage: function() {
+			this.initAPIKeyToggle();
+			this.initCompatibilitySettings();
+		},
+
+		/**
+		 * Initialize API key toggle functionality
+		 */
+		initAPIKeyToggle: function() {
 			// API key show/hide toggle
 			$('#toggle-api-key').on('click', function() {
 				var field = $('#univoucher_wc_alchemy_api_key');
@@ -349,6 +357,40 @@
 					progressText.text('Error: Failed to sync products. Please try again.');
 					progressBar.css('background', '#dc3545');
 					if (completeCallback) completeCallback();
+				}
+			});
+		},
+
+		/**
+		 * Initialize compatibility settings functionality
+		 */
+		initCompatibilitySettings: function() {
+			// Handle LMFWC integration checkbox change
+			$('#univoucher_wc_lmfwc_integration').on('change', function() {
+				var isChecked = $(this).is(':checked');
+				var isLmfwcActive = !$(this).prop('disabled');
+				
+				if (isChecked && isLmfwcActive) {
+					$('#lmfwc-template-box, #lmfwc-abandoned-box, #lmfwc-all-licenses-box').show();
+				} else {
+					$('#lmfwc-template-box, #lmfwc-abandoned-box, #lmfwc-all-licenses-box').hide();
+				}
+			});
+			
+			// Handle license key template reset
+			$('#reset-license-key-template').on('click', function() {
+				if (confirm(univoucher_settings_vars.reset_template_confirm)) {
+					var defaultTemplate = 'Card ID: {card_id} Card Secret: {card_secret} Network: {card_network} Abandoned on {card_abandoned}';
+					$('#univoucher_wc_lmfwc_license_key_template').val(defaultTemplate);
+					
+					// Trigger the height adjustment
+					var textarea = $('#univoucher_wc_lmfwc_license_key_template')[0];
+					if (textarea) {
+						textarea.style.height = '50px';
+						textarea.style.height = textarea.scrollHeight + 'px';
+					}
+					
+					alert(univoucher_settings_vars.reset_template_success);
 				}
 			});
 		},

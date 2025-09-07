@@ -1931,37 +1931,6 @@ class UniVoucher_WC_Image_Templates {
 			<input type="hidden" id="univoucher_wc_image_logo_height" name="univoucher_wc_image_logo_height" value="<?php echo esc_attr( $logo_height ); ?>" />
 			<input type="hidden" id="univoucher_wc_image_token_height" name="univoucher_wc_image_token_height" value="<?php echo esc_attr( $token_height ); ?>" />
 		</div>
-		
-		<script>
-		jQuery(document).ready(function($) {
-			$('.color-picker').wpColorPicker();
-			
-			// Toggle visibility of draggable elements based on checkboxes
-			$('#univoucher_wc_image_show_amount_with_symbol').change(function() {
-				$('#univoucher-draggable-amount-with-symbol').toggle(this.checked);
-			});
-			
-			$('#univoucher_wc_image_show_amount').change(function() {
-				$('#univoucher-draggable-amount').toggle(this.checked);
-			});
-			
-			$('#univoucher_wc_image_show_token_symbol').change(function() {
-				$('#univoucher-draggable-token-symbol').toggle(this.checked);
-			});
-			
-			$('#univoucher_wc_image_show_network_name').change(function() {
-				$('#univoucher-draggable-network-name').toggle(this.checked);
-			});
-			
-			$('#univoucher_wc_image_show_token_logo').change(function() {
-				$('#univoucher-draggable-token').toggle(this.checked);
-			});
-			
-			$('#univoucher_wc_image_show_network_logo').change(function() {
-				$('#univoucher-draggable-logo').toggle(this.checked);
-			});
-		});
-		</script>
 		<?php
 	}
 

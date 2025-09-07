@@ -40,7 +40,6 @@ class UniVoucher_WC_Admin_Menus {
 	 */
 	public function __construct() {
 		$this->add_menus();
-		add_action( 'admin_head', array( $this, 'admin_menu_icon_styles' ) );
 	}
 
 	/**
@@ -296,25 +295,4 @@ class UniVoucher_WC_Admin_Menus {
 		<?php
 	}
 
-	/**
-	 * Add admin menu icon styles.
-	 */
-	public function admin_menu_icon_styles() {
-		?>
-		<style>
-			#toplevel_page_univoucher-inventory .wp-menu-image img {
-				width: 20px !important;
-				height: 20px !important;
-				object-fit: contain;
-				max-width: 20px;
-				max-height: 20px;
-			}
-			/* Ensure proper display in collapsed menu */
-			.folded #toplevel_page_univoucher-inventory .wp-menu-image img {
-				width: 20px !important;
-				height: 20px !important;
-			}
-		</style>
-		<?php
-	}
 }

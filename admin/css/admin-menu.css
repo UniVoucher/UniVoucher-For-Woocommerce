@@ -1,0 +1,21 @@
+/**
+ * UniVoucher for WooCommerce - Admin Menu Styles
+ *
+ * Styles for UniVoucher admin menu icons that need to load globally
+ * across all WordPress admin pages.
+ */
+
+/* Admin Menu Icon Styles */
+#toplevel_page_univoucher-inventory .wp-menu-image img {
+	width: 20px !important;
+	height: 20px !important;
+	object-fit: contain;
+	max-width: 20px;
+	max-height: 20px;
+}
+
+/* Ensure proper display in collapsed menu */
+.folded #toplevel_page_univoucher-inventory .wp-menu-image img {
+	width: 20px !important;
+	height: 20px !important;
+}

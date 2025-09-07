@@ -546,6 +546,14 @@ class UniVoucher_WC_Product_Fields {
 			true
 		);
 
+		// Enqueue product admin styles.
+		wp_enqueue_style(
+			'univoucher-wc-product-admin',
+			plugins_url( 'admin/css/product-admin.css', UNIVOUCHER_WC_PLUGIN_FILE ),
+			array(),
+			UNIVOUCHER_WC_VERSION
+		);
+
 		// Check if product has existing cards
 		$product_manager = UniVoucher_WC_Product_Manager::instance();
 		$has_existing_cards = $product_manager->product_has_existing_cards( $post->ID );
@@ -563,25 +571,6 @@ class UniVoucher_WC_Product_Fields {
 				'cards_count' => $cards_count,
 			)
 		);
-
-		// Add UniVoucher tab icon styling.
-		$univoucher_icon_url = plugins_url( 'admin/images/univoucher-icon-100px.png', UNIVOUCHER_WC_PLUGIN_FILE );
-		wp_add_inline_style( 'wp-admin', "
-			/* Remove default tab icon */
-			.wc-tabs li.univoucher_gift_card_options a:before {
-				display: none !important;
-			}
-			/* Add UniVoucher icon */
-			.wc-tabs li.univoucher_gift_card_options a {
-				background-image: url('{$univoucher_icon_url}') !important;
-				background-size: 14px 14px !important;
-				background-repeat: no-repeat !important;
-				background-position: 8px center !important;
-				padding-left: 20px !important;
-			}
-
-			}
-		" );
 	}
 
 	/**

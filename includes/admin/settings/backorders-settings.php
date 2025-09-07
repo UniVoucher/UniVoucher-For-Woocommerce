@@ -110,17 +110,6 @@ function univoucher_backorder_initial_status_callback( $args ) {
 				</p>
 			</div>
 
-			<script>
-			jQuery(document).ready(function($) {
-				$('#univoucher_wc_show_unassigned_notice').on('change', function() {
-					if ($(this).is(':checked')) {
-						$('#univoucher-notice-text-options').show();
-					} else {
-						$('#univoucher-notice-text-options').hide();
-					}
-				});
-			});
-			</script>
 		</div>
 
 
@@ -346,17 +335,6 @@ function univoucher_on_demand_limit_settings_callback( $args ) {
 			</div>
 		</div>
 
-		<script>
-		jQuery(document).ready(function($) {
-			$('#univoucher_wc_on_demand_order_limit').on('change', function() {
-				if ($(this).is(':checked')) {
-					$('#univoucher-order-limit-options').show();
-				} else {
-					$('#univoucher-order-limit-options').hide();
-				}
-			});
-		});
-		</script>
 
 		<div class="univoucher-settings-box-warning" style="margin-top: 20px;">
 			<strong style="color: #856404;">
