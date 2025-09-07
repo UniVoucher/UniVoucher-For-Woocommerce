@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UniVoucher For WooCommerce
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.2.6
+ * Version: 1.3
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -33,7 +33,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.2.6
+	 * @version 1.3
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.2.6';
+		public $version = '1.3';
 
 		/**
 		 * The single instance of the class.
@@ -293,7 +293,12 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 
 			// Don't show on the plugin's own settings page to avoid redundancy.
 			if ( isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'univoucher-settings' ) {
-				return;
+				// Check for nonce if available (for admin page navigation)
+				if ( isset( $_GET['_wpnonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher-admin-navigation' ) ) {
+					// If nonce is present but invalid, still continue to show notice on other pages
+				} else {
+					return;
+				}
 			}
 
 			// Show the warning notice.

@@ -122,7 +122,7 @@ function univoucher_show_customer_cards_callback( $args ) {
 			</p>
 		</div>
 
-		<div id="cards-display-position-option" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460; <?php echo $show_cards ? '' : 'display: none;'; ?>">
+		<div id="cards-display-position-option" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460; <?php echo esc_attr( $show_cards ? '' : 'display: none;' ); ?>">
 			<label for="univoucher_wc_cards_display_position" style="font-weight: bold; display: block; margin-bottom: 8px;">
 				<?php esc_html_e( 'Display Position:', 'univoucher-for-woocommerce' ); ?>
 			</label>
@@ -200,7 +200,7 @@ function univoucher_send_email_cards_callback( $args ) {
 			</p>
 		</div>
 
-		<div class="univoucher-settings-box-info" id="email-fully-assigned-option" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460; <?php echo !$send_email ? 'display: none;' : ''; ?>">
+		<div class="univoucher-settings-box-info" id="email-fully-assigned-option" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460; <?php echo esc_attr( !$send_email ? 'display: none;' : '' ); ?>">
 			<label for="univoucher_wc_send_email_only_fully_assigned" style="display: flex; align-items: center; margin: 0;">
 				<input
 					type="checkbox"

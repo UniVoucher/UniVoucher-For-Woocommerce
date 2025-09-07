@@ -313,16 +313,39 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 		$per_page = 20;
 		$current_page = $this->get_pagenum();
 
-		// Get filter values.
-		$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
-		$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
-		$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
-		$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
-		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+		// Check nonce for $_GET parameter access (if any filter/search parameters are present)
+		if ( ! empty( $_GET ) && ( isset( $_GET['status'] ) || isset( $_GET['delivery_status'] ) || isset( $_GET['chain_id'] ) || isset( $_GET['product_id'] ) || isset( $_GET['s'] ) || isset( $_GET['orderby'] ) || isset( $_GET['order'] ) ) ) {
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_inventory_filter' ) ) {
+				// If nonce is invalid, use default values
+				$filter_status = '';
+				$filter_delivery_status = '';
+				$chain_filter = '';
+				$product_filter = '';
+				$search = '';
+				$orderby = 'created_at';
+				$order = 'DESC';
+			} else {
+				// Get filter values with valid nonce.
+				$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+				$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
+				$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
+				$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
+				$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 
-		// Get order by and order.
-		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
-		$order = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'DESC';
+				// Get order by and order.
+				$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
+				$order = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'DESC';
+			}
+		} else {
+			// No filter parameters, use defaults
+			$filter_status = '';
+			$filter_delivery_status = '';
+			$chain_filter = '';
+			$product_filter = '';
+			$search = '';
+			$orderby = 'created_at';
+			$order = 'DESC';
+		}
 
 		$args = array(
 			'page'            => $current_page,
@@ -364,10 +387,28 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 	 * Display filters.
 	 */
 	protected function display_filters() {
-		$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
-		$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
-		$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
-		$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
+		// Check nonce for $_GET parameter access (if any filter parameters are present)
+		if ( ! empty( $_GET ) && ( isset( $_GET['status'] ) || isset( $_GET['delivery_status'] ) || isset( $_GET['chain_id'] ) || isset( $_GET['product_id'] ) ) ) {
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_inventory_filter' ) ) {
+				// If nonce is invalid, use default values
+				$filter_status = '';
+				$filter_delivery_status = '';
+				$chain_filter = '';
+				$product_filter = '';
+			} else {
+				// Get filter values with valid nonce
+				$filter_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+				$filter_delivery_status = isset( $_GET['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_GET['delivery_status'] ) ) : '';
+				$chain_filter = isset( $_GET['chain_id'] ) ? absint( wp_unslash( $_GET['chain_id'] ) ) : '';
+				$product_filter = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : '';
+			}
+		} else {
+			// No filter parameters, use defaults
+			$filter_status = '';
+			$filter_delivery_status = '';
+			$chain_filter = '';
+			$product_filter = '';
+		}
 		$networks = UniVoucher_WC_Product_Fields::get_supported_networks();
 		?>
 		<div class="alignleft actions">
@@ -418,7 +459,7 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 					echo sprintf(
 						'<option value="%d"%s>#%d %s</option>',
 						esc_attr( $product->ID ),
-						$selected,
+						esc_attr( $selected ),
 						esc_html( $product->ID ),
 						esc_html( $product->post_title )
 					);
@@ -641,7 +682,18 @@ class UniVoucher_WC_Inventory_Page {
 			</div>
 
 			<form method="get">
-				<input type="hidden" name="page" value="<?php echo esc_attr( sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) ); ?>" />
+				<input type="hidden" name="page" value="<?php 
+				// Check nonce for $_GET parameter access
+				if ( isset( $_GET['page'] ) ) {
+					if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_inventory_filter' ) ) {
+						echo esc_attr( 'univoucher-inventory' ); // Default page value
+					} else {
+						echo esc_attr( sanitize_text_field( wp_unslash( $_GET['page'] ) ) );
+					}
+				} else {
+					echo esc_attr( 'univoucher-inventory' ); // Default page value
+				}
+				?>" />
 				<?php
 				$list_table->search_box( __( 'Search gift cards...', 'univoucher-for-woocommerce' ), 'gift_card' );
 				$list_table->display();
@@ -670,7 +722,7 @@ class UniVoucher_WC_Inventory_Page {
 			wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$card_id = isset( $_POST['card_id'] ) ? absint( $_POST['card_id'] ) : 0;
+		$card_id = isset( $_POST['card_id'] ) ? absint( wp_unslash( $_POST['card_id'] ) ) : 0;
 		if ( ! $card_id ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid card ID.', 'univoucher-for-woocommerce' ) ) );
 		}
@@ -747,11 +799,11 @@ class UniVoucher_WC_Inventory_Page {
 			wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$card_pk_id = isset( $_POST['card_id_pk'] ) ? absint( $_POST['card_id_pk'] ) : 0;
-		$new_card_id = isset( $_POST['card_id'] ) ? sanitize_text_field( $_POST['card_id'] ) : '';
-		$new_card_secret = isset( $_POST['card_secret'] ) ? sanitize_text_field( $_POST['card_secret'] ) : '';
-		$status = isset( $_POST['status'] ) ? sanitize_text_field( $_POST['status'] ) : '';
-		$delivery_status = isset( $_POST['delivery_status'] ) ? sanitize_text_field( $_POST['delivery_status'] ) : '';
+		$card_pk_id = isset( $_POST['card_id_pk'] ) ? absint( wp_unslash( $_POST['card_id_pk'] ) ) : 0;
+		$new_card_id = isset( $_POST['card_id'] ) ? sanitize_text_field( wp_unslash( $_POST['card_id'] ) ) : '';
+		$new_card_secret = isset( $_POST['card_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['card_secret'] ) ) : '';
+		$status = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
+		$delivery_status = isset( $_POST['delivery_status'] ) ? sanitize_text_field( wp_unslash( $_POST['delivery_status'] ) ) : '';
 
 		if ( ! $card_pk_id || empty( $new_card_id ) || empty( $new_card_secret ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Missing required fields.', 'univoucher-for-woocommerce' ) ) );
@@ -789,6 +841,7 @@ class UniVoucher_WC_Inventory_Page {
 		// since we're only updating specific fields and product_id shouldn't be required for updates
 		global $wpdb;
 		
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$result = $wpdb->update(
 			UniVoucher_WC_Database::instance()->uv_get_gift_cards_table(),
 			$update_data,
@@ -800,6 +853,7 @@ class UniVoucher_WC_Inventory_Page {
 		if ( false === $result ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Failed to update gift card.', 'univoucher-for-woocommerce' ) ) );
 		}
+
 
 		// Handle stock adjustment for status changes
 		if ( $old_status !== $new_status ) {
@@ -830,7 +884,7 @@ class UniVoucher_WC_Inventory_Page {
 		// Check nonce - support both old and new nonce formats
 		$nonce_valid = false;
 		if ( isset( $_POST['nonce'] ) ) {
-			$nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ) );
+			$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 			if ( wp_verify_nonce( $nonce, 'univoucher_bulk_action' ) || wp_verify_nonce( $nonce, 'univoucher_inventory_action' ) ) {
 				$nonce_valid = true;
 			}
@@ -845,14 +899,14 @@ class UniVoucher_WC_Inventory_Page {
 			wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$action = isset( $_POST['action_type'] ) ? sanitize_text_field( $_POST['action_type'] ) : '';
+		$action = isset( $_POST['action_type'] ) ? sanitize_text_field( wp_unslash( $_POST['action_type'] ) ) : '';
 		
 		// Support both old format (ids) and new format (card_ids)
 		$card_ids = array();
 		if ( isset( $_POST['card_ids'] ) ) {
-			$card_ids = array_map( 'absint', $_POST['card_ids'] );
+			$card_ids = array_map( 'absint', wp_unslash( $_POST['card_ids'] ) );
 		} elseif ( isset( $_POST['ids'] ) ) {
-			$card_ids = array_map( 'absint', $_POST['ids'] );
+			$card_ids = array_map( 'absint', wp_unslash( $_POST['ids'] ) );
 		}
 
 		if ( empty( $action ) || empty( $card_ids ) ) {
@@ -897,6 +951,7 @@ class UniVoucher_WC_Inventory_Page {
 				$old_status = $card->status;
 
 				// Update card status
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 				$result = $wpdb->update(
 					UniVoucher_WC_Database::instance()->uv_get_gift_cards_table(),
 					array( 'status' => $new_status ),
@@ -907,6 +962,7 @@ class UniVoucher_WC_Inventory_Page {
 
 				if ( false !== $result ) {
 					$updated_count++;
+
 
 					// Track stock changes for this product
 					if ( ! isset( $product_stock_changes[ $card->product_id ] ) ) {

@@ -69,13 +69,12 @@ class UniVoucher_WC_CSV_Handler {
 		}
 
 		// Sanitize file data.
-		$uploaded_file = $_FILES['csv_file'];
 		$sanitized_file = array(
-			'name'     => isset( $uploaded_file['name'] ) ? sanitize_file_name( $uploaded_file['name'] ) : '',
-			'type'     => isset( $uploaded_file['type'] ) ? sanitize_mime_type( $uploaded_file['type'] ) : '',
-			'tmp_name' => isset( $uploaded_file['tmp_name'] ) ? sanitize_text_field( $uploaded_file['tmp_name'] ) : '',
-			'error'    => isset( $uploaded_file['error'] ) ? intval( $uploaded_file['error'] ) : 0,
-			'size'     => isset( $uploaded_file['size'] ) ? intval( $uploaded_file['size'] ) : 0,
+			'name'     => isset( $_FILES['csv_file']['name'] ) ? sanitize_file_name( $_FILES['csv_file']['name'] ) : '',
+			'type'     => isset( $_FILES['csv_file']['type'] ) ? sanitize_mime_type( $_FILES['csv_file']['type'] ) : '',
+			'tmp_name' => isset( $_FILES['csv_file']['tmp_name'] ) ? sanitize_text_field( $_FILES['csv_file']['tmp_name'] ) : '',
+			'error'    => isset( $_FILES['csv_file']['error'] ) ? intval( $_FILES['csv_file']['error'] ) : 0,
+			'size'     => isset( $_FILES['csv_file']['size'] ) ? intval( $_FILES['csv_file']['size'] ) : 0,
 		);
 
 		// Process the uploaded file.

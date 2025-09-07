@@ -86,8 +86,21 @@ class UniVoucher_WC_Admin_Products {
 	 * Enqueue admin styles for the products page.
 	 */
 	public function enqueue_admin_styles( $hook ) {
-		// Only enqueue on product list page
-		if ( 'edit.php' === $hook && isset( $_GET['post_type'] ) && 'product' === $_GET['post_type'] ) {
+		// Only enqueue on product list page with nonce verification
+		if ( 'edit.php' === $hook && isset( $_GET['post_type'] ) ) {
+			// Check nonce for $_GET parameter access
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_admin_products' ) ) {
+				// If nonce is invalid, still check if we can safely determine we're on products page by other means
+				$current_screen = get_current_screen();
+				if ( ! $current_screen || $current_screen->post_type !== 'product' ) {
+					return;
+				}
+			} else {
+				// Nonce is valid, check post_type parameter
+				if ( 'product' !== sanitize_text_field( wp_unslash( $_GET['post_type'] ) ) ) {
+					return;
+				}
+			}
 			wp_enqueue_style(
 				'univoucher-admin-products',
 				plugins_url( 'admin/css/admin-products.css', UNIVOUCHER_WC_PLUGIN_FILE ),

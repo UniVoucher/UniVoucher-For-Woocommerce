@@ -162,6 +162,7 @@ function univoucher_ajax_test_api_key() {
 		if ( stripos( $error_message, 'authenticate' ) !== false || stripos( $error_message, 'unauthorized' ) !== false ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid API key. Please check your Alchemy API key.', 'univoucher-for-woocommerce' ) ) );
 		} else {
+			/* translators: %s is the error message from the API */
 			wp_send_json_error( array( 'message' => sprintf( esc_html__( 'API Error: %s', 'univoucher-for-woocommerce' ), $error_message ) ) );
 		}
 	}

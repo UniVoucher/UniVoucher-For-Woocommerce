@@ -51,7 +51,7 @@ function univoucher_lmfwc_integration_callback( $args ) {
 					name="<?php echo esc_attr( $args['label_for'] ); ?>"
 					value="1"
 					<?php checked( $lmfwc_integration, true ); ?>
-					<?php echo ! $lmfwc_active ? 'disabled' : ''; ?>
+					<?php echo esc_attr( ! $lmfwc_active ? 'disabled' : '' ); ?>
 				/>
 				<strong style="color: #0c5460;">
 					<?php esc_html_e( 'Enable License Manager integration', 'univoucher-for-woocommerce' ); ?>

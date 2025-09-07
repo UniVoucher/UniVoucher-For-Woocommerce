@@ -571,7 +571,7 @@ class UniVoucher_WC_Add_Cards_Page {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$product_id = absint( $_GET['product_id'] );
+		$product_id = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : 0;
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid product ID.', 'univoucher-for-woocommerce' ) ) );
 		}
@@ -635,15 +635,15 @@ class UniVoucher_WC_Add_Cards_Page {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$card_id = sanitize_text_field( $_POST['card_id'] );
-		$card_secret = sanitize_text_field( $_POST['card_secret'] );
-		$product_id = absint( $_POST['product_id'] );
-		$expected_chain_id = absint( $_POST['chain_id'] );
-		$expected_token_address = sanitize_text_field( $_POST['token_address'] );
-		$expected_amount = sanitize_text_field( $_POST['amount'] );
-		$expected_token_decimals = absint( $_POST['token_decimals'] );
-		$edit_mode = isset( $_POST['edit_mode'] ) && $_POST['edit_mode'];
-		$current_card_id = isset( $_POST['current_card_id'] ) ? absint( $_POST['current_card_id'] ) : 0;
+		$card_id = isset( $_POST['card_id'] ) ? sanitize_text_field( wp_unslash( $_POST['card_id'] ) ) : '';
+		$card_secret = isset( $_POST['card_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['card_secret'] ) ) : '';
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$expected_chain_id = isset( $_POST['chain_id'] ) ? absint( wp_unslash( $_POST['chain_id'] ) ) : 0;
+		$expected_token_address = isset( $_POST['token_address'] ) ? sanitize_text_field( wp_unslash( $_POST['token_address'] ) ) : '';
+		$expected_amount = isset( $_POST['amount'] ) ? sanitize_text_field( wp_unslash( $_POST['amount'] ) ) : '';
+		$expected_token_decimals = isset( $_POST['token_decimals'] ) ? absint( wp_unslash( $_POST['token_decimals'] ) ) : 0;
+		$edit_mode = isset( $_POST['edit_mode'] ) && sanitize_text_field( wp_unslash( $_POST['edit_mode'] ) );
+		$current_card_id = isset( $_POST['current_card_id'] ) ? absint( wp_unslash( $_POST['current_card_id'] ) ) : 0;
 
 		if ( empty( $card_id ) || empty( $card_secret ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Card ID and Secret are required.', 'univoucher-for-woocommerce' ) ) );
@@ -668,12 +668,12 @@ class UniVoucher_WC_Add_Cards_Page {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$card_ids = isset( $_POST['card_ids'] ) ? array_map( 'sanitize_text_field', $_POST['card_ids'] ) : array();
-		$card_secrets = isset( $_POST['card_secrets'] ) ? array_map( 'sanitize_text_field', $_POST['card_secrets'] ) : array();
-		$expected_chain_id = absint( $_POST['chain_id'] );
-		$expected_token_address = sanitize_text_field( $_POST['token_address'] );
-		$expected_amount = sanitize_text_field( $_POST['amount'] );
-		$expected_token_decimals = absint( $_POST['token_decimals'] );
+		$card_ids = isset( $_POST['card_ids'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['card_ids'] ) ) : array();
+		$card_secrets = isset( $_POST['card_secrets'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['card_secrets'] ) ) : array();
+		$expected_chain_id = isset( $_POST['chain_id'] ) ? absint( wp_unslash( $_POST['chain_id'] ) ) : 0;
+		$expected_token_address = isset( $_POST['token_address'] ) ? sanitize_text_field( wp_unslash( $_POST['token_address'] ) ) : '';
+		$expected_amount = isset( $_POST['amount'] ) ? sanitize_text_field( wp_unslash( $_POST['amount'] ) ) : '';
+		$expected_token_decimals = isset( $_POST['token_decimals'] ) ? absint( wp_unslash( $_POST['token_decimals'] ) ) : 0;
 
 		if ( empty( $card_ids ) || count( $card_ids ) !== count( $card_secrets ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid card data provided.', 'univoucher-for-woocommerce' ) ) );
@@ -1026,16 +1026,16 @@ class UniVoucher_WC_Add_Cards_Page {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$product_id = absint( $_POST['product_id'] );
-		$card_ids = isset( $_POST['card_ids'] ) ? array_map( 'sanitize_text_field', $_POST['card_ids'] ) : array();
-		$card_secrets = isset( $_POST['card_secrets'] ) ? array_map( 'sanitize_text_field', $_POST['card_secrets'] ) : array();
-		$creation_dates = isset( $_POST['creation_dates'] ) ? array_map( 'sanitize_text_field', $_POST['creation_dates'] ) : array();
-		$chain_id = absint( $_POST['chain_id'] );
-		$token_address = sanitize_text_field( $_POST['token_address'] );
-		$token_symbol = sanitize_text_field( $_POST['token_symbol'] );
-		$token_type = sanitize_text_field( $_POST['token_type'] );
-		$token_decimals = absint( $_POST['token_decimals'] );
-		$amount = sanitize_text_field( $_POST['amount'] );
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$card_ids = isset( $_POST['card_ids'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['card_ids'] ) ) : array();
+		$card_secrets = isset( $_POST['card_secrets'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['card_secrets'] ) ) : array();
+		$creation_dates = isset( $_POST['creation_dates'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['creation_dates'] ) ) : array();
+		$chain_id = isset( $_POST['chain_id'] ) ? absint( wp_unslash( $_POST['chain_id'] ) ) : 0;
+		$token_address = isset( $_POST['token_address'] ) ? sanitize_text_field( wp_unslash( $_POST['token_address'] ) ) : '';
+		$token_symbol = isset( $_POST['token_symbol'] ) ? sanitize_text_field( wp_unslash( $_POST['token_symbol'] ) ) : '';
+		$token_type = isset( $_POST['token_type'] ) ? sanitize_text_field( wp_unslash( $_POST['token_type'] ) ) : '';
+		$token_decimals = isset( $_POST['token_decimals'] ) ? absint( wp_unslash( $_POST['token_decimals'] ) ) : 0;
+		$amount = isset( $_POST['amount'] ) ? sanitize_text_field( wp_unslash( $_POST['amount'] ) ) : '';
 
 		if ( empty( $card_ids ) || count( $card_ids ) !== count( $card_secrets ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid card data provided.', 'univoucher-for-woocommerce' ) ) );

@@ -512,8 +512,16 @@ class UniVoucher_WC_Image_Templates {
 			return;
 		}
 
-		// Check if we're on the image templates tab.
-		$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'security';
+		// Check if we're on the image templates tab with nonce verification.
+		if ( isset( $_GET['tab'] ) ) {
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_settings_tab' ) ) {
+				$active_tab = 'security'; // Default tab if nonce is invalid
+			} else {
+				$active_tab = sanitize_text_field( wp_unslash( $_GET['tab'] ) );
+			}
+		} else {
+			$active_tab = 'security'; // Default tab
+		}
 		if ( 'image-templates' !== $active_tab ) {
 			return;
 		}
@@ -684,7 +692,7 @@ class UniVoucher_WC_Image_Templates {
 
 		// Get all new settings from POST with updated fallback defaults
 		$settings = array(
-			'template' => sanitize_text_field( $_POST['template'] ?? '' ),
+			'template' => sanitize_text_field( wp_unslash( $_POST['template'] ?? '' ) ),
 			'show_amount_with_symbol' => isset( $_POST['show_amount_with_symbol'] ) ? (bool) $_POST['show_amount_with_symbol'] : true,
 			'show_amount' => isset( $_POST['show_amount'] ) ? (bool) $_POST['show_amount'] : false,
 			'show_token_symbol' => isset( $_POST['show_token_symbol'] ) ? (bool) $_POST['show_token_symbol'] : false,
@@ -693,44 +701,44 @@ class UniVoucher_WC_Image_Templates {
 			'show_network_logo' => isset( $_POST['show_network_logo'] ) ? (bool) $_POST['show_network_logo'] : true,
 			
 			// Amount with symbol text settings
-			'amount_with_symbol_font' => sanitize_text_field( $_POST['amount_with_symbol_font'] ?? 'Inter-Bold.ttf' ),
-			'amount_with_symbol_size' => absint( $_POST['amount_with_symbol_size'] ?? 69 ),
-			'amount_with_symbol_color' => sanitize_hex_color( $_POST['amount_with_symbol_color'] ?? '#1f2937' ),
-			'amount_with_symbol_align' => $this->sanitize_text_align( $_POST['amount_with_symbol_align'] ?? 'center' ),
-			'amount_with_symbol_x' => absint( $_POST['amount_with_symbol_x'] ?? 411 ),
-			'amount_with_symbol_y' => absint( $_POST['amount_with_symbol_y'] ?? 315 ),
+			'amount_with_symbol_font' => sanitize_text_field( wp_unslash( $_POST['amount_with_symbol_font'] ?? 'Inter-Bold.ttf' ) ),
+			'amount_with_symbol_size' => absint( wp_unslash( $_POST['amount_with_symbol_size'] ?? 69 ) ),
+			'amount_with_symbol_color' => sanitize_hex_color( wp_unslash( $_POST['amount_with_symbol_color'] ?? '#1f2937' ) ),
+			'amount_with_symbol_align' => $this->sanitize_text_align( sanitize_text_field( wp_unslash( $_POST['amount_with_symbol_align'] ?? 'center' ) ) ),
+			'amount_with_symbol_x' => absint( wp_unslash( $_POST['amount_with_symbol_x'] ?? 411 ) ),
+			'amount_with_symbol_y' => absint( wp_unslash( $_POST['amount_with_symbol_y'] ?? 315 ) ),
 			
 			// Amount text settings
-			'amount_font' => sanitize_text_field( $_POST['amount_font'] ?? 'Inter-Bold.ttf' ),
-			'amount_size' => absint( $_POST['amount_size'] ?? 20 ),
-			'amount_color' => sanitize_hex_color( $_POST['amount_color'] ?? '#dd3333' ),
-			'amount_align' => $this->sanitize_text_align( $_POST['amount_align'] ?? 'right' ),
-			'amount_x' => absint( $_POST['amount_x'] ?? 53 ),
-			'amount_y' => absint( $_POST['amount_y'] ?? 21 ),
+			'amount_font' => sanitize_text_field( wp_unslash( $_POST['amount_font'] ?? 'Inter-Bold.ttf' ) ),
+			'amount_size' => absint( wp_unslash( $_POST['amount_size'] ?? 20 ) ),
+			'amount_color' => sanitize_hex_color( wp_unslash( $_POST['amount_color'] ?? '#dd3333' ) ),
+			'amount_align' => $this->sanitize_text_align( sanitize_text_field( wp_unslash( $_POST['amount_align'] ?? 'right' ) ) ),
+			'amount_x' => absint( wp_unslash( $_POST['amount_x'] ?? 53 ) ),
+			'amount_y' => absint( wp_unslash( $_POST['amount_y'] ?? 21 ) ),
 			
 			// Token symbol text settings
-			'token_symbol_font' => sanitize_text_field( $_POST['token_symbol_font'] ?? 'Inter-Bold.ttf' ),
-			'token_symbol_size' => absint( $_POST['token_symbol_size'] ?? 20 ),
-			'token_symbol_color' => sanitize_hex_color( $_POST['token_symbol_color'] ?? '#dd3333' ),
-			'token_symbol_align' => $this->sanitize_text_align( $_POST['token_symbol_align'] ?? 'left' ),
-			'token_symbol_x' => absint( $_POST['token_symbol_x'] ?? 33 ),
-			'token_symbol_y' => absint( $_POST['token_symbol_y'] ?? 48 ),
+			'token_symbol_font' => sanitize_text_field( wp_unslash( $_POST['token_symbol_font'] ?? 'Inter-Bold.ttf' ) ),
+			'token_symbol_size' => absint( wp_unslash( $_POST['token_symbol_size'] ?? 20 ) ),
+			'token_symbol_color' => sanitize_hex_color( wp_unslash( $_POST['token_symbol_color'] ?? '#dd3333' ) ),
+			'token_symbol_align' => $this->sanitize_text_align( sanitize_text_field( wp_unslash( $_POST['token_symbol_align'] ?? 'left' ) ) ),
+			'token_symbol_x' => absint( wp_unslash( $_POST['token_symbol_x'] ?? 33 ) ),
+			'token_symbol_y' => absint( wp_unslash( $_POST['token_symbol_y'] ?? 48 ) ),
 			
 			// Network name text settings
-			'network_name_font' => sanitize_text_field( $_POST['network_name_font'] ?? 'Inter-Bold.ttf' ),
-			'network_name_size' => absint( $_POST['network_name_size'] ?? 27 ),
-			'network_name_color' => sanitize_hex_color( $_POST['network_name_color'] ?? '#1f2937' ),
-			'network_name_align' => $this->sanitize_text_align( $_POST['network_name_align'] ?? 'left' ),
-			'network_name_x' => absint( $_POST['network_name_x'] ?? 147 ),
-			'network_name_y' => absint( $_POST['network_name_y'] ?? 452 ),
+			'network_name_font' => sanitize_text_field( wp_unslash( $_POST['network_name_font'] ?? 'Inter-Bold.ttf' ) ),
+			'network_name_size' => absint( wp_unslash( $_POST['network_name_size'] ?? 27 ) ),
+			'network_name_color' => sanitize_hex_color( wp_unslash( $_POST['network_name_color'] ?? '#1f2937' ) ),
+			'network_name_align' => $this->sanitize_text_align( sanitize_text_field( wp_unslash( $_POST['network_name_align'] ?? 'left' ) ) ),
+			'network_name_x' => absint( wp_unslash( $_POST['network_name_x'] ?? 147 ) ),
+			'network_name_y' => absint( wp_unslash( $_POST['network_name_y'] ?? 452 ) ),
 			
 			// Logo settings
-			'logo_height' => absint( $_POST['logo_height'] ?? 33 ),
-			'logo_x' => absint( $_POST['logo_x'] ?? 125 ),
-			'logo_y' => absint( $_POST['logo_y'] ?? 452 ),
-			'token_height' => absint( $_POST['token_height'] ?? 68 ),
-			'token_x' => absint( $_POST['token_x'] ?? 649 ),
-			'token_y' => absint( $_POST['token_y'] ?? 177 ),
+			'logo_height' => absint( wp_unslash( $_POST['logo_height'] ?? 33 ) ),
+			'logo_x' => absint( wp_unslash( $_POST['logo_x'] ?? 125 ) ),
+			'logo_y' => absint( wp_unslash( $_POST['logo_y'] ?? 452 ) ),
+			'token_height' => absint( wp_unslash( $_POST['token_height'] ?? 68 ) ),
+			'token_x' => absint( wp_unslash( $_POST['token_x'] ?? 649 ) ),
+			'token_y' => absint( wp_unslash( $_POST['token_y'] ?? 177 ) ),
 		);
 
 		// Generate 6 test variations with different data
@@ -1056,16 +1064,22 @@ class UniVoucher_WC_Image_Templates {
 		}
 
 		// Check if file was uploaded.
-		if ( ! isset( $_FILES['file'] ) || $_FILES['file']['error'] !== UPLOAD_ERR_OK ) {
+		if ( ! isset( $_FILES['file'] ) || ! isset( $_FILES['file']['error'] ) || $_FILES['file']['error'] !== UPLOAD_ERR_OK ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'No file uploaded or upload error.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$upload_type = sanitize_text_field( $_POST['upload_type'] ?? '' );
-		$token_symbol = sanitize_text_field( $_POST['token_symbol'] ?? '' );
+		$upload_type = sanitize_text_field( wp_unslash( $_POST['upload_type'] ?? '' ) );
+		$token_symbol = sanitize_text_field( wp_unslash( $_POST['token_symbol'] ?? '' ) );
 
 		// Validate file type.
 		$allowed_types = array( 'image/png', 'application/x-font-ttf', 'font/ttf', 'application/octet-stream' );
-		$file_ext = strtolower( pathinfo( sanitize_file_name( $_FILES['file']['name'] ), PATHINFO_EXTENSION ) );
+		
+		if ( ! isset( $_FILES['file']['name'] ) || empty( $_FILES['file']['name'] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'File name is missing.', 'univoucher-for-woocommerce' ) ) );
+		}
+		
+		$sanitized_filename = sanitize_file_name( $_FILES['file']['name'] );
+		$file_ext = strtolower( pathinfo( $sanitized_filename, PATHINFO_EXTENSION ) );
 
 		if ( ! in_array( $file_ext, array( 'png', 'ttf' ), true ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type. Only PNG and TTF files are allowed.', 'univoucher-for-woocommerce' ) ) );
@@ -1078,11 +1092,11 @@ class UniVoucher_WC_Image_Templates {
 			if ( $file_ext === 'ttf' ) {
 				// Upload font.
 				$target_dir = $plugin_dir . 'fonts/';
-				$target_filename = sanitize_file_name( basename( $_FILES['file']['name'] ) );
+				$target_filename = basename( $sanitized_filename );
 			} elseif ( $upload_type === 'template' ) {
 				// Upload template.
 				$target_dir = $plugin_dir . 'images/templates/';
-				$target_filename = sanitize_file_name( basename( $_FILES['file']['name'] ) );
+				$target_filename = basename( $sanitized_filename );
 			} elseif ( $upload_type === 'token' && ! empty( $token_symbol ) ) {
 				// Upload token logo.
 				$target_dir = $plugin_dir . 'images/tokens/';
@@ -1148,8 +1162,8 @@ class UniVoucher_WC_Image_Templates {
 			wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$filename = sanitize_text_field( $_POST['filename'] ?? '' );
-		$file_type = sanitize_text_field( $_POST['file_type'] ?? '' );
+		$filename = sanitize_text_field( wp_unslash( $_POST['filename'] ?? '' ) );
+		$file_type = sanitize_text_field( wp_unslash( $_POST['file_type'] ?? '' ) );
 
 		if ( empty( $filename ) || empty( $file_type ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid parameters.', 'univoucher-for-woocommerce' ) ) );
@@ -1173,7 +1187,7 @@ class UniVoucher_WC_Image_Templates {
 		}
 
 		// Delete the file.
-		if ( file_exists( $file_path ) && unlink( $file_path ) ) {
+		if ( file_exists( $file_path ) && wp_delete_file( $file_path ) ) {
 			wp_send_json_success( array( 'message' => esc_html__( 'File deleted successfully.', 'univoucher-for-woocommerce' ) ) );
 		} else {
 			wp_send_json_error( array( 'message' => esc_html__( 'Failed to delete file.', 'univoucher-for-woocommerce' ) ) );

@@ -33,6 +33,7 @@ function univoucher_stock_sync_callback( $args ) {
 	global $wpdb;
 	
 	// Get all UniVoucher enabled products
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	$univoucher_products = $wpdb->get_results(
 		"SELECT p.ID, p.post_title 
 		FROM {$wpdb->posts} p
@@ -143,7 +144,7 @@ function univoucher_stock_sync_callback( $args ) {
 					printf(
 						// translators: %d is the number of products
 						esc_html__( 'Total UniVoucher products: %d', 'univoucher-for-woocommerce' ),
-						$total_products
+						absint( $total_products )
 					);
 					?>
 				</p>
@@ -183,7 +184,7 @@ function univoucher_ajax_sync_single_product() {
 		wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 	}
 
-	$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+	$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
 	
 	if ( ! $product_id ) {
 		wp_send_json_error( array( 'message' => esc_html__( 'Invalid product ID.', 'univoucher-for-woocommerce' ) ) );
@@ -236,12 +237,13 @@ function univoucher_ajax_sync_all_products() {
 		wp_send_json_error( array( 'message' => esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) ) );
 	}
 
-	$batch_size = isset( $_POST['batch_size'] ) ? absint( $_POST['batch_size'] ) : 5;
-	$offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
+	$batch_size = isset( $_POST['batch_size'] ) ? absint( wp_unslash( $_POST['batch_size'] ) ) : 5;
+	$offset = isset( $_POST['offset'] ) ? absint( wp_unslash( $_POST['offset'] ) ) : 0;
 
 	global $wpdb;
 	
 	// Get UniVoucher enabled products.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	$products = $wpdb->get_results( $wpdb->prepare(
 		"SELECT p.ID, p.post_title 
 		FROM {$wpdb->posts} p
@@ -302,6 +304,7 @@ function univoucher_ajax_sync_all_products() {
 	}
 
 	// Get total count for progress calculation.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	$total_products = (int) $wpdb->get_var(
 		"SELECT COUNT(*) 
 		FROM {$wpdb->posts} p

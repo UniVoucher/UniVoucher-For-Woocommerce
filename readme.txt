@@ -2,9 +2,9 @@
 Contributors: univoucher
 Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
-Tested up to: 6.8.2
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.6
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create an
 
 == Description ==
 
-UniVoucher For WooCommerce integrates the power of decentralized gift cards with your WooCommerce store. This plugin allows you to:
+UniVoucher For WooCommerce integrates the power of decentralized crypto gift cards with your WooCommerce store. This plugin allows you to:
 
-* **Sell UniVoucher gift cards** for any ERC-20 token or native cryptocurrency
+* **Sell UniVoucher crypto gift cards** for Ethereum,BNB, USDT, USDC, or any ERC-20 token or native cryptocurrency
 * **Manage gift card inventory** with automatic stock synchronization
 * **Bulk import gift cards** via CSV upload
 
@@ -87,6 +87,22 @@ This plugin interacts with the following external services:
 
 Please review the terms of service and privacy policies of these services before using this plugin.
 
+= Third-Party Libraries =
+
+This plugin includes the following third-party JavaScript libraries:
+
+* **Ethers.js v6.0.6** - Ethereum JavaScript library for wallet functionality
+  - Minified version included locally for performance
+  - Source code available at: https://unpkg.com/ethers@6.0.6/dist/ethers.umd.js
+  - GitHub repository: https://github.com/ethers-io/ethers.js
+  - License: MIT
+
+* **QRCode.js v1.0.0** - QR Code generation library for wallet QR codes
+  - Minified version included locally for performance  
+  - Source code available at: https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.js
+  - GitHub repository: https://github.com/davidshimjs/qrcodejs
+  - License: MIT
+
 == Installation ==
 
 1. Upload the plugin files to the `/wp-content/plugins/univoucher-for-woocommerce/` directory, or install the plugin through the WordPress plugins screen directly.
@@ -127,6 +143,14 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 
 == Changelog ==
+
+= 1.3 =
+* Major security alignment with WordPress plugin coding standards
+* Proper sanitization of all user input values
+* Proper nonce verification for all admin actions
+* Local loading of ethers.js and QR code libraries for improved security
+* Enhanced input validation and escape functions throughout the plugin
+* Security hardening measures implemented across all components
 
 = 1.2.6 =
 * Improved code organization by separating scripts and styles into dedicated files
@@ -209,6 +233,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.3 =
+Major security update with comprehensive alignment to WordPress plugin coding standards. This version includes proper sanitization of all user inputs, nonce verification for admin actions, and local loading of third-party libraries. Highly recommended security upgrade.
 
 = 1.2.6 =
 Code organization update with improved asset management. This version separates scripts and styles into dedicated files following WordPress plugin development standards for better maintainability and performance.

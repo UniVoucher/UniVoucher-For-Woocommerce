@@ -348,7 +348,7 @@ class UniVoucher_WC_LMFWC_Integration {
 		if ( ! empty( $gift_cards ) ) {
 			// Add the action if it doesn't already exist
 			if ( ! isset( $actions['lmfwc_send_license_keys'] ) ) {
-				$actions['lmfwc_send_license_keys'] = __( 'Send license key(s) to customer', 'license-manager-for-woocommerce' );
+				$actions['lmfwc_send_license_keys'] = __( 'Send license key(s) to customer', 'univoucher-for-woocommerce' );
 			}
 		}
 		

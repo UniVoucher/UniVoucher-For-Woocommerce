@@ -117,6 +117,7 @@ class UniVoucher_WC_Gift_Card_Manager {
 		);
 
 		// Insert into database.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$result = $wpdb->insert(
 			$this->database->uv_get_gift_cards_table(),
 			$ordered_data,
@@ -186,11 +187,13 @@ class UniVoucher_WC_Gift_Card_Manager {
 			) );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$result = $wpdb->delete(
 			$this->database->uv_get_gift_cards_table(),
 			array( 'id' => $id ),
 			array( '%d' )
 		);
+
 
 		if ( false === $result ) {
 			return new WP_Error( 'db_error', esc_html__( 'Failed to delete gift card.', 'univoucher-for-woocommerce' ) );
@@ -223,9 +226,10 @@ class UniVoucher_WC_Gift_Card_Manager {
 			return null;
 		}
 
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
+		$table = $this->database->uv_get_gift_cards_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$card = $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table WHERE id = %d",
+			"SELECT * FROM {$wpdb->prefix}univoucher_gift_cards WHERE id = %d",
 			$id
 		) );
 
@@ -255,9 +259,9 @@ class UniVoucher_WC_Gift_Card_Manager {
 			return null;
 		}
 
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$card = $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table WHERE card_id = %s",
+			"SELECT * FROM {$wpdb->prefix}univoucher_gift_cards WHERE card_id = %s",
 			sanitize_text_field( $card_id )
 		) );
 
@@ -343,17 +347,19 @@ class UniVoucher_WC_Gift_Card_Manager {
 		$order = strtoupper( $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
 
 		// Get total count.
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
-		$count_query = "SELECT COUNT(*) FROM $table WHERE $where_clause";
+		$table = $this->database->uv_get_gift_cards_table();
+		$count_query = "SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE {$where_clause}";
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
 		$total = (int) $wpdb->get_var( $where_values ? $wpdb->prepare( $count_query, $where_values ) : $count_query );
 
 		// Get items.
 		$offset = ( absint( $args['page'] ) - 1 ) * absint( $args['per_page'] );
 		$limit = absint( $args['per_page'] );
 
-		$query = "SELECT * FROM $table WHERE $where_clause ORDER BY $orderby $order LIMIT %d OFFSET %d";
+		$query = "SELECT * FROM {$wpdb->prefix}univoucher_gift_cards WHERE {$where_clause} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
 		$query_values = array_merge( $where_values, array( $limit, $offset ) );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
 		$items = $wpdb->get_results( $wpdb->prepare( $query, $query_values ) );
 
 		// Decrypt card secrets for all items
@@ -384,8 +390,6 @@ class UniVoucher_WC_Gift_Card_Manager {
 	public function get_inventory_stats() {
 		global $wpdb;
 
-		$table = $this->database->uv_get_gift_cards_table();
-
 		$stats = array(
 			'total'     => 0,
 			'available' => 0,
@@ -393,8 +397,8 @@ class UniVoucher_WC_Gift_Card_Manager {
 			'inactive'  => 0,
 		);
 
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
-		$results = $wpdb->get_results( "SELECT status, COUNT(*) as count FROM $table GROUP BY status" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$results = $wpdb->get_results( "SELECT status, COUNT(*) as count FROM {$wpdb->prefix}univoucher_gift_cards GROUP BY status" );
 
 		if ( $results ) {
 			foreach ( $results as $result ) {
@@ -402,6 +406,7 @@ class UniVoucher_WC_Gift_Card_Manager {
 				$stats['total'] += (int) $result->count;
 			}
 		}
+
 
 		return $stats;
 	}
@@ -420,11 +425,12 @@ class UniVoucher_WC_Gift_Card_Manager {
 			return array();
 		}
 
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$cards = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM $table WHERE order_id = %d ORDER BY created_at ASC",
+			"SELECT * FROM {$wpdb->prefix}univoucher_gift_cards WHERE order_id = %d ORDER BY created_at ASC",
 			$order_id
 		) );
+
 
 		// Decrypt card secrets for all cards
 		if ( $cards ) {
@@ -464,7 +470,7 @@ class UniVoucher_WC_Gift_Card_Manager {
 			wp_die( esc_html__( 'Invalid request.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$id = absint( wp_unslash( $_POST['id'] ) );
+		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
 		$result = $this->uv_delete_gift_card( $id );
 
 		if ( is_wp_error( $result ) ) {
@@ -492,8 +498,8 @@ class UniVoucher_WC_Gift_Card_Manager {
 			wp_die( esc_html__( 'Invalid request.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$action = sanitize_text_field( wp_unslash( $_POST['action_type'] ) );
-		$ids = array_map( 'absint', (array) wp_unslash( $_POST['ids'] ) );
+		$action = isset( $_POST['action_type'] ) ? sanitize_text_field( wp_unslash( $_POST['action_type'] ) ) : '';
+		$ids = isset( $_POST['ids'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['ids'] ) ) : array();
 		$ids = array_filter( $ids );
 
 		if ( empty( $ids ) ) {

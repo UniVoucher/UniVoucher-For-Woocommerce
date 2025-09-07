@@ -111,8 +111,16 @@ class UniVoucher_WC_Admin_Menus {
 	 * Settings page callback.
 	 */
 	public function settings_page() {
-		// Get current tab.
-		$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'security';
+		// Get current tab with nonce verification.
+		if ( isset( $_GET['tab'] ) ) {
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_settings_tab' ) ) {
+				$active_tab = 'security'; // Default tab if nonce is invalid
+			} else {
+				$active_tab = sanitize_text_field( wp_unslash( $_GET['tab'] ) );
+			}
+		} else {
+			$active_tab = 'security'; // Default tab
+		}
 		
 		// Define tabs.
 		$tabs = array(
@@ -171,8 +179,8 @@ class UniVoucher_WC_Admin_Menus {
 			<!-- Tab Navigation -->
 			<nav class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $tab_key => $tab_data ) : ?>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-settings&tab=' . $tab_key ) ); ?>" 
-					   class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>">
+					<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=univoucher-settings&tab=' . $tab_key ), 'univoucher_settings_tab' ) ); ?>" 
+					   class="nav-tab <?php echo esc_attr( $active_tab === $tab_key ? 'nav-tab-active' : '' ); ?>">
 						<?php echo esc_html( $tab_data['title'] ); ?>
 					</a>
 				<?php endforeach; ?>
@@ -229,7 +237,7 @@ class UniVoucher_WC_Admin_Menus {
 		$section = $wp_settings_sections[ $page ][ $section_id ];
 
 		if ( $section['title'] ) {
-			echo "<h2>{$section['title']}</h2>\n";
+			echo '<h2>' . esc_html( $section['title'] ) . "</h2>\n";
 		}
 
 		if ( $section['callback'] ) {
@@ -260,7 +268,7 @@ class UniVoucher_WC_Admin_Menus {
 			$section = $wp_settings_sections[ $page ][ $section_id ];
 
 			if ( $section['title'] ) {
-				echo "<h2>{$section['title']}</h2>\n";
+				echo '<h2>' . esc_html( $section['title'] ) . "</h2>\n";
 			}
 
 			if ( $section['callback'] ) {

@@ -231,14 +231,16 @@ class UniVoucher_WC_Product_Manager {
 	public function product_has_existing_cards( $product_id ) {
 		global $wpdb;
 		$database = UniVoucher_WC_Database::instance();
-		$table = $database->uv_get_gift_cards_table();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$count = $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM $table WHERE product_id = %d",
+			"SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE product_id = %d",
 			$product_id
 		) );
 
-		return (int) $count > 0;
+		$has_cards = (int) $count > 0;
+
+		return $has_cards;
 	}
 
 	/**
@@ -250,14 +252,16 @@ class UniVoucher_WC_Product_Manager {
 	public function get_product_cards_count( $product_id ) {
 		global $wpdb;
 		$database = UniVoucher_WC_Database::instance();
-		$table = $database->uv_get_gift_cards_table();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$count = $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM $table WHERE product_id = %d",
+			"SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE product_id = %d",
 			$product_id
 		) );
 
-		return (int) $count;
+		$count = (int) $count;
+
+		return $count;
 	}
 
 	/**
@@ -273,15 +277,16 @@ class UniVoucher_WC_Product_Manager {
 		if ( $this->product_has_existing_cards( $post_id ) ) {
 			$cards_count = $this->get_product_cards_count( $post_id );
 			$product = wc_get_product( $post_id );
+			/* translators: %d is the product ID */
 			$product_name = $product ? $product->get_name() : sprintf( __( 'Product #%d', 'univoucher-for-woocommerce' ), $post_id );
 			
 			wp_die(
 				sprintf(
-					/* translators: %1$s is the product name, %2$d is the product ID, %3$d is the number of gift cards */
+					// translators: %1$s is the product name, %2$d is the product ID, %3$d is the number of gift cards
 					esc_html__( 'You cannot delete "%1$s" (Product #%2$d) as it has %3$d existing gift card/s in the inventory. You must delete all gift cards connected to this product from the inventory before you can permanently delete this product.', 'univoucher-for-woocommerce' ),
-					$product_name,
-					$post_id,
-					$cards_count
+					esc_html( $product_name ),
+					absint( $post_id ),
+					absint( $cards_count )
 				),
 				esc_html__( 'Product with Gift Cards', 'univoucher-for-woocommerce' ),
 				array( 'back_link' => true )

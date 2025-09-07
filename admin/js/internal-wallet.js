@@ -39,7 +39,7 @@
         },
 
         /**
-         * Load ethers.js library
+         * Load ethers.js library - now loaded via wp_enqueue_script
          */
         loadEthersJS: function() {
             return new Promise((resolve, reject) => {
@@ -48,17 +48,9 @@
                     return;
                 }
                 
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/ethers@6.0.6/dist/ethers.umd.min.js';
-                script.onload = () => {
-                    if (typeof ethers !== 'undefined') {
-                        resolve(ethers);
-                    } else {
-                        reject(new Error('Ethers.js failed to load'));
-                    }
-                };
-                script.onerror = () => reject(new Error('Failed to load ethers.js'));
-                document.head.appendChild(script);
+                // Ethers.js should already be loaded via wp_enqueue_script
+                // If not available, something is wrong with the enqueue
+                reject(new Error('Ethers.js not available - check wp_enqueue_script'));
             });
         },
 

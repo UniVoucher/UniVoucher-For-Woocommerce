@@ -147,7 +147,7 @@ class UniVoucher_WC_Product_Fields {
 					printf(
 						/* translators: %d is the number of gift cards */
 						esc_html__( 'This product has %d existing gift card/s in the inventory. You must delete all gift cards connected to this product from the inventory before you can modify the gift card settings.', 'univoucher-for-woocommerce' ),
-						$cards_count
+						absint( $cards_count )
 					);
 					?>
 				</p>
@@ -159,7 +159,7 @@ class UniVoucher_WC_Product_Fields {
 			</div>
 			<?php endif; ?>
 
-			<div class="options_group univoucher-gift-card-options" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;'; ?>">
+			<div class="options_group univoucher-gift-card-options" style="<?php echo esc_attr( ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;' ); ?>">
 				<?php
 				// Network selection.
 				woocommerce_wp_select(
@@ -225,7 +225,7 @@ class UniVoucher_WC_Product_Fields {
 
 				<p class="form-field">
 					<label>&nbsp;</label>
-					<button type="button" id="univoucher-get-token-info" class="button univoucher-erc20-field" <?php echo $has_existing_cards ? 'disabled="disabled"' : ''; ?>>
+					<button type="button" id="univoucher-get-token-info" class="button univoucher-erc20-field" <?php echo esc_attr( $has_existing_cards ? 'disabled="disabled"' : '' ); ?>>
 						<?php esc_html_e( 'Get Token Info', 'univoucher-for-woocommerce' ); ?>
 					</button>
 					<span class="spinner" id="univoucher-token-spinner"></span>
@@ -302,7 +302,7 @@ class UniVoucher_WC_Product_Fields {
 			</div>
 
 			<!-- Auto-generate Title & Description Section -->
-			<div class="options_group univoucher-auto-generate-section" style="<?php echo ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;'; ?>">
+			<div class="options_group univoucher-auto-generate-section" style="<?php echo esc_attr( ( $product_object && $product_object->get_meta( '_univoucher_enabled' ) ) ? '' : 'display:none;' ); ?>">
 				<h4 style="padding-left: 12px;"><?php esc_html_e( 'Auto Generate:', 'univoucher-for-woocommerce' ); ?></h4>
 				<p class="form-field">
 					<label>&nbsp;</label>
@@ -358,6 +358,16 @@ class UniVoucher_WC_Product_Fields {
 	 * @param int $post_id Product ID.
 	 */
 	public function validate_product_meta( $post_id ) {
+		// Check nonce for security
+		if ( ! isset( $_POST['woocommerce_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woocommerce_meta_nonce'] ) ), 'woocommerce_save_data' ) ) {
+			return;
+		}
+
+		// Check user capabilities
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
 		// Only validate if UniVoucher is enabled.
 		$enabled = isset( $_POST['_univoucher_enabled'] ) ? 'yes' : 'no';
 		if ( 'yes' !== $enabled ) {
@@ -367,19 +377,19 @@ class UniVoucher_WC_Product_Fields {
 		$errors = array();
 
 		// Validate network.
-		$network = isset( $_POST['_univoucher_network'] ) ? sanitize_text_field( $_POST['_univoucher_network'] ) : '';
+		$network = isset( $_POST['_univoucher_network'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_network'] ) ) : '';
 		if ( empty( $network ) ) {
 			$errors[] = esc_html__( 'Blockchain Network is required.', 'univoucher-for-woocommerce' );
 		}
 
 		// Validate token type.
-		$token_type = isset( $_POST['_univoucher_token_type'] ) ? sanitize_text_field( $_POST['_univoucher_token_type'] ) : '';
+		$token_type = isset( $_POST['_univoucher_token_type'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_token_type'] ) ) : '';
 		if ( empty( $token_type ) ) {
 			$errors[] = esc_html__( 'Token Type is required.', 'univoucher-for-woocommerce' );
 		}
 
 		// Validate token address (only required for ERC-20 tokens).
-		$token_address = isset( $_POST['_univoucher_token_address'] ) ? sanitize_text_field( $_POST['_univoucher_token_address'] ) : '';
+		$token_address = isset( $_POST['_univoucher_token_address'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_token_address'] ) ) : '';
 		if ( 'erc20' === $token_type && empty( $token_address ) ) {
 			$errors[] = esc_html__( 'Token Address is required for ERC-20 tokens.', 'univoucher-for-woocommerce' );
 		} elseif ( 'erc20' === $token_type && ! preg_match( '/^0x[a-fA-F0-9]{40}$/', $token_address ) ) {
@@ -387,19 +397,19 @@ class UniVoucher_WC_Product_Fields {
 		}
 
 		// Validate card amount.
-		$card_amount = isset( $_POST['_univoucher_card_amount'] ) ? sanitize_text_field( $_POST['_univoucher_card_amount'] ) : '';
+		$card_amount = isset( $_POST['_univoucher_card_amount'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_card_amount'] ) ) : '';
 		if ( empty( $card_amount ) || ! is_numeric( $card_amount ) || floatval( $card_amount ) <= 0 ) {
 			$errors[] = esc_html__( 'Card Amount is required and must be greater than 0.', 'univoucher-for-woocommerce' );
 		}
 
 		// Validate token symbol.
-		$token_symbol = isset( $_POST['_univoucher_token_symbol'] ) ? sanitize_text_field( $_POST['_univoucher_token_symbol'] ) : '';
+		$token_symbol = isset( $_POST['_univoucher_token_symbol'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_token_symbol'] ) ) : '';
 		if ( empty( $token_symbol ) ) {
 			$errors[] = esc_html__( 'Token Symbol is required. Please use "Get Token Info" button.', 'univoucher-for-woocommerce' );
 		}
 
 		// Validate token decimals.
-		$token_decimals = isset( $_POST['_univoucher_token_decimals'] ) ? sanitize_text_field( $_POST['_univoucher_token_decimals'] ) : '';
+		$token_decimals = isset( $_POST['_univoucher_token_decimals'] ) ? sanitize_text_field( wp_unslash( $_POST['_univoucher_token_decimals'] ) ) : '';
 		if ( empty( $token_decimals ) || ! is_numeric( $token_decimals ) ) {
 			$errors[] = esc_html__( 'Token Decimals is required. Please use "Get Token Info" button.', 'univoucher-for-woocommerce' );
 		}
@@ -424,6 +434,16 @@ class UniVoucher_WC_Product_Fields {
 	 * @param int $post_id Product ID.
 	 */
 	public function save_product_meta( $post_id ) {
+		// Check nonce for security
+		if ( ! isset( $_POST['woocommerce_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woocommerce_meta_nonce'] ) ), 'woocommerce_save_data' ) ) {
+			return;
+		}
+
+		// Check user capabilities
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
 		// Get product object.
 		$product = wc_get_product( $post_id );
 		if ( ! $product ) {
@@ -434,7 +454,7 @@ class UniVoucher_WC_Product_Fields {
 		$enabled = isset( $_POST['_univoucher_enabled'] ) ? 'yes' : 'no';
 		
 		// Check if validation failed.
-		$validation_failed = isset( $_POST['_univoucher_validation_failed'] ) && $_POST['_univoucher_validation_failed'];
+		$validation_failed = isset( $_POST['_univoucher_validation_failed'] ) && sanitize_text_field( wp_unslash( $_POST['_univoucher_validation_failed'] ) );
 		
 		// If validation failed, disable UniVoucher and don't save other data.
 		if ( $validation_failed ) {
@@ -449,37 +469,37 @@ class UniVoucher_WC_Product_Fields {
 		if ( 'yes' === $enabled ) {
 			// Network.
 			if ( isset( $_POST['_univoucher_network'] ) ) {
-				$network = sanitize_text_field( $_POST['_univoucher_network'] );
+				$network = sanitize_text_field( wp_unslash( $_POST['_univoucher_network'] ) );
 				$product->update_meta_data( '_univoucher_network', $network );
 			}
 
 			// Token type.
 			if ( isset( $_POST['_univoucher_token_type'] ) ) {
-				$token_type = sanitize_text_field( $_POST['_univoucher_token_type'] );
+				$token_type = sanitize_text_field( wp_unslash( $_POST['_univoucher_token_type'] ) );
 				$product->update_meta_data( '_univoucher_token_type', $token_type );
 			}
 
 			// Token address.
 			if ( isset( $_POST['_univoucher_token_address'] ) ) {
-				$token_address = sanitize_text_field( $_POST['_univoucher_token_address'] );
+				$token_address = sanitize_text_field( wp_unslash( $_POST['_univoucher_token_address'] ) );
 				$product->update_meta_data( '_univoucher_token_address', $token_address );
 			}
 
 			// Card amount.
 			if ( isset( $_POST['_univoucher_card_amount'] ) ) {
-				$card_amount = sanitize_text_field( $_POST['_univoucher_card_amount'] );
+				$card_amount = sanitize_text_field( wp_unslash( $_POST['_univoucher_card_amount'] ) );
 				$product->update_meta_data( '_univoucher_card_amount', $card_amount );
 			}
 
 			// Token symbol.
 			if ( isset( $_POST['_univoucher_token_symbol'] ) ) {
-				$token_symbol = sanitize_text_field( $_POST['_univoucher_token_symbol'] );
+				$token_symbol = sanitize_text_field( wp_unslash( $_POST['_univoucher_token_symbol'] ) );
 				$product->update_meta_data( '_univoucher_token_symbol', $token_symbol );
 			}
 
 			// Token decimals.
 			if ( isset( $_POST['_univoucher_token_decimals'] ) && '' !== $_POST['_univoucher_token_decimals'] ) {
-				$token_decimals = absint( $_POST['_univoucher_token_decimals'] );
+				$token_decimals = absint( wp_unslash( $_POST['_univoucher_token_decimals'] ) );
 				$product->update_meta_data( '_univoucher_token_decimals', $token_decimals );
 			}
 		}
@@ -568,7 +588,7 @@ class UniVoucher_WC_Product_Fields {
 				'nonce'    => wp_create_nonce( 'univoucher_product_nonce' ),
 				'networks' => self::$supported_networks,
 				'has_existing_cards' => $has_existing_cards,
-				'cards_count' => $cards_count,
+				'cards_count' => absint( $cards_count ),
 			)
 		);
 	}
@@ -585,8 +605,8 @@ class UniVoucher_WC_Product_Fields {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
 		}
 
-		$token_address = sanitize_text_field( $_POST['token_address'] ?? '' );
-		$network = sanitize_text_field( $_POST['network'] ?? '1' );
+		$token_address = sanitize_text_field( wp_unslash( $_POST['token_address'] ?? '' ) );
+		$network = sanitize_text_field( wp_unslash( $_POST['network'] ?? '1' ) );
 
 		if ( empty( $token_address ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Token address is required.', 'univoucher-for-woocommerce' ) ) );
@@ -819,7 +839,7 @@ class UniVoucher_WC_Product_Fields {
 		}
 
 		// Validate and sanitize product ID
-		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
 
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Valid product ID is required.', 'univoucher-for-woocommerce' ) ) );

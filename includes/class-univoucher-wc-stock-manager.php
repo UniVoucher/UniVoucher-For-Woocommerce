@@ -161,8 +161,9 @@ class UniVoucher_WC_Stock_Manager {
 		global $wpdb;
 
 		// Get all available gift cards for this product
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$cards = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, card_id FROM {$this->database->uv_get_gift_cards_table()}
+			"SELECT id, card_id FROM {$wpdb->prefix}univoucher_gift_cards
 			WHERE product_id = %d AND status = 'available' 
 			ORDER BY created_at ASC",
 			$product_id
@@ -180,12 +181,13 @@ class UniVoucher_WC_Stock_Manager {
 			$card_ids = wp_list_pluck( $cards_to_process, 'id' );
 			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 			
-			$result = $wpdb->query( $wpdb->prepare(
-				"UPDATE {$this->database->uv_get_gift_cards_table()}
-				SET status = 'sold', order_id = %d 
-				WHERE id IN ($card_ids_placeholder)",
-				array_merge( array( $order->get_id() ), $card_ids )
-			) );
+			// Build the SQL query with proper placeholders
+			$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = %d WHERE id IN ({$card_ids_placeholder})";
+			$prepare_values = array_merge( array( 'sold', $order->get_id() ), $card_ids );
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+			$result = $wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
+			
 
 			if ( $result === false ) {
 				return;
@@ -259,8 +261,9 @@ class UniVoucher_WC_Stock_Manager {
 		global $wpdb;
 		
 		// Get the most recently sold cards for this order/product to restore
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$cards_to_restore = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, card_id, delivery_status FROM {$this->database->uv_get_gift_cards_table()}
+			"SELECT id, card_id, delivery_status FROM {$wpdb->prefix}univoucher_gift_cards
 			WHERE order_id = %d AND product_id = %d AND status = 'sold'
 			ORDER BY id DESC 
 			LIMIT %d",
@@ -290,12 +293,12 @@ class UniVoucher_WC_Stock_Manager {
 			$card_ids = wp_list_pluck( $cards_never_delivered, 'id' );
 			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 			
-			$wpdb->query( $wpdb->prepare(
-				"UPDATE {$this->database->uv_get_gift_cards_table()}
-				SET status = 'available', order_id = NULL 
-				WHERE id IN ($card_ids_placeholder)",
-				$card_ids
-			) );
+			// Build the SQL query with proper placeholders
+			$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+			$prepare_values = array_merge( array( 'available' ), $card_ids );
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+			$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 			// Add order notes for restored cards
 			foreach ( $cards_never_delivered as $card ) {
@@ -312,12 +315,12 @@ class UniVoucher_WC_Stock_Manager {
 			$card_ids = wp_list_pluck( $cards_delivered, 'id' );
 			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 			
-			$wpdb->query( $wpdb->prepare(
-				"UPDATE {$this->database->uv_get_gift_cards_table()}
-				SET status = 'inactive', delivery_status = 'returned after delivery', order_id = NULL 
-				WHERE id IN ($card_ids_placeholder)",
-				$card_ids
-			) );
+			// Build the SQL query with proper placeholders
+			$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, delivery_status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+			$prepare_values = array_merge( array( 'inactive', 'returned after delivery' ), $card_ids );
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+			$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 			// Reduce WooCommerce stock for inactivated cards
 			$product = wc_get_product( $product_id );
@@ -388,9 +391,10 @@ class UniVoucher_WC_Stock_Manager {
 		foreach ( $product_quantities as $product_id => $total_quantity ) {
 			global $wpdb;
 			
-			// Get currently assigned gift cards for this product in this order	
+			// Get currently assigned gift cards for this product in this order
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$assigned_cards = $wpdb->get_results( $wpdb->prepare(
-				"SELECT id, card_id, status, delivery_status FROM {$this->database->uv_get_gift_cards_table()}
+				"SELECT id, card_id, status, delivery_status FROM {$wpdb->prefix}univoucher_gift_cards
 				WHERE order_id = %d AND product_id = %d AND status = 'sold'",
 				$order_id,
 				$product_id
@@ -402,8 +406,9 @@ class UniVoucher_WC_Stock_Manager {
 				// Need to assign more cards
 				$cards_needed = $total_quantity - $assigned_count;
 				
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 				$available_cards = $wpdb->get_results( $wpdb->prepare(
-					"SELECT id, card_id FROM {$this->database->uv_get_gift_cards_table()}
+					"SELECT id, card_id FROM {$wpdb->prefix}univoucher_gift_cards
 					WHERE product_id = %d AND status = 'available' 
 					ORDER BY created_at ASC 
 					LIMIT %d",
@@ -415,12 +420,12 @@ class UniVoucher_WC_Stock_Manager {
 					$card_ids = wp_list_pluck( $available_cards, 'id' );
 					$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 					
-					$wpdb->query( $wpdb->prepare(
-						"UPDATE {$this->database->uv_get_gift_cards_table()}
-						SET status = 'sold', order_id = %d 
-						WHERE id IN ($card_ids_placeholder)",
-						array_merge( array( $order_id ), $card_ids )
-					) );
+					// Build the SQL query with proper placeholders
+					$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = %d WHERE id IN ({$card_ids_placeholder})";
+					$prepare_values = array_merge( array( 'sold', $order_id ), $card_ids );
+					
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+					$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 					// Add order notes for assigned cards
 					foreach ( $available_cards as $card ) {
@@ -455,12 +460,12 @@ class UniVoucher_WC_Stock_Manager {
 					$card_ids = wp_list_pluck( $cards_never_delivered, 'id' );
 					$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 					
-					$wpdb->query( $wpdb->prepare(
-						"UPDATE {$this->database->uv_get_gift_cards_table()}
-						SET status = 'available', order_id = NULL 
-						WHERE id IN ($card_ids_placeholder)",
-						$card_ids
-					) );
+					// Build the SQL query with proper placeholders
+					$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+					$prepare_values = array_merge( array( 'available' ), $card_ids );
+					
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+					$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 					// Add order notes for restored cards
 					foreach ( $cards_never_delivered as $card ) {
@@ -477,12 +482,12 @@ class UniVoucher_WC_Stock_Manager {
 					$card_ids = wp_list_pluck( $cards_delivered, 'id' );
 					$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 					
-					$wpdb->query( $wpdb->prepare(
-						"UPDATE {$this->database->uv_get_gift_cards_table()}
-						SET status = 'inactive', delivery_status = 'returned after delivery', order_id = NULL 
-						WHERE id IN ($card_ids_placeholder)",
-						$card_ids
-					) );
+					// Build the SQL query with proper placeholders
+					$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, delivery_status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+					$prepare_values = array_merge( array( 'inactive', 'returned after delivery' ), $card_ids );
+					
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+					$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 					// Reduce WooCommerce stock for inactivated cards
 					$product = wc_get_product( $product_id );
@@ -537,8 +542,9 @@ class UniVoucher_WC_Stock_Manager {
 		global $wpdb;
 		
 		// Get the most recently sold cards for this order/product to restore
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$cards_to_restore = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, card_id, delivery_status FROM {$this->database->uv_get_gift_cards_table()}
+			"SELECT id, card_id, delivery_status FROM {$wpdb->prefix}univoucher_gift_cards
 			WHERE order_id = %d AND product_id = %d AND status = 'sold'
 			ORDER BY id DESC 
 			LIMIT %d",
@@ -568,12 +574,12 @@ class UniVoucher_WC_Stock_Manager {
 			$card_ids = wp_list_pluck( $cards_never_delivered, 'id' );
 			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 			
-			$wpdb->query( $wpdb->prepare(
-				"UPDATE {$this->database->uv_get_gift_cards_table()}
-				SET status = 'available', order_id = NULL 
-				WHERE id IN ($card_ids_placeholder)",
-				$card_ids
-			) );
+			// Build the SQL query with proper placeholders
+			$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+			$prepare_values = array_merge( array( 'available' ), $card_ids );
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+			$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 			// Add order notes for restored cards
 			foreach ( $cards_never_delivered as $card ) {
@@ -590,12 +596,12 @@ class UniVoucher_WC_Stock_Manager {
 			$card_ids = wp_list_pluck( $cards_delivered, 'id' );
 			$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 			
-			$wpdb->query( $wpdb->prepare(
-				"UPDATE {$this->database->uv_get_gift_cards_table()}
-				SET status = 'inactive', delivery_status = 'returned after delivery', order_id = NULL 
-				WHERE id IN ($card_ids_placeholder)",
-				$card_ids
-			) );
+			// Build the SQL query with proper placeholders
+			$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, delivery_status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+			$prepare_values = array_merge( array( 'inactive', 'returned after delivery' ), $card_ids );
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+			$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 			// Reduce WooCommerce stock for inactivated cards
 			if ( $product && $product->managing_stock() ) {
@@ -637,15 +643,20 @@ class UniVoucher_WC_Stock_Manager {
 
 			// Get cards to be marked as delivered (for order notes)
 			global $wpdb;
-			$table = esc_sql( $this->database->uv_get_gift_cards_table() );
+			$table = $this->database->uv_get_gift_cards_table();
+			
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$cards_to_deliver = $wpdb->get_results( $wpdb->prepare(
-				"SELECT card_id FROM $table
-				WHERE order_id = %d AND product_id = %d AND status = 'sold' AND delivery_status = 'never delivered'",
+				"SELECT card_id FROM " . esc_sql( $table ) . "
+				WHERE order_id = %d AND product_id = %d AND status = %s AND delivery_status = %s",
 				$order_id,
-				$product_id
+				$product_id,
+				'sold',
+				'never delivered'
 			) );
 
 			// Mark gift cards as delivered for this product
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$result = $wpdb->update(
 				$this->database->uv_get_gift_cards_table(),
 				array( 'delivery_status' => 'delivered' ),
@@ -653,6 +664,7 @@ class UniVoucher_WC_Stock_Manager {
 				array( '%s' ),
 				array( '%d', '%d', '%s', '%s' )
 			);
+			
 
 			// Add order notes for delivered cards
 			if ( $result !== false && ! empty( $cards_to_deliver ) ) {
@@ -679,9 +691,9 @@ class UniVoucher_WC_Stock_Manager {
 		global $wpdb;
 		
 		// Get all assigned gift cards for this order
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$assigned_cards = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, card_id, product_id, delivery_status FROM $table
+			"SELECT id, card_id, product_id, delivery_status FROM {$wpdb->prefix}univoucher_gift_cards
 			WHERE order_id = %d AND status = 'sold'",
 			$order_id
 		) );
@@ -719,12 +731,12 @@ class UniVoucher_WC_Stock_Manager {
 				$card_ids = wp_list_pluck( $cards['never_delivered'], 'id' );
 				$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 				
-				$wpdb->query( $wpdb->prepare(
-					"UPDATE $table
-					SET status = 'available', order_id = NULL 
-					WHERE id IN ($card_ids_placeholder)",
-					$card_ids
-				) );
+				// Build the SQL query with proper placeholders
+				$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+				$prepare_values = array_merge( array( 'available' ), $card_ids );
+				
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+				$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 
 				// Increase WooCommerce stock for restored cards
 				if ( $product->managing_stock() ) {
@@ -740,12 +752,12 @@ class UniVoucher_WC_Stock_Manager {
 				$card_ids = wp_list_pluck( $cards['delivered'], 'id' );
 				$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 				
-				$wpdb->query( $wpdb->prepare(
-					"UPDATE $table
-					SET status = 'inactive', delivery_status = 'returned after delivery', order_id = NULL 
-					WHERE id IN ($card_ids_placeholder)",
-					$card_ids
-				) );
+				// Build the SQL query with proper placeholders
+				$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, delivery_status = %s, order_id = NULL WHERE id IN ({$card_ids_placeholder})";
+				$prepare_values = array_merge( array( 'inactive', 'returned after delivery' ), $card_ids );
+				
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+				$wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
 			}
 		}
 	}
@@ -764,12 +776,12 @@ class UniVoucher_WC_Stock_Manager {
 		}
 
 		global $wpdb;
-		$table = esc_sql( $this->database->uv_get_gift_cards_table() );
 		$product_id = absint( $product_id );
 
-		// Get the actual available stock in the Gift Card table
+		// Get the actual available stock in the Gift Card table  
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$available_quantity = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM $table WHERE product_id = %d AND status = 'available'",
+			"SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE product_id = %d AND status = 'available'",
 			$product_id
 		) );
 
@@ -803,40 +815,44 @@ class UniVoucher_WC_Stock_Manager {
 		$status_placeholders = implode( ',', array_fill( 0, count( $valid_statuses ), '%s' ) );
 
 		// Calculate total ordered cards with a single optimized query
-		$ordered_cards = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COALESCE(SUM(
+		// Build the SQL query with proper placeholders
+		$sql = "SELECT COALESCE(SUM(
 				CAST(order_item_qty.meta_value AS SIGNED) - 
 				COALESCE(CAST(refunded_qty.meta_value AS SIGNED), 0)
 			), 0)
 			FROM {$wpdb->prefix}woocommerce_order_items AS order_items
 			INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS product_meta 
 				ON order_items.order_item_id = product_meta.order_item_id
-				AND product_meta.meta_key = '_product_id' 
+				AND product_meta.meta_key = %s 
 				AND product_meta.meta_value = %s
 			INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS order_item_qty
 				ON order_items.order_item_id = order_item_qty.order_item_id
-				AND order_item_qty.meta_key = '_qty'
+				AND order_item_qty.meta_key = %s
 			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS refunded_qty
 				ON order_items.order_item_id = refunded_qty.order_item_id
-				AND refunded_qty.meta_key = '_refunded_qty'
+				AND refunded_qty.meta_key = %s
 			INNER JOIN {$wpdb->posts} AS orders
 				ON order_items.order_id = orders.ID
-				AND orders.post_status IN ($status_placeholders)",
-			array_merge( array( $product_id ), $valid_statuses )
-		) );
+				AND orders.post_status IN ({$status_placeholders})";
+		$prepare_values = array_merge( array( '_product_id', $product_id, '_qty', '_refunded_qty' ), $valid_statuses );
+		
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+		$ordered_cards = (int) $wpdb->get_var( $wpdb->prepare( $sql, $prepare_values ) );
 
 		// Calculate total assigned cards with a single optimized query
-		$assigned_cards = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*)
-			FROM {$this->database->uv_get_gift_cards_table()} AS cards
+		// Build the SQL query with proper placeholders
+		$sql2 = "SELECT COUNT(*)
+			FROM {$wpdb->prefix}univoucher_gift_cards AS cards
 			INNER JOIN {$wpdb->posts} AS orders
 				ON cards.order_id = orders.ID
-				AND orders.post_status IN ($status_placeholders)
+				AND orders.post_status IN ({$status_placeholders})
 			WHERE cards.product_id = %d 
-				AND cards.status = 'sold' 
-				AND cards.order_id IS NOT NULL",
-			array_merge( $valid_statuses, array( $product_id ) )
-		) );
+				AND cards.status = %s 
+				AND cards.order_id IS NOT NULL";
+		$prepare_values2 = array_merge( $valid_statuses, array( $product_id, 'sold' ) );
+		
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+		$assigned_cards = (int) $wpdb->get_var( $wpdb->prepare( $sql2, $prepare_values2 ) );
 
 		// Calculate missing cards (always positive or zero)
 		return max( 0, $ordered_cards - $assigned_cards );

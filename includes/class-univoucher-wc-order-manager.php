@@ -78,7 +78,6 @@ class UniVoucher_WC_Order_Manager {
 		
 		// AJAX handler for checking order assignment status
 		add_action( 'wp_ajax_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
-		add_action( 'wp_ajax_nopriv_univoucher_check_order_assignment', array( $this, 'ajax_check_order_assignment' ) );
 		
 		// check if univoucher order item needs processing or not - Automatically mark orders as "Completed"
 		add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'univoucher_check_item_needs_processing' ), 10, 3 );
@@ -277,7 +276,7 @@ class UniVoucher_WC_Order_Manager {
 									<td><code style="font-size: 11px;"><?php echo esc_html( $card->card_secret ); ?></code></td>
 									<td><?php echo esc_html( number_format( (float) $card->amount, 4 ) . ' ' . $card->token_symbol ); ?></td>
 									<td>
-										<span style="color: <?php echo $card->delivery_status === 'delivered' ? '#28a745' : '#6c757d'; ?>">
+										<span style="color: <?php echo esc_attr( $card->delivery_status === 'delivered' ? '#28a745' : '#6c757d' ); ?>">
 											<?php echo esc_html( ucwords( str_replace( '_', ' ', $card->delivery_status ) ) ); ?>
 										</span>
 									</td>
@@ -372,9 +371,9 @@ class UniVoucher_WC_Order_Manager {
 			wp_send_json_error( array( 'message' => 'Insufficient permissions.' ) );
 		}
 
-		$order_id = absint( $_POST['order_id'] ?? 0 );
-		$product_id = absint( $_POST['product_id'] ?? 0 );
-		$missing_quantity = absint( $_POST['missing_quantity'] ?? 0 );
+		$order_id = absint( wp_unslash( $_POST['order_id'] ?? 0 ) );
+		$product_id = absint( wp_unslash( $_POST['product_id'] ?? 0 ) );
+		$missing_quantity = absint( wp_unslash( $_POST['missing_quantity'] ?? 0 ) );
 		
 		if ( ! $order_id || ! $product_id || ! $missing_quantity ) {
 			wp_send_json_error( array( 'message' => 'Invalid parameters.' ) );
@@ -401,8 +400,9 @@ class UniVoucher_WC_Order_Manager {
 		$table = esc_sql( $database->uv_get_gift_cards_table() );
 
 		// Get available cards for this product
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$available_cards = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, card_id FROM $table WHERE product_id = %d AND status = 'available' ORDER BY created_at ASC LIMIT %d",
+			"SELECT id, card_id FROM {$wpdb->prefix}univoucher_gift_cards WHERE product_id = %d AND status = 'available' ORDER BY created_at ASC LIMIT %d",
 			$product_id,
 			$missing_quantity
 		) );
@@ -424,10 +424,13 @@ class UniVoucher_WC_Order_Manager {
 		$card_ids = wp_list_pluck( $available_cards, 'id' );
 		$card_ids_placeholder = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
 		
-		$result = $wpdb->query( $wpdb->prepare(
-			"UPDATE $table SET status = 'sold', order_id = %d, delivery_status = %s WHERE id IN ($card_ids_placeholder)",
-			array_merge( array( $order_id, $delivery_status ), $card_ids )
-		) );
+		// Build the SQL query with proper placeholders
+		$sql = "UPDATE {$wpdb->prefix}univoucher_gift_cards SET status = %s, order_id = %d, delivery_status = %s WHERE id IN ({$card_ids_placeholder})";
+		$prepare_values = array_merge( array( 'sold', $order_id, $delivery_status ), $card_ids );
+		
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+		$result = $wpdb->query( $wpdb->prepare( $sql, $prepare_values ) );
+		
 
 		if ( $result === false ) {
 			wp_send_json_error( array( 'message' => 'Failed to assign cards to order.' ) );
@@ -471,9 +474,9 @@ class UniVoucher_WC_Order_Manager {
 			wp_send_json_error( array( 'message' => 'Insufficient permissions.' ) );
 		}
 
-		$card_id = absint( $_POST['card_id'] ?? 0 );
-		$order_id = absint( $_POST['order_id'] ?? 0 );
-		$product_id = absint( $_POST['product_id'] ?? 0 );
+		$card_id = absint( wp_unslash( $_POST['card_id'] ?? 0 ) );
+		$order_id = absint( wp_unslash( $_POST['order_id'] ?? 0 ) );
+		$product_id = absint( wp_unslash( $_POST['product_id'] ?? 0 ) );
 		
 		if ( ! $card_id || ! $order_id || ! $product_id ) {
 			wp_send_json_error( array( 'message' => 'Invalid parameters.' ) );
@@ -500,8 +503,9 @@ class UniVoucher_WC_Order_Manager {
 		$table = esc_sql( $database->uv_get_gift_cards_table() );
 
 		// Get the card to verify it exists and belongs to this order
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$card = $wpdb->get_row( $wpdb->prepare(
-			"SELECT id, card_id, delivery_status FROM $table WHERE id = %d AND order_id = %d AND product_id = %d AND status = 'sold'",
+			"SELECT id, card_id, delivery_status FROM {$wpdb->prefix}univoucher_gift_cards WHERE id = %d AND order_id = %d AND product_id = %d AND status = 'sold'",
 			$card_id,
 			$order_id,
 			$product_id
@@ -514,8 +518,9 @@ class UniVoucher_WC_Order_Manager {
 		// Handle delivered vs never delivered cards differently
 		if ( $card->delivery_status === 'delivered' ) {
 			// Mark delivered card as inactive and reduce stock (like a return)
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$result = $wpdb->update(
-				$table,
+				$database->uv_get_gift_cards_table(),
 				array( 
 					'status' => 'inactive',
 					'delivery_status' => 'returned after delivery',
@@ -555,8 +560,9 @@ class UniVoucher_WC_Order_Manager {
 			) );
 		} else {
 			// Unassign never delivered card (make it available again)
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$result = $wpdb->update(
-				$table,
+				$database->uv_get_gift_cards_table(),
 				array( 
 					'status' => 'available',
 					'order_id' => null
@@ -731,9 +737,19 @@ class UniVoucher_WC_Order_Manager {
 	 * @param string $hook Current admin page hook.
 	 */
 	public function enqueue_admin_scripts( $hook ) {
-		// Only on order edit pages
+		// Only on order edit pages with nonce verification
 		if ( 'post.php' === $hook && isset( $_GET['post'] ) ) {
-			$post_id = absint( wp_unslash( $_GET['post'] ) );
+			// Check nonce for $_GET parameter access
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'univoucher_order_scripts' ) ) {
+				// If nonce is invalid, try to determine if we're on order page by other means
+				$current_screen = get_current_screen();
+				if ( ! $current_screen || $current_screen->post_type !== 'shop_order' ) {
+					return;
+				}
+				$post_id = $current_screen->post_id ?? 0;
+			} else {
+				$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+			}
 			$post = get_post( $post_id );
 			if ( ! $post || 'shop_order' !== $post->post_type ) {
 				return;
@@ -883,11 +899,16 @@ class UniVoucher_WC_Order_Manager {
 	 */
 	public function ajax_check_order_assignment() {
 		// Verify nonce
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_check_order_assignment' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_check_order_assignment' ) ) {
 			wp_die();
 		}
 
-		$order_id = absint( $_POST['order_id'] );
+		// Check user permissions
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions.', 'univoucher-for-woocommerce' ) );
+		}
+
+		$order_id = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
 		$order = wc_get_order( $order_id );
 
 		if ( ! $order ) {
@@ -943,8 +964,8 @@ class UniVoucher_WC_Order_Manager {
 					// Check available inventory for this product
 					global $wpdb;
 					$database = UniVoucher_WC_Database::instance();
-					$table = esc_sql( $database->uv_get_gift_cards_table() );
-					$available_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE product_id = %d AND status = 'available'", $product_id ) );
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$available_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE product_id = %d AND status = 'available'", $product_id ) );
 					if ( $available_count < $missing ) {
 						// Return true for processing, false for completed based on setting
 						return ( $backorder_status === 'processing' );

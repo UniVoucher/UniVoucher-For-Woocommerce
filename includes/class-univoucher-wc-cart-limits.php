@@ -211,7 +211,7 @@ class UniVoucher_WC_Cart_Limits {
 				$error_message
 			);
 			wc_add_notice( 
-				__( $error_message, 'univoucher-for-woocommerce' ), 
+				esc_html( $error_message ), 
 				'error' 
 			);
 			return false;
@@ -287,9 +287,7 @@ class UniVoucher_WC_Cart_Limits {
 					array( $product->get_name(), $total_available, $requested_quantity ),
 					$error_message
 				);
-				throw new Exception( 
-					__( $error_message, 'univoucher-for-woocommerce' )
-				);
+				throw new Exception( esc_html( $error_message ) );
 			}
 		}
 	}

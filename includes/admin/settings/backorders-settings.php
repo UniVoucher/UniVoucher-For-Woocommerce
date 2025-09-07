@@ -210,12 +210,12 @@ function univoucher_auto_create_backordered_cards_callback( $args ) {
 				?>
 				
 				<div style="margin: 2px 0; display: flex; align-items: center;">
-					<span class="dashicons dashicons-<?php echo $wallet_configured ? 'yes' : 'no'; ?>" style="color: <?php echo $wallet_configured ? '#28a745' : '#dc3545'; ?>; margin-right: 5px;"></span>
+					<span class="dashicons dashicons-<?php echo esc_attr( $wallet_configured ? 'yes' : 'no' ); ?>" style="color: <?php echo esc_attr( $wallet_configured ? '#28a745' : '#dc3545' ); ?>; margin-right: 5px;"></span>
 					<span><?php esc_html_e( 'Internal wallet private key is configured', 'univoucher-for-woocommerce' ); ?></span>
 				</div>
 				
 				<div style="margin: 2px 0; display: flex; align-items: center;">
-					<span class="dashicons dashicons-<?php echo $backorder_enabled ? 'yes' : 'no'; ?>" style="color: <?php echo $backorder_enabled ? '#28a745' : '#dc3545'; ?>; margin-right: 5px;"></span>
+					<span class="dashicons dashicons-<?php echo esc_attr( $backorder_enabled ? 'yes' : 'no' ); ?>" style="color: <?php echo esc_attr( $backorder_enabled ? '#28a745' : '#dc3545' ); ?>; margin-right: 5px;"></span>
 					<span><?php esc_html_e( 'At least one UniVoucher product has backorder feature enabled', 'univoucher-for-woocommerce' ); ?></span>
 				</div>
 				

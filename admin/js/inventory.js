@@ -30,9 +30,6 @@
 			// Filter buttons
 			$('#filter-submit').on('click', this.handleFilter.bind(this));
 
-			// Auto-filter on dropdown change  
-			$('#filter-by-status, #filter-by-delivery-status, #filter-by-chain, #filter-by-product').on('change', this.handleFilter.bind(this));
-
 			// Enter key for search
 			$('input[name="s"]').on('keypress', function(e) {
 				if (e.which === 13) {
@@ -246,6 +243,11 @@
 			
 			// Reset pagination
 			url.searchParams.delete('paged');
+			
+			// Add filter nonce
+			if (typeof univoucher_inventory_vars !== 'undefined' && univoucher_inventory_vars.filter_nonce) {
+				url.searchParams.set('_wpnonce', univoucher_inventory_vars.filter_nonce);
+			}
 			
 			window.location.href = url.toString();
 		},
