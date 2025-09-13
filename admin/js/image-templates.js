@@ -1153,7 +1153,10 @@ jQuery(document).ready(function($) {
                 return;
             }
             
-            var templateUrl = univoucher_image_templates_ajax.templates_url + selectedTemplate;
+            // Get the correct URL from the selected option's data attribute
+            var $selectedOption = $('#univoucher_wc_image_template option:selected');
+            var templateUrl = $selectedOption.data('url');
+            
             var $preview = $('#univoucher-template-preview');
             var self = this;
             

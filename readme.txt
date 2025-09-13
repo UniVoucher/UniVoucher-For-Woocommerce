@@ -4,7 +4,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,15 +77,35 @@ The plugin supports gift cards on multiple blockchain networks including:
 * WooCommerce 5.0 or higher
 * PHP 7.4 or higher
 
-= Third-Party Services =
+== External services ==
 
-This plugin interacts with the following external services:
+This plugin connects to external services to provide its functionality. Users should be aware of what data is transmitted and under what conditions:
 
-* **UniVoucher API** - For gift card validation and creation
-* **Blockchain Networks** - For gift card transactions on various networks
-* **Alchemy API** - For blockchain data retrieval
+**UniVoucher API (api.univoucher.com)**
+* What it's used for: Gift card creation, validation, fee calculation, and card information retrieval
+* When data is sent: When creating gift cards on-demand, validating existing cards, or retrieving card details
+* Data transmitted: Wallet addresses, private keys (encrypted), gift card IDs, blockchain network information, token addresses and amounts
+* Service provider: UniVoucher platform
+* Terms of service: https://docs.univoucher.com/disclaimer/
+* Privacy policy: https://docs.univoucher.com/privacy-policy/
 
-Please review the terms of service and privacy policies of these services before using this plugin.
+**Alchemy API (g.alchemy.com)**
+* What it's used for: Blockchain network communication for wallet balance checks and smart contract interactions
+* When data is sent: When retrieving wallet balances, token information, or interacting with blockchain networks
+* Data transmitted: Wallet addresses, token contract addresses, RPC calls for blockchain data retrieval
+* Service provider: Alchemy Insights Inc.
+* Terms of service: https://legal.alchemy.com/
+* Privacy policy: https://legal.alchemy.com/#contract-sblyf8eub
+
+**RedeemBase.com**
+* What it's used for: Alternative gasless gift card redemption service (referenced in product descriptions and emails)
+* When data is sent: Only when users manually visit the service to redeem cards
+* Data transmitted: Gift card ID, card secret, and recipient wallet address (user-initiated)
+* Service provider: RedeemBase platform
+* Terms of service: https://redeembase.com/terms.html
+* Privacy policy: https://redeembase.com/privacy.html
+
+Note: The plugin only facilitates connections to these services. Users control when and what data is shared by their usage of the plugin features.
 
 = Third-Party Libraries =
 
@@ -143,6 +163,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 
 == Changelog ==
+
+= 1.3.1 =
+* Addressed all identified issues in review feedback
+* All changes maintain plugin functionality while adhering to WordPress security and development standards
 
 = 1.3 =
 * Major security alignment with WordPress plugin coding standards
@@ -233,6 +257,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Maintenance update addressing review feedback while maintaining plugin functionality and WordPress security standards.
 
 = 1.3 =
 Major security update with comprehensive alignment to WordPress plugin coding standards. This version includes proper sanitization of all user inputs, nonce verification for admin actions, and local loading of third-party libraries. Highly recommended security upgrade.

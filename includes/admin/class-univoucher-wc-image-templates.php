@@ -586,6 +586,24 @@ class UniVoucher_WC_Image_Templates {
 			}
 		}
 
+		// Get custom templates from uploads directory
+		$upload_dir = wp_upload_dir();
+		$custom_templates_dir = $upload_dir['basedir'] . '/univoucher-assets/images/templates/';
+		$custom_templates_url = $upload_dir['baseurl'] . '/univoucher-assets/images/templates/';
+
+		if ( is_dir( $custom_templates_dir ) ) {
+			$files = scandir( $custom_templates_dir );
+			foreach ( $files as $file ) {
+				if ( pathinfo( $file, PATHINFO_EXTENSION ) === 'png' ) {
+					$templates[] = array(
+						'filename' => $file,
+						'name'     => ucfirst( str_replace( array( '-', '_', '.png' ), array( ' ', ' ', '' ), $file ) ) . ' (Custom)',
+						'url'      => $custom_templates_url . $file,
+					);
+				}
+			}
+		}
+
 		// Fallback if no templates found.
 		if ( empty( $templates ) ) {
 			$templates[] = array(
@@ -614,6 +632,26 @@ class UniVoucher_WC_Image_Templates {
 					$font_name = pathinfo( $file, PATHINFO_FILENAME );
 					// Convert hyphens to spaces for display, but keep original for CSS
 					$display_name = ucfirst( str_replace( array( '-', '_' ), array( ' ', ' ' ), $font_name ) );
+					$fonts[] = array(
+						'filename' => $file,
+						'name'     => $display_name,
+						'css_name' => $font_name, // Keep original name for CSS font-family
+					);
+				}
+			}
+		}
+
+		// Get custom fonts from uploads directory
+		$upload_dir = wp_upload_dir();
+		$custom_fonts_dir = $upload_dir['basedir'] . '/univoucher-assets/fonts/';
+
+		if ( is_dir( $custom_fonts_dir ) ) {
+			$files = scandir( $custom_fonts_dir );
+			foreach ( $files as $file ) {
+				if ( pathinfo( $file, PATHINFO_EXTENSION ) === 'ttf' || pathinfo( $file, PATHINFO_EXTENSION ) === 'otf' ) {
+					$font_name = pathinfo( $file, PATHINFO_FILENAME );
+					// Convert hyphens to spaces for display, but keep original for CSS
+					$display_name = ucfirst( str_replace( array( '-', '_' ), array( ' ', ' ' ), $font_name ) ) . ' (Custom)';
 					$fonts[] = array(
 						'filename' => $file,
 						'name'     => $display_name,
@@ -823,8 +861,12 @@ class UniVoucher_WC_Image_Templates {
 	 * @return string|WP_Error Image data or error.
 	 */
 	private function generate_test_image_with_settings( $settings, $test_data ) {
-		// Load the template image.
-		$template_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/templates/' . $settings['template'];
+		// Check custom templates first, then plugin templates
+		$upload_dir = wp_upload_dir();
+		$custom_template_path = $upload_dir['basedir'] . '/univoucher-assets/images/templates/' . $settings['template'];
+		$default_template_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/templates/' . $settings['template'];
+		
+		$template_path = file_exists( $custom_template_path ) ? $custom_template_path : $default_template_path;
 		
 		if ( ! file_exists( $template_path ) ) {
 			return new WP_Error( 'template_missing', esc_html__( 'Selected template image not found.', 'univoucher-for-woocommerce' ) );
@@ -1085,21 +1127,23 @@ class UniVoucher_WC_Image_Templates {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type. Only PNG and TTF files are allowed.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$plugin_dir = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/';
+		// Use uploads directory instead of plugin directory
+		$upload_dir = wp_upload_dir();
+		$univoucher_dir = $upload_dir['basedir'] . '/univoucher-assets/';
 
 		try {
 			// Determine target directory and filename based on upload type.
 			if ( $file_ext === 'ttf' ) {
 				// Upload font.
-				$target_dir = $plugin_dir . 'fonts/';
+				$target_dir = $univoucher_dir . 'fonts/';
 				$target_filename = basename( $sanitized_filename );
 			} elseif ( $upload_type === 'template' ) {
 				// Upload template.
-				$target_dir = $plugin_dir . 'images/templates/';
+				$target_dir = $univoucher_dir . 'images/templates/';
 				$target_filename = basename( $sanitized_filename );
 			} elseif ( $upload_type === 'token' && ! empty( $token_symbol ) ) {
 				// Upload token logo.
-				$target_dir = $plugin_dir . 'images/tokens/';
+				$target_dir = $univoucher_dir . 'images/tokens/';
 				$target_filename = strtolower( $token_symbol ) . '.png';
 			} else {
 				wp_send_json_error( array( 'message' => esc_html__( 'Invalid upload parameters.', 'univoucher-for-woocommerce' ) ) );
@@ -1108,6 +1152,9 @@ class UniVoucher_WC_Image_Templates {
 			// Create directory if it doesn't exist.
 			if ( ! file_exists( $target_dir ) ) {
 				wp_mkdir_p( $target_dir );
+				// Create .htaccess file to protect uploaded files if needed
+				$htaccess_content = "# UniVoucher Assets Directory\n<Files \"*.ttf\">\nOrder Allow,Deny\nAllow from all\n</Files>\n<Files \"*.png\">\nOrder Allow,Deny\nAllow from all\n</Files>";
+				file_put_contents( $target_dir . '.htaccess', $htaccess_content );
 			}
 
 			$target_file = $target_dir . $target_filename;
@@ -1169,18 +1216,20 @@ class UniVoucher_WC_Image_Templates {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid parameters.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		$plugin_dir = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/';
+		// Use uploads directory instead of plugin directory
+		$upload_dir = wp_upload_dir();
+		$univoucher_dir = $upload_dir['basedir'] . '/univoucher-assets/';
 
 		// Determine file path based on type.
 		switch ( $file_type ) {
 			case 'font':
-				$file_path = $plugin_dir . 'fonts/' . $filename;
+				$file_path = $univoucher_dir . 'fonts/' . $filename;
 				break;
 			case 'template':
-				$file_path = $plugin_dir . 'images/templates/' . $filename;
+				$file_path = $univoucher_dir . 'images/templates/' . $filename;
 				break;
 			case 'token':
-				$file_path = $plugin_dir . 'images/tokens/' . $filename;
+				$file_path = $univoucher_dir . 'images/tokens/' . $filename;
 				break;
 			default:
 				wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type.', 'univoucher-for-woocommerce' ) ) );
@@ -1198,7 +1247,9 @@ class UniVoucher_WC_Image_Templates {
 	 * Get custom resources by comparing existing files with default lists.
 	 */
 	private function get_custom_resources() {
-		$plugin_dir = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/';
+		// Use uploads directory instead of plugin directory
+		$upload_dir = wp_upload_dir();
+		$univoucher_dir = $upload_dir['basedir'] . '/univoucher-assets/';
 		$custom_resources = array();
 
 		// Define default files that should not be considered custom.
@@ -1221,7 +1272,7 @@ class UniVoucher_WC_Image_Templates {
 		$default_tokens = array( 'arb.png', 'avax.png', 'bnb.png', 'eth.png', 'op.png', 'pol.png', 'token.png', 'usdc.png', 'usdt.png' );
 
 		// Check fonts directory.
-		$fonts_dir = $plugin_dir . 'fonts/';
+		$fonts_dir = $univoucher_dir . 'fonts/';
 		if ( is_dir( $fonts_dir ) ) {
 			$font_files = scandir( $fonts_dir );
 			foreach ( $font_files as $file ) {
@@ -1236,7 +1287,7 @@ class UniVoucher_WC_Image_Templates {
 		}
 
 		// Check templates directory.
-		$templates_dir = $plugin_dir . 'images/templates/';
+		$templates_dir = $univoucher_dir . 'images/templates/';
 		if ( is_dir( $templates_dir ) ) {
 			$template_files = scandir( $templates_dir );
 			foreach ( $template_files as $file ) {
@@ -1251,7 +1302,7 @@ class UniVoucher_WC_Image_Templates {
 		}
 
 		// Check tokens directory.
-		$tokens_dir = $plugin_dir . 'images/tokens/';
+		$tokens_dir = $univoucher_dir . 'images/tokens/';
 		if ( is_dir( $tokens_dir ) ) {
 			$token_files = scandir( $tokens_dir );
 			foreach ( $token_files as $file ) {
@@ -1381,7 +1432,12 @@ class UniVoucher_WC_Image_Templates {
 	 * @param string   $align      Text alignment (left, center, right).
 	 */
 	public function draw_text_on_image( $image, $text, $font, $size, $text_color, $text_x, $text_y, $align = 'center' ) {
-		$font_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/fonts/' . $font;
+		// Check custom fonts first, then plugin fonts
+		$upload_dir = wp_upload_dir();
+		$custom_font_path = $upload_dir['basedir'] . '/univoucher-assets/fonts/' . $font;
+		$default_font_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/fonts/' . $font;
+		
+		$font_path = file_exists( $custom_font_path ) ? $custom_font_path : $default_font_path;
 		
 		if ( file_exists( $font_path ) && function_exists( 'imagettftext' ) ) {
 			$angle = 0;
@@ -1523,13 +1579,20 @@ class UniVoucher_WC_Image_Templates {
 	 * @param int      $token_y      Token Y position.
 	 */
 	public function draw_token_logo_on_image( $image, $token_symbol, $token_height, $token_x, $token_y ) {
-		// Try specific token logo first, fallback to generic token.png
+		// Check custom tokens first, then plugin tokens
 		$token_filename = strtolower( $token_symbol ) . '.png';
-		$token_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/tokens/' . $token_filename;
+		$upload_dir = wp_upload_dir();
+		$custom_token_path = $upload_dir['basedir'] . '/univoucher-assets/images/tokens/' . $token_filename;
+		$default_token_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/tokens/' . $token_filename;
+		
+		// Try custom uploaded token first
+		$token_path = file_exists( $custom_token_path ) ? $custom_token_path : $default_token_path;
 		
 		if ( ! file_exists( $token_path ) ) {
-			// Fallback to generic token logo
-			$token_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/tokens/token.png';
+			// Fallback to generic token logo (check custom first, then default)
+			$custom_generic_token = $upload_dir['basedir'] . '/univoucher-assets/images/tokens/token.png';
+			$default_generic_token = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/tokens/token.png';
+			$token_path = file_exists( $custom_generic_token ) ? $custom_generic_token : $default_generic_token;
 		}
 
 		if ( ! file_exists( $token_path ) ) {
@@ -1675,7 +1738,7 @@ class UniVoucher_WC_Image_Templates {
 						</label>
 						<select id="univoucher_wc_image_template" name="univoucher_wc_image_template" style="width: 100%; font-size: 12px;">
 							<?php foreach ( $templates as $template ) : ?>
-								<option value="<?php echo esc_attr( $template['filename'] ); ?>" <?php selected( $selected_template, $template['filename'] ); ?>>
+								<option value="<?php echo esc_attr( $template['filename'] ); ?>" data-url="<?php echo esc_attr( $template['url'] ); ?>" <?php selected( $selected_template, $template['filename'] ); ?>>
 									<?php echo esc_html( $template['name'] ); ?>
 								</option>
 							<?php endforeach; ?>

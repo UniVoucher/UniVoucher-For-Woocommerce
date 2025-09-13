@@ -32,7 +32,8 @@ function univoucher_security_section_callback( $args ) {
 function univoucher_database_key_backup_callback( $args ) {
 	$database_key = UniVoucher_For_WooCommerce::uv_get_database_key();
 	$backup_confirmed = get_option( 'univoucher_wc_database_key_backup_confirmed', false );
-	$key_file_path = ABSPATH . 'wp-includes/univoucher-database-security-key.php';
+	$upload_dir = wp_upload_dir();
+	$key_file_path = $upload_dir['basedir'] . '/univoucher-security/database-security-key.php';
 	?>
 	
 	<?php if ( $database_key ) : ?>
@@ -50,7 +51,7 @@ function univoucher_database_key_backup_callback( $args ) {
 			</p>
 			<p style="margin: 5px 0 0 0; font-size: 11px; color: #28a745;">
 				<span class="dashicons dashicons-lock" style="font-size: 11px; margin-right: 3px;"></span>
-				<?php esc_html_e( 'Stored in wp-includes for enhanced security', 'univoucher-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Stored in uploads directory with .htaccess protection', 'univoucher-for-woocommerce' ); ?>
 			</p>
 			<h5 style="margin: 15px 0 5px 0; font-size: 14px; color: #495057;">
 				<?php esc_html_e( 'What is Database Key?', 'univoucher-for-woocommerce' ); ?>

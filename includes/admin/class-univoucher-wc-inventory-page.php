@@ -881,16 +881,8 @@ class UniVoucher_WC_Inventory_Page {
 	 * AJAX handler for bulk actions.
 	 */
 	public function ajax_bulk_action() {
-		// Check nonce - support both old and new nonce formats
-		$nonce_valid = false;
-		if ( isset( $_POST['nonce'] ) ) {
-			$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-			if ( wp_verify_nonce( $nonce, 'univoucher_bulk_action' ) || wp_verify_nonce( $nonce, 'univoucher_inventory_action' ) ) {
-				$nonce_valid = true;
-			}
-		}
-		
-		if ( ! $nonce_valid ) {
+		// Check nonce - use single, specific nonce for this action
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'univoucher_bulk_action' ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) ) );
 		}
 

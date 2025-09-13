@@ -44,10 +44,13 @@ class UniVoucher_WC_Encryption {
 
 	/**
 	 * Generate database security key file if it doesn't exist.
+	 * Includes migration logic to preserve existing keys from old wp-includes location.
 	 */
 	public function uv_generate_database_security_key() {
-		// Store the key file in wp-includes directory for enhanced security
-		$key_file_path = ABSPATH . 'wp-includes/univoucher-database-security-key.php';
+		// Store the key file in uploads directory following WordPress best practices
+		$upload_dir = wp_upload_dir();
+		$univoucher_dir = $upload_dir['basedir'] . '/univoucher-security';
+		$key_file_path = $univoucher_dir . '/database-security-key.php';
 		
 		// Initialize WordPress filesystem.
 		global $wp_filesystem;
@@ -56,9 +59,32 @@ class UniVoucher_WC_Encryption {
 			WP_Filesystem();
 		}
 
-		// Only create if file doesn't exist
+		// Create univoucher security directory if it doesn't exist
+		if ( ! $wp_filesystem->exists( $univoucher_dir ) ) {
+			$wp_filesystem->mkdir( $univoucher_dir, FS_CHMOD_DIR );
+			// Create .htaccess file to protect the directory
+			$htaccess_content = "# UniVoucher Security Directory Protection\n<Files \"*\">\nOrder Allow,Deny\nDeny from all\n</Files>";
+			$wp_filesystem->put_contents( $univoucher_dir . '/.htaccess', $htaccess_content, FS_CHMOD_FILE );
+		}
+
+		// Only create if file doesn't exist in new location
 		if ( ! $wp_filesystem->exists( $key_file_path ) ) {
-			$database_key = bin2hex( random_bytes( 32 ) ); // 64-character hex string
+			$database_key = null;
+			
+			// Check for existing key in old wp-includes location for migration
+			$old_key_file_path = ABSPATH . 'wp-includes/univoucher-database-security-key.php';
+			if ( $wp_filesystem->exists( $old_key_file_path ) ) {
+				// Migrate existing key from old location
+				include_once $old_key_file_path;
+				if ( defined( 'UNIVOUCHER_DATABASE_KEY' ) ) {
+					$database_key = UNIVOUCHER_DATABASE_KEY;
+				}
+			}
+			
+			// Generate new key if no existing key found
+			if ( ! $database_key ) {
+				$database_key = bin2hex( random_bytes( 32 ) ); // 64-character hex string
+			}
 			
 			$file_content = '<?php
 /**
@@ -76,7 +102,7 @@ class UniVoucher_WC_Encryption {
  * - ALWAYS keep a secure backup of this file
  * - If you lose this key, NO ONE can recover your encrypted gift card secrets
  * - Keep this file secure and restrict access to it
- * - This file is stored in wp-includes for enhanced security
+ * - This file is stored in uploads directory with .htaccess protection
  * 
  * Generated: ' . current_time( 'mysql' ) . '
  */
@@ -92,6 +118,16 @@ define( \'UNIVOUCHER_DATABASE_KEY\', \'' . $database_key . '\' );
 
 			// Write the file using WordPress filesystem
 			$wp_filesystem->put_contents( $key_file_path, $file_content, FS_CHMOD_FILE );
+			
+			// If we migrated from old location, optionally clean up old file
+			// (Only if new file was created successfully)
+			if ( $wp_filesystem->exists( $key_file_path ) && isset( $old_key_file_path ) && $wp_filesystem->exists( $old_key_file_path ) ) {
+				// Add a small delay and verify the key can be read from new location
+				if ( $this->uv_get_database_key() ) {
+					// Successfully migrated, can safely remove old file
+					$wp_filesystem->delete( $old_key_file_path );
+				}
+			}
 		}
 	}
 
@@ -101,8 +137,9 @@ define( \'UNIVOUCHER_DATABASE_KEY\', \'' . $database_key . '\' );
 	 * @return string|false Database key or false if not found.
 	 */
 	public function uv_get_database_key() {
-		// Look for the key file in wp-includes directory
-		$key_file_path = ABSPATH . 'wp-includes/univoucher-database-security-key.php';
+		// Look for the key file in uploads directory
+		$upload_dir = wp_upload_dir();
+		$key_file_path = $upload_dir['basedir'] . '/univoucher-security/database-security-key.php';
 		
 		// Initialize WordPress filesystem.
 		global $wp_filesystem;

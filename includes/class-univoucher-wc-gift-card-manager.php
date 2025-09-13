@@ -302,44 +302,42 @@ class UniVoucher_WC_Gift_Card_Manager {
 
 		$args = wp_parse_args( $args, $defaults );
 
-		// Build WHERE clause.
-		$where_conditions = array( '1=1' );
+		// Build WHERE clause and values.
+		$where_parts = array();
 		$where_values = array();
 
 		if ( ! empty( $args['status'] ) ) {
-			$where_conditions[] = 'status = %s';
+			$where_parts[] = 'status = %s';
 			$where_values[] = $args['status'];
 		}
 
 		if ( ! empty( $args['delivery_status'] ) ) {
-			$where_conditions[] = 'delivery_status = %s';
+			$where_parts[] = 'delivery_status = %s';
 			$where_values[] = $args['delivery_status'];
 		}
 
 		if ( ! empty( $args['chain_id'] ) ) {
-			$where_conditions[] = 'chain_id = %d';
+			$where_parts[] = 'chain_id = %d';
 			$where_values[] = absint( $args['chain_id'] );
 		}
 
 		if ( ! empty( $args['product_id'] ) ) {
-			$where_conditions[] = 'product_id = %d';
+			$where_parts[] = 'product_id = %d';
 			$where_values[] = absint( $args['product_id'] );
 		}
 
 		if ( ! empty( $args['token_type'] ) ) {
-			$where_conditions[] = 'token_type = %s';
+			$where_parts[] = 'token_type = %s';
 			$where_values[] = $args['token_type'];
 		}
 
 		if ( ! empty( $args['search'] ) ) {
-			$where_conditions[] = '(card_id LIKE %s OR token_symbol LIKE %s OR token_address LIKE %s)';
+			$where_parts[] = '(card_id LIKE %s OR token_symbol LIKE %s OR token_address LIKE %s)';
 			$search_term = '%' . $wpdb->esc_like( $args['search'] ) . '%';
 			$where_values[] = $search_term;
 			$where_values[] = $search_term;
 			$where_values[] = $search_term;
 		}
-
-		$where_clause = implode( ' AND ', $where_conditions );
 
 		// Build ORDER BY clause.
 		$allowed_orderby = array( 'id', 'product_id', 'card_id', 'chain_id', 'token_symbol', 'amount', 'status', 'delivery_status', 'created_at' );
@@ -347,20 +345,31 @@ class UniVoucher_WC_Gift_Card_Manager {
 		$order = strtoupper( $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
 
 		// Get total count.
-		$table = $this->database->uv_get_gift_cards_table();
-		$count_query = "SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards WHERE {$where_clause}";
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
-		$total = (int) $wpdb->get_var( $where_values ? $wpdb->prepare( $count_query, $where_values ) : $count_query );
+		if ( ! empty( $where_values ) ) {
+			$where_clause = 'WHERE ' . implode( ' AND ', $where_parts );
+			$count_sql = "SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards {$where_clause}";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $where_values ) );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}univoucher_gift_cards" );
+		}
 
 		// Get items.
 		$offset = ( absint( $args['page'] ) - 1 ) * absint( $args['per_page'] );
 		$limit = absint( $args['per_page'] );
 
-		$query = "SELECT * FROM {$wpdb->prefix}univoucher_gift_cards WHERE {$where_clause} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
-		$query_values = array_merge( $where_values, array( $limit, $offset ) );
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
-		$items = $wpdb->get_results( $wpdb->prepare( $query, $query_values ) );
+		if ( ! empty( $where_values ) ) {
+			$where_clause = 'WHERE ' . implode( ' AND ', $where_parts );
+			$main_sql = "SELECT * FROM {$wpdb->prefix}univoucher_gift_cards {$where_clause} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+			$query_values = array_merge( $where_values, array( $limit, $offset ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$items = $wpdb->get_results( $wpdb->prepare( $main_sql, $query_values ) );
+		} else {
+			$main_sql = "SELECT * FROM {$wpdb->prefix}univoucher_gift_cards ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$items = $wpdb->get_results( $wpdb->prepare( $main_sql, $limit, $offset ) );
+		}
 
 		// Decrypt card secrets for all items
 		if ( $items ) {
