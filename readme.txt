@@ -1,10 +1,11 @@
 === UniVoucher For WooCommerce ===
 Contributors: univoucher
+Donate link: https://etherscan.io/address/0x0898B609C1AEFF4dd53F0548d42780Fb297534A1
 Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -161,8 +162,26 @@ The plugin supports Ethereum, Base, Polygon, Arbitrum, Optimism, BNB Chain, and 
 
 Yes, this plugin requires WooCommerce to be installed and active as it integrates directly with WooCommerce's product and order systems.
 
+== Screenshots ==
+
+1. Gift card inventory management dashboard showing total cards, available, sold, and inactive with detailed card tracking
+2. Product management interface displaying UniVoucher gift card products with various denominations and blockchain networks
+3. Product configuration page for creating/editing UniVoucher gift cards with blockchain settings and auto-generation features
+4. Order details view showing completed order with UniVoucher gift cards and assignment status
+5. Gift card creation interface with multiple methods including UniVoucher.com integration and on-demand mode
+6. Bulk gift card validation screen showing successfully validated cards ready for inventory
+7. Internal Wallet configuration settings with crypto wallet setup and QR code display
+8. Card delivery settings for completed orders with auto-completion and display configuration options
+9. On-demand automation settings for backordered products with automatic card creation
+10. Image template customization interface with font, color, and alignment controls for gift card designs
+11. Gift card template variations showing support for multiple cryptocurrencies and blockchain networks
 
 == Changelog ==
+
+= 1.3.2 =
+* Added Plugin URI for better plugin identification
+* Enhanced plugin metadata for WordPress.org directory listing
+* Improved plugin documentation and asset descriptions
 
 = 1.3.1 =
 * Addressed all identified issues in review feedback
@@ -257,6 +276,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.3.2 =
+Minor update with enhanced plugin metadata and improved documentation for WordPress.org directory listing.
 
 = 1.3.1 =
 Maintenance update addressing review feedback while maintaining plugin functionality and WordPress security standards.
