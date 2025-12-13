@@ -11,6 +11,9 @@
 	 * Find Missing Cards functionality
 	 */
 	var FindMissingCards = {
+		allOrders: [],
+		totalMissing: 0,
+
 		/**
 		 * Initialize
 		 */
@@ -26,45 +29,106 @@
 		},
 
 		/**
-		 * Scan for missing cards
+		 * Scan for missing cards with batch processing
 		 */
 		scanForMissingCards: function() {
 			var $button = $(this);
 			var $spinner = $('#univoucher-scan-spinner');
 			var $results = $('#univoucher-missing-cards-results');
 			var $resultsContent = $('#univoucher-results-content');
+			var $progressDiv = $('#univoucher-scan-progress');
+			var $progressBar = $('#univoucher-progress-bar');
+			var $progressText = $('#univoucher-progress-text');
 
 			// Disable button and show spinner
 			$button.prop('disabled', true);
 			$spinner.addClass('is-active');
 			$results.hide();
 			$resultsContent.html('');
+			$progressDiv.show();
+			$progressBar.css('width', '0%');
+			$progressText.text('Preparing scan...');
 
-			// Make AJAX request
+			// Reset accumulated data
+			FindMissingCards.allOrders = [];
+			FindMissingCards.totalMissing = 0;
+
+			// Start batch processing
+			FindMissingCards.performBatchScan(0, function() {
+				$button.prop('disabled', false);
+				$spinner.removeClass('is-active');
+				$progressDiv.hide();
+			});
+		},
+
+		/**
+		 * Perform batch scan with progress tracking
+		 *
+		 * @param {number} offset Current offset
+		 * @param {Function} completeCallback Callback when complete
+		 */
+		performBatchScan: function(offset, completeCallback) {
+			var $resultsContent = $('#univoucher-results-content');
+			var $results = $('#univoucher-missing-cards-results');
+			var $progressBar = $('#univoucher-progress-bar');
+			var $progressText = $('#univoucher-progress-text');
+
 			$.ajax({
 				url: univoucherTools.ajaxurl,
 				type: 'POST',
 				data: {
 					action: 'univoucher_find_missing_cards',
-					nonce: univoucherTools.nonce
+					nonce: univoucherTools.nonce,
+					offset: offset,
+					batch_size: 50
 				},
 				success: function(response) {
-					$button.prop('disabled', false);
-					$spinner.removeClass('is-active');
-
 					if (response.success) {
-						FindMissingCards.displayResults(response.data, $resultsContent);
+						var data = response.data;
+
+						// Accumulate orders with missing cards
+						if (data.orders && data.orders.length > 0) {
+							FindMissingCards.allOrders = FindMissingCards.allOrders.concat(data.orders);
+							// Calculate total missing
+							$.each(data.orders, function(i, order) {
+								FindMissingCards.totalMissing += order.missing_qty;
+							});
+						}
+
+						// Update progress
+						var percentage = Math.round((data.processed / data.total) * 100);
+						$progressBar.css('width', percentage + '%');
+						$progressText.text('Scanning orders... ' + data.processed + ' of ' + data.total + ' (' + percentage + '%)');
+
+						// Continue if not complete
+						if (!data.is_complete) {
+							FindMissingCards.performBatchScan(data.next_offset, completeCallback);
+						} else {
+							// All batches complete - display final results
+							$progressText.text('Scan complete! Processing results...');
+							FindMissingCards.displayResults({
+								orders: FindMissingCards.allOrders,
+								total_missing: FindMissingCards.totalMissing
+							}, $resultsContent);
+							$results.show();
+							if (completeCallback) {
+								completeCallback();
+							}
+						}
 					} else {
 						FindMissingCards.displayError(response.data ? response.data.message : univoucherTools.i18n.unknownError, $resultsContent);
+						$results.show();
+						if (completeCallback) {
+							completeCallback();
+						}
 					}
-
-					$results.fadeIn();
 				},
 				error: function() {
-					$button.prop('disabled', false);
-					$spinner.removeClass('is-active');
 					FindMissingCards.displayError(univoucherTools.i18n.ajaxError, $resultsContent);
-					$results.fadeIn();
+					$results.show();
+					if (completeCallback) {
+						completeCallback();
+					}
 				}
 			});
 		},

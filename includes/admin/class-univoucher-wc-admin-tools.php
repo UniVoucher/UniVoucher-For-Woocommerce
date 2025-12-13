@@ -171,6 +171,15 @@ class UniVoucher_WC_Admin_Tools {
 				<span id="univoucher-scan-spinner" class="spinner" style="float: none; margin-left: 10px;"></span>
 			</div>
 
+			<div id="univoucher-scan-progress" style="display: none; margin-bottom: 20px;">
+				<div style="margin-bottom: 10px;">
+					<span id="univoucher-progress-text"><?php esc_html_e( 'Preparing scan...', 'univoucher-for-woocommerce' ); ?></span>
+				</div>
+				<div style="background: #e9ecef; border-radius: 4px; height: 20px; margin-bottom: 10px;">
+					<div id="univoucher-progress-bar" style="background: #007cba; height: 100%; border-radius: 4px; width: 0%; transition: width 0.3s ease;"></div>
+				</div>
+			</div>
+
 			<div id="univoucher-missing-cards-results" style="display: none; margin-top: 20px;">
 				<h3><?php esc_html_e( 'Scan Results', 'univoucher-for-woocommerce' ); ?></h3>
 				<div id="univoucher-results-content"></div>
@@ -180,7 +189,7 @@ class UniVoucher_WC_Admin_Tools {
 	}
 
 	/**
-	 * AJAX handler to find orders with missing cards.
+	 * AJAX handler to find orders with missing cards (batch processing).
 	 */
 	public function ajax_find_missing_cards() {
 		// Verify nonce.
@@ -193,27 +202,51 @@ class UniVoucher_WC_Admin_Tools {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'univoucher-for-woocommerce' ) ) );
 		}
 
-		// Get all active orders.
+		// Get batch parameters.
+		$batch_size = isset( $_POST['batch_size'] ) ? absint( wp_unslash( $_POST['batch_size'] ) ) : 50;
+		$offset = isset( $_POST['offset'] ) ? absint( wp_unslash( $_POST['offset'] ) ) : 0;
+
+		// Get active orders.
 		$order_statuses = array( 'processing', 'on-hold', 'completed' );
 		$orders_with_missing = array();
-		$total_missing = 0;
 
-		// Query orders using WooCommerce functions.
+		// Query orders using WooCommerce functions with batch size and offset.
 		$args = array(
 			'status'   => $order_statuses,
-			'limit'    => -1,
+			'limit'    => $batch_size,
+			'offset'   => $offset,
 			'return'   => 'ids',
+			'orderby'  => 'ID',
+			'order'    => 'ASC',
 		);
 
 		$order_ids = wc_get_orders( $args );
 
-		if ( empty( $order_ids ) ) {
-			wp_send_json_success(
-				array(
-					'orders'        => array(),
-					'total_missing' => 0,
-				)
+		// Get total count for progress calculation (only on first batch).
+		if ( $offset === 0 ) {
+			$total_args = array(
+				'status'   => $order_statuses,
+				'limit'    => -1,
+				'return'   => 'ids',
 			);
+			$total_orders = count( wc_get_orders( $total_args ) );
+		} else {
+			// Get from transient set in first batch.
+			$total_orders = get_transient( 'univoucher_scan_total_orders' );
+			if ( false === $total_orders ) {
+				// Fallback if transient expired.
+				$total_args = array(
+					'status'   => $order_statuses,
+					'limit'    => -1,
+					'return'   => 'ids',
+				);
+				$total_orders = count( wc_get_orders( $total_args ) );
+			}
+		}
+
+		// Store total count in transient for subsequent batches (expires in 1 hour).
+		if ( $offset === 0 ) {
+			set_transient( 'univoucher_scan_total_orders', $total_orders, HOUR_IN_SECONDS );
 		}
 
 		$stock_manager = UniVoucher_WC_Stock_Manager::instance();
@@ -248,8 +281,6 @@ class UniVoucher_WC_Admin_Tools {
 				$missing = $net_ordered - $assigned_count;
 
 				if ( $missing > 0 ) {
-					$total_missing += $missing;
-
 					$orders_with_missing[] = array(
 						'order_id'     => $order_id,
 						'status'       => 'wc-' . $order->get_status(),
@@ -265,10 +296,21 @@ class UniVoucher_WC_Admin_Tools {
 			}
 		}
 
+		$processed_count = $offset + count( $order_ids );
+		$is_complete = $processed_count >= $total_orders;
+
+		// Clean up transient when complete.
+		if ( $is_complete ) {
+			delete_transient( 'univoucher_scan_total_orders' );
+		}
+
 		wp_send_json_success(
 			array(
-				'orders'        => $orders_with_missing,
-				'total_missing' => $total_missing,
+				'orders'      => $orders_with_missing,
+				'processed'   => $processed_count,
+				'total'       => $total_orders,
+				'is_complete' => $is_complete,
+				'next_offset' => $processed_count,
 			)
 		);
 	}
