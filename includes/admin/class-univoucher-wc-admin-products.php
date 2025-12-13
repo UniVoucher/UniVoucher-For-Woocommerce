@@ -44,7 +44,7 @@ class UniVoucher_WC_Admin_Products {
 	private function init_hooks() {
 		// Add on-demand info to stock column
 		add_filter( 'woocommerce_admin_stock_html', array( $this, 'modify_stock_column_content' ), 10, 2 );
-		
+
 		// Enqueue admin styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
 	}

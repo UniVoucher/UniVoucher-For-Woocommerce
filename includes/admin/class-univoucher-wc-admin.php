@@ -51,6 +51,7 @@ class UniVoucher_WC_Admin {
 	private function includes() {
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin-menus.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin-settings.php';
+		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-admin-tools.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-image-templates.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-product-fields.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-inventory-page.php';
@@ -79,6 +80,7 @@ class UniVoucher_WC_Admin {
 	 */
 	public function admin_init() {
 		UniVoucher_WC_Admin_Settings::instance();
+		UniVoucher_WC_Admin_Tools::instance();
 		UniVoucher_WC_Image_Templates::instance();
 		UniVoucher_WC_CSV_Handler::instance();
 		UniVoucher_WC_Product_Fields::instance();

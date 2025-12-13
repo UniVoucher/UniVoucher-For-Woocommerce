@@ -46,7 +46,6 @@ class UniVoucher_WC_Admin_Settings {
 		require_once plugin_dir_path( __FILE__ ) . 'settings/security-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/api-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/internal-wallet-settings.php';
-		require_once plugin_dir_path( __FILE__ ) . 'settings/stock-sync-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/card-delivery-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/content-templates-settings.php';
 		require_once plugin_dir_path( __FILE__ ) . 'settings/compatibility-settings.php';
@@ -57,8 +56,6 @@ class UniVoucher_WC_Admin_Settings {
 	 * Initialize hooks for AJAX handlers.
 	 */
 	private function init_hooks() {
-		add_action( 'wp_ajax_univoucher_sync_single_product', 'univoucher_ajax_sync_single_product' );
-		add_action( 'wp_ajax_univoucher_sync_all_products', 'univoucher_ajax_sync_all_products' );
 		add_action( 'wp_ajax_univoucher_test_api_key', 'univoucher_ajax_test_api_key' );
 		add_action( 'wp_ajax_univoucher_get_content_templates', 'univoucher_ajax_get_content_templates' );
 	}
@@ -381,26 +378,6 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
-		// Add stock sync section (third).
-		add_settings_section(
-			'univoucher_wc_stock_sync_section',
-			esc_html__( 'Stock Synchronization', 'univoucher-for-woocommerce' ),
-			array( $this, 'stock_sync_section_callback' ),
-			'univoucher_wc_stock_settings'
-		);
-
-		// Add stock sync field.
-		add_settings_field(
-			'univoucher_wc_stock_sync',
-			esc_html__( 'Sync Product Stock', 'univoucher-for-woocommerce' ),
-			array( $this, 'stock_sync_callback' ),
-			'univoucher_wc_stock_settings',
-			'univoucher_wc_stock_sync_section',
-			array(
-				'label_for' => 'univoucher_wc_stock_sync',
-				'class'     => 'univoucher-wc-row',
-			)
-		);
 
 		// Register content template settings.
 		register_setting(
@@ -684,24 +661,6 @@ class UniVoucher_WC_Admin_Settings {
 	 */
 	public function wallet_details_callback( $args ) {
 		univoucher_wallet_details_callback( $args );
-	}
-
-	/**
-	 * Stock sync section callback.
-	 *
-	 * @param array $args Section arguments.
-	 */
-	public function stock_sync_section_callback( $args ) {
-		univoucher_stock_sync_section_callback( $args );
-	}
-
-	/**
-	 * Stock sync field callback.
-	 *
-	 * @param array $args Field arguments.
-	 */
-	public function stock_sync_callback( $args ) {
-		univoucher_stock_sync_callback( $args );
 	}
 
 	/**

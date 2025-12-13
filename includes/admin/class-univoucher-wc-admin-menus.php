@@ -89,6 +89,16 @@ class UniVoucher_WC_Admin_Menus {
 			'univoucher-settings',
 			array( $this, 'settings_page' )
 		);
+
+		// Add Tools submenu.
+		add_submenu_page(
+			'univoucher-inventory',
+			esc_html__( 'Tools', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Tools', 'univoucher-for-woocommerce' ),
+			'manage_options',
+			'univoucher-tools',
+			array( $this, 'tools_page' )
+		);
 	}
 
 	/**
@@ -105,6 +115,14 @@ class UniVoucher_WC_Admin_Menus {
 	public function add_cards_page() {
 		$add_cards_page = UniVoucher_WC_Add_Cards_Page::instance();
 		$add_cards_page->render_page();
+	}
+
+	/**
+	 * Tools page callback.
+	 */
+	public function tools_page() {
+		$tools_page = UniVoucher_WC_Admin_Tools::instance();
+		$tools_page->render_page();
 	}
 
 	/**
@@ -138,11 +156,6 @@ class UniVoucher_WC_Admin_Menus {
 				'title' => esc_html__( 'Internal Wallet', 'univoucher-for-woocommerce' ),
 				'settings_group' => 'univoucher_wc_wallet_settings',
 				'sections' => array( 'univoucher_wc_wallet_section' ),
-			),
-			'stock' => array(
-				'title' => esc_html__( 'Stock Sync', 'univoucher-for-woocommerce' ),
-				'settings_group' => 'univoucher_wc_stock_settings',
-				'sections' => array( 'univoucher_wc_stock_sync_section' ),
 			),
 			'delivery' => array(
 				'title' => esc_html__( 'Card Delivery', 'univoucher-for-woocommerce' ),
@@ -186,16 +199,7 @@ class UniVoucher_WC_Admin_Menus {
 				<?php endforeach; ?>
 			</nav>
 			
-			<?php if ( $active_tab === 'stock' ) : ?>
-				<?php
-				// Stock sync tab has no form submission - just display the section
-				if ( isset( $tabs[ $active_tab ] ) ) {
-					foreach ( $tabs[ $active_tab ]['sections'] as $section_id ) {
-						$this->render_settings_section_no_form( $section_id );
-					}
-				}
-				?>
-			<?php elseif ( $active_tab === 'image-templates' ) : ?>
+			<?php if ( $active_tab === 'image-templates' ) : ?>
 				<?php
 				// Image Templates tab uses custom layout - bypass WordPress settings API
 				$this->render_image_templates_custom_page();

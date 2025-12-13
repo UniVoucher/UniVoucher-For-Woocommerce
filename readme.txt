@@ -3,9 +3,9 @@ Contributors: univoucher
 Donate link: https://etherscan.io/address/0x0898B609C1AEFF4dd53F0548d42780Fb297534A1
 Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.3.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,23 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.3.5 =
+* Added new Tools page for administrative utilities
+* Added Find Missing Cards tool for inventory reconciliation
+* Migrated Stock Sync from Settings page to Tools page
+* Minor bug fixes and improvements
+
+= 1.3.4 =
+* Improved checkout validation timing to run earlier in the checkout process
+* Enhanced on-demand limits validation to prevent checkout bypass scenarios
+* Optimized cart validation for better reliability across all checkout flows
+
+= 1.3.3 =
+* Enhanced on-demand order validation with wallet balance check across cart items
+* Added grouped validation for cart items with same token/chain to prevent over-ordering
+* Improved checkout validation to ensure total on-demand cards don't exceed internal wallet balance
+* Updated WordPress compatibility (tested up to 6.9)
+
 = 1.3.2 =
 * Added Plugin URI for better plugin identification
 * Enhanced plugin metadata for WordPress.org directory listing
@@ -276,6 +293,15 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.3.5 =
+Feature update with new Tools page. This version adds administrative utilities including a Find Missing Cards tool for inventory reconciliation and moves Stock Sync functionality to the new Tools page for better organization.
+
+= 1.3.4 =
+Important update fixing checkout validation timing issues. This version ensures on-demand limits and wallet balance validation run earlier in the checkout process to prevent bypass scenarios. Highly recommended for all users using on-demand mode.
+
+= 1.3.3 =
+Important update with enhanced validation for on-demand orders. This version adds comprehensive wallet balance checking to prevent checkout when total on-demand cards across all cart items exceed the internal wallet balance for any token/chain combination. Recommended for all users using on-demand mode.
 
 = 1.3.2 =
 Minor update with enhanced plugin metadata and improved documentation for WordPress.org directory listing.

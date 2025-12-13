@@ -17,6 +17,9 @@
                 return;
             }
 
+            // Reset Internal Wallet to initial state
+            this.resetInternalWallet();
+
             // Show UI elements first
             $('#method-elements').show();
             $('#internal-wallet-form').show();
@@ -25,7 +28,7 @@
             this.loadEthersJS().then(() => {
                 this.setupInternalWalletEvents();
                 this.loadWalletInfo();
-                
+
                 // Verify Web Crypto API is available for UniVoucher compatibility
                 if (typeof crypto === 'undefined' || !crypto.subtle) {
                     this.showError('Web Crypto API is required for creating cards compatible with UniVoucher.com. Please use HTTPS or a modern browser.');
@@ -36,6 +39,52 @@
             }).catch((error) => {
                 univoucherNotify.error('Failed to load required libraries. Please refresh the page and try again.');
             });
+        },
+
+        /**
+         * Reset Internal Wallet to initial state
+         */
+        resetInternalWallet: function() {
+            // Reset step to 1
+            $('#internal-wallet-step').val('1');
+            $('#internal-wallet-step1').show();
+            $('#internal-wallet-step2').hide();
+            $('#internal-wallet-step3').hide();
+
+            // Reset quantity
+            $('#card-quantity').val(1);
+
+            // Reset wallet info display
+            $('#wallet-address-display').text('Loading...');
+            $('#balance-loading').text('Loading balances...');
+            $('#balance-loading').parent().html('<div id="balance-loading" style="color: #666; font-size: 13px;">Loading balances...</div>');
+
+            // Reset cost summary
+            $('#cost-card-amount').text('-');
+            $('#cost-univoucher-fee').text('-');
+            $('#cost-quantity').text('1');
+            $('#cost-total-needed').text('-');
+
+            // Reset allowance section
+            $('#allowance-loading').hide();
+            $('#allowance-insufficient').hide();
+            $('#allowance-sufficient').hide();
+
+            // Reset transaction summary
+            $('#tx-cost-card-amount').text('-');
+            $('#tx-cost-univoucher-fee').text('-');
+            $('#tx-cost-quantity').text('-');
+            $('#tx-gas-required').text('-');
+            $('#tx-gas-cost').text('-');
+            $('#tx-total-cost').text('-');
+
+            // Reset buttons
+            $('#prepare-cards-btn').prop('disabled', false).text('Prepare Cards');
+            $('#create-cards-btn').prop('disabled', false).text('Create Cards & Add to Inventory');
+
+            // Hide error messages
+            $('#step1-error').hide();
+            $('#step2-error').hide();
         },
 
         /**
@@ -729,12 +778,13 @@
                     return this.estimateCardCreationGas(privateKey, chainId, tokenAddress, cardAmount, quantity, tokenDecimals, alchemyApiKey);
                 }).then((gasEstimation) => {
                     // Update transaction summary with real gas estimation
+                    const nativeSymbol = this.getNativeTokenSymbol(parseInt(chainId));
                     $('#tx-cost-card-amount').text(`${cardAmount} ${tokenSymbol}`);
                     $('#tx-cost-univoucher-fee').text(`${univoucherFee.toFixed(6)} ${tokenSymbol}`);
                     $('#tx-cost-quantity').text(quantity);
                     $('#tx-gas-required').text(gasEstimation.gasLimit.toLocaleString());
-                    $('#tx-gas-cost').text(`${gasEstimation.gasCostEth.toFixed(6)} ETH`);
-                    $('#tx-total-cost').text(`${(totalPerCard * quantity).toFixed(6)} ${tokenSymbol} + ${gasEstimation.gasCostEth.toFixed(6)} ETH`);
+                    $('#tx-gas-cost').text(`${gasEstimation.gasCostEth.toFixed(6)} ${nativeSymbol}`);
+                    $('#tx-total-cost').text(`${(totalPerCard * quantity).toFixed(6)} ${tokenSymbol} + ${gasEstimation.gasCostEth.toFixed(6)} ${nativeSymbol}`);
                     
                     $('#gas-estimation-loading').hide();
                     $('#transaction-summary').show();

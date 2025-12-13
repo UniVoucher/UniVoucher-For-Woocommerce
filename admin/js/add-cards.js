@@ -240,6 +240,9 @@
          * Display product settings
          */
         displayProductSettings: function(settings) {
+            // Store the current method before resetting
+            var currentMethod = $('#current-method').val();
+
             // Store settings in hidden fields
             $('#selected-product-id').val(settings.product_id);
             $('#product-chain-id').val(settings.chain_id);
@@ -248,25 +251,33 @@
             $('#product-token-symbol').val(settings.token_symbol);
             $('#product-token-decimals').val(settings.token_decimals);
             $('#product-amount').val(settings.amount);
-            
+
             // Build horizontal display HTML
             var html = this.buildProductSettingsBox(settings);
-            
+
             $('#product-settings-display').html(html);
-            
+
             // Show the next sections
             $('#product-details').show();
             $('#method-selection').show();
-            
+
             // Clear method elements and reset form
             $('#method-elements').hide();
             $('.method-form').hide();
-            
+
             // Update validation requirements
             this.updateValidationRequirements(settings);
-            
+
             // Reset card inputs
             this.resetCardTable();
+
+            // If Internal Wallet method was active, reload it with new product settings
+            if (currentMethod === 'internal-wallet') {
+                // Clear balance display immediately to prevent stale data from previous product's async calls
+                $('#wallet-balances').html('<div id="balance-loading" style="color: #666; font-size: 13px;">Loading balances...</div>');
+                $('.method-box-inline[data-method="internal-wallet"]').addClass('active');
+                UniVoucherInternalWallet.initInternalWallet();
+            }
         },
         
         /**

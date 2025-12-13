@@ -1,0 +1,81 @@
+/**
+ * UniVoucher Tools Page Styles
+ *
+ * @package UniVoucher_For_WooCommerce
+ */
+
+.univoucher-results-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 15px;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.univoucher-results-table th {
+	background: #f8f9fa;
+	padding: 12px;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 2px solid #ddd;
+}
+
+.univoucher-results-table td {
+	padding: 10px 12px;
+	border-bottom: 1px solid #eee;
+}
+
+.univoucher-results-table tr:hover {
+	background: #f9f9f9;
+}
+
+.univoucher-status-badge {
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.univoucher-status-processing {
+	background: #f0ad4e;
+	color: #fff;
+}
+
+.univoucher-status-on-hold {
+	background: #5bc0de;
+	color: #fff;
+}
+
+.univoucher-status-completed {
+	background: #5cb85c;
+	color: #fff;
+}
+
+.univoucher-missing-count {
+	color: #dc3232;
+	font-weight: 600;
+}
+
+.univoucher-notice-success {
+	background: #d4edda;
+	border-left: 4px solid #28a745;
+	padding: 12px;
+	margin: 15px 0;
+	border-radius: 3px;
+}
+
+.univoucher-notice-info {
+	background: #d1ecf1;
+	border-left: 4px solid #17a2b8;
+	padding: 12px;
+	margin: 15px 0;
+	border-radius: 3px;
+}
+
+.univoucher-notice-error {
+	background: #f8d7da;
+	border-left: 4px solid #dc3545;
+	padding: 12px;
+	margin: 15px 0;
+	border-radius: 3px;
+}

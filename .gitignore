@@ -5,4 +5,7 @@
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# WordPress.org listing assets
+listing assets/ 
