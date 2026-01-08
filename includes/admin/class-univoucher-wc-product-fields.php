@@ -916,11 +916,18 @@ class UniVoucher_WC_Product_Fields {
 
 		// Get current image template settings.
 		$settings = UniVoucher_WC_Image_Templates::get_current_settings();
-		
-		// Load the template image.
-		$template_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/templates/' . $settings['template'];
-		
-		if ( ! file_exists( $template_path ) ) {
+
+		// Load the template image - check custom templates first, then plugin templates.
+		$upload_dir = wp_upload_dir();
+		$custom_template_path = $upload_dir['basedir'] . '/univoucher-assets/images/templates/' . $settings['template'];
+		$default_template_path = plugin_dir_path( UNIVOUCHER_WC_PLUGIN_FILE ) . 'admin/images/templates/' . $settings['template'];
+
+		// Use custom template if it exists, otherwise use default template.
+		if ( file_exists( $custom_template_path ) ) {
+			$template_path = $custom_template_path;
+		} elseif ( file_exists( $default_template_path ) ) {
+			$template_path = $default_template_path;
+		} else {
 			return new WP_Error( 'template_missing', esc_html__( 'Gift card template image not found.', 'univoucher-for-woocommerce' ) );
 		}
 

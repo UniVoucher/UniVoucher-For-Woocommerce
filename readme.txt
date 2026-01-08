@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,11 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.3.7 =
+* Fixed product image generation failing when using custom uploaded templates
+* Enhanced template loading to check both custom uploads directory and default plugin templates
+* Improved template path resolution for better compatibility
+
 = 1.3.6 =
 * Implemented batch processing for order scanning to prevent timeouts on large stores
 * Added progress bar with real-time percentage updates for missing cards scan
@@ -300,6 +305,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.3.7 =
+Bug fix for custom template image generation. This version fixes an issue where the "Generate Product Image" button would fail silently when using custom uploaded templates. Recommended for users who upload custom image templates.
 
 = 1.3.6 =
 Performance update fixing timeout issues when scanning large stores. This version implements batch processing with progress tracking for the Find Missing Cards tool, preventing 500 errors on stores with thousands of orders. Recommended for stores experiencing scan timeout issues.
