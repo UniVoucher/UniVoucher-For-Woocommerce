@@ -3,7 +3,7 @@
  * Plugin Name: UniVoucher For WooCommerce
  * Plugin URI: https://univoucher.com
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.4.2
+ * Version: 1.4.3
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -34,7 +34,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.4.2';
+		public $version = '1.4.3';
 
 		/**
 		 * The single instance of the class.
@@ -73,6 +73,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			$this->define_constants();
 			$this->includes();
 			$this->init_hooks();
+			$this->init_database();
 
 			do_action( 'univoucher_for_woocommerce_loaded' );
 		}
@@ -210,9 +211,8 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			if ( isset( $options['plugins'] ) ) {
 				foreach ( $options['plugins'] as $plugin ) {
 					if ( $plugin === $current_plugin ) {
-						// Run database updates.
-						$database = UniVoucher_WC_Database::instance();
-						$database->uv_check_database_version();
+						// Run database updates - instantiating will automatically check version.
+						UniVoucher_WC_Database::instance();
 						break;
 					}
 				}
@@ -344,6 +344,14 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 				</p>
 			</div>
 			<?php
+		}
+
+		/**
+		 * Initialize database and check for updates.
+		 */
+		private function init_database() {
+			// Instantiate database class - this will register its hooks.
+			UniVoucher_WC_Database::instance();
 		}
 
 		/**

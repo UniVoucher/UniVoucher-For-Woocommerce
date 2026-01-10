@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.3';
+	const DB_VERSION = '3.5.4';
 
 	/**
 	 * Gift cards table name.
@@ -79,14 +79,9 @@ class UniVoucher_WC_Database {
 		$this->uv_promotions_table = $wpdb->prefix . 'univoucher_promotions';
 		$this->uv_promotion_user_tracking_table = $wpdb->prefix . 'univoucher_promotion_user_tracking';
 		$this->uv_promotional_cards_table = $wpdb->prefix . 'univoucher_promotional_cards';
-		$this->init_hooks();
-	}
 
-	/**
-	 * Initialize hooks.
-	 */
-	private function init_hooks() {
-		add_action( 'plugins_loaded', array( $this, 'uv_check_database_version' ), 5 );
+		// Check database version immediately on instantiation.
+		$this->uv_check_database_version();
 	}
 
 	/**
