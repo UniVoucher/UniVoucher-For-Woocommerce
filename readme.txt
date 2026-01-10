@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -196,6 +196,12 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.4.2 =
+* Added upgrader_process_complete hook to ensure database updates run immediately on plugin update
+* Enhanced database version tracking to handle upgrades from versions without database version tracking
+* Fixed missing database version initialization in activation hook
+* Improved reliability of automatic database schema updates
+
 = 1.4.1 =
 * Fixed database tables not creating automatically on plugin updates
 * Database schema now updates automatically without requiring deactivation/reactivation
@@ -339,6 +345,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+Critical update fixing database creation issues. Implements WordPress-recommended upgrade detection to ensure all database tables are created when updating from any previous version. Essential for all 1.4.0 and 1.4.1 users experiencing database errors.
 
 = 1.4.1 =
 Critical bug fix for database updates. Fixes new tables not being created on plugin update. Highly recommended for all 1.4.0 users.

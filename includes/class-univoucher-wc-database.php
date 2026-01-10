@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.2';
+	const DB_VERSION = '3.5.3';
 
 	/**
 	 * Gift cards table name.
@@ -129,9 +129,10 @@ class UniVoucher_WC_Database {
 	 * Check if database needs updating.
 	 */
 	public function uv_check_database_version() {
-		$installed_version = get_option( 'univoucher_wc_db_version' );
-		
-		if ( $installed_version !== self::DB_VERSION ) {
+		$installed_version = get_option( 'univoucher_wc_db_version', false );
+
+		// If no version is set or version doesn't match, update database.
+		if ( $installed_version === false || $installed_version !== self::DB_VERSION ) {
 			$this->create_tables();
 			update_option( 'univoucher_wc_db_version', self::DB_VERSION );
 		}

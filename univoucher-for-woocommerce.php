@@ -3,7 +3,7 @@
  * Plugin Name: UniVoucher For WooCommerce
  * Plugin URI: https://univoucher.com
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -34,7 +34,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.4.1
+	 * @version 1.4.2
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.4.1';
+		public $version = '1.4.2';
 
 		/**
 		 * The single instance of the class.
@@ -135,12 +135,15 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			add_action( 'admin_notices', array( $this, 'uv_admin_notices' ) );
 			add_action( 'before_woocommerce_init', array( $this, 'uv_declare_woocommerce_compatibility' ) );
 			add_action( 'init', array( $this, 'init_components' ) );
-			
+
 			// Add plugin action links.
 			add_filter( 'plugin_action_links_' . UNIVOUCHER_WC_PLUGIN_BASENAME, array( $this, 'plugin_action_links' ) );
-			
+
 			// Register REST API endpoints for webhooks
 			add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+
+			// Handle plugin updates
+			add_action( 'upgrader_process_complete', array( $this, 'plugin_update' ), 10, 2 );
 		}
 
 		/**
@@ -183,10 +186,37 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			$database = UniVoucher_WC_Database::instance();
 			$database->create_tables();
 
-
-
 			// Set plugin version.
 			update_option( 'univoucher_wc_version', UNIVOUCHER_WC_VERSION );
+
+			// Set database version.
+			update_option( 'univoucher_wc_db_version', UniVoucher_WC_Database::DB_VERSION );
+		}
+
+		/**
+		 * Handle plugin update.
+		 *
+		 * @param WP_Upgrader $upgrader_object WP_Upgrader instance.
+		 * @param array       $options Array of bulk item update data.
+		 */
+		public function plugin_update( $upgrader_object, $options ) {
+			// Check if this is a plugin update.
+			if ( $options['action'] !== 'update' || $options['type'] !== 'plugin' ) {
+				return;
+			}
+
+			// Check if our plugin is being updated.
+			$current_plugin = plugin_basename( __FILE__ );
+			if ( isset( $options['plugins'] ) ) {
+				foreach ( $options['plugins'] as $plugin ) {
+					if ( $plugin === $current_plugin ) {
+						// Run database updates.
+						$database = UniVoucher_WC_Database::instance();
+						$database->uv_check_database_version();
+						break;
+					}
+				}
+			}
 		}
 
 		/**
