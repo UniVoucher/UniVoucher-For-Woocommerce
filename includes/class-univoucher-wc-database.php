@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.1';
+	const DB_VERSION = '3.5.2';
 
 	/**
 	 * Gift cards table name.
@@ -86,7 +86,7 @@ class UniVoucher_WC_Database {
 	 * Initialize hooks.
 	 */
 	private function init_hooks() {
-		add_action( 'init', array( $this, 'uv_check_database_version' ) );
+		add_action( 'plugins_loaded', array( $this, 'uv_check_database_version' ), 5 );
 	}
 
 	/**

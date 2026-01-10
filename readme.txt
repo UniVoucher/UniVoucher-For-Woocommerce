@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -196,6 +196,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.4.1 =
+* Fixed database tables not creating automatically on plugin updates
+* Database schema now updates automatically without requiring deactivation/reactivation
+
 = 1.4.0 =
 * Added comprehensive promotional gift card system for automated marketing campaigns
 * Introduced rule-based promotion triggers (order value, products, categories, customer criteria)
@@ -335,6 +339,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+Critical bug fix for database updates. Fixes new tables not being created on plugin update. Highly recommended for all 1.4.0 users.
 
 = 1.4.0 =
 Major feature update introducing promotional gift cards system. This version adds a complete promotional campaign management system with rule-based triggers, automatic gift card issuance, customer notifications, and comprehensive tracking. Perfect for running automated marketing campaigns and customer rewards programs. Requires internal wallet configuration to use promotional features.

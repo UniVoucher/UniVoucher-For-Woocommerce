@@ -8,4 +8,11 @@ ehthumbs.db
 Thumbs.db
 
 # WordPress.org listing assets
-listing assets/ 
+listing assets/
+
+# Claude Code
+.claude/
+
+# Deployment
+deploy-to-wporg.sh
+.distignore
