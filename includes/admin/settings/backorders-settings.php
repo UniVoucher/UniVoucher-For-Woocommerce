@@ -25,94 +25,60 @@ function univoucher_backorders_section_callback( $args ) {
 }
 
 /**
- * Backorder initial status field callback.
+ * Backorder notice settings field callback.
  *
  * @param array $args Field arguments.
  */
-function univoucher_backorder_initial_status_callback( $args ) {
-	$backorder_status = get_option( 'univoucher_wc_backorder_initial_status', 'processing' );
+function univoucher_backorder_notice_settings_callback( $args ) {
 	?>
-	
+
 	<div class="univoucher-settings-box">
 		<h4>
-			<?php esc_html_e( 'On-Demand Order Status', 'univoucher-for-woocommerce' ); ?>
+			<?php esc_html_e( 'On-Demand Processing Notice', 'univoucher-for-woocommerce' ); ?>
 		</h4>
-		
+
 		<div style="margin-bottom: 15px;">
 			<p style="margin: 5px 0 8px 0; font-size: 13px;">
-				<?php esc_html_e( 'Set the initial order status when customers place orders for cards that need to be created on-demand (backordered).', 'univoucher-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Configure notice shown to customers when their order contains cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 		</div>
 
 		<div class="univoucher-settings-box-info">
-			<label for="univoucher_wc_backorder_initial_status" style="display: block; margin: 0 0 10px 0;">
+			<label for="univoucher_wc_show_unassigned_notice" style="display: flex; align-items: center; margin: 0;">
+				<input
+					type="checkbox"
+					id="univoucher_wc_show_unassigned_notice"
+					name="univoucher_wc_show_unassigned_notice"
+					value="1"
+					<?php checked( get_option( 'univoucher_wc_show_unassigned_notice', true ), true ); ?>
+					style="margin-right: 10px;"
+				/>
 				<strong style="color: #0c5460;">
-					<?php esc_html_e( 'Initial status for on-demand orders:', 'univoucher-for-woocommerce' ); ?>
+					<?php esc_html_e( 'Show processing notice for on-demand cards', 'univoucher-for-woocommerce' ); ?>
 				</strong>
 			</label>
-			<select
-				id="univoucher_wc_backorder_initial_status"
-				name="univoucher_wc_backorder_initial_status"
-				style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-			>
-				<option value="processing" <?php selected( $backorder_status, 'processing' ); ?>>
-					<?php esc_html_e( 'Processing (recommended)', 'univoucher-for-woocommerce' ); ?>
-				</option>
-				<option value="completed" <?php selected( $backorder_status, 'completed' ); ?>>
-					<?php esc_html_e( 'Completed', 'univoucher-for-woocommerce' ); ?>
-				</option>
-			</select>
 			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-				<?php esc_html_e( 'Choose whether on-demand orders should be marked as "Processing" until cards are actually created or immediately marked as "Completed" regardless what could happen with the card creation process.', 'univoucher-for-woocommerce' ); ?>
+				<?php esc_html_e( 'When enabled, customers will see a notice on order details and thank you pages when their order contains cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 		</div>
 
-		<!-- Backorder Notice Section -->
-		<div id="backorder-notice-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e5e9;">
-			<h5 style="margin: 0 0 10px 0; color: #495057; font-size: 14px;">
-				<?php esc_html_e( 'On-demand processing notice', 'univoucher-for-woocommerce' ); ?>
-			</h5>
-			
-			<div class="univoucher-settings-box-info" style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #0c5460;">
-				<label for="univoucher_wc_show_unassigned_notice" style="display: flex; align-items: center; margin: 0;">
-					<input
-						type="checkbox"
-						id="univoucher_wc_show_unassigned_notice"
-						name="univoucher_wc_show_unassigned_notice"
-						value="1"
-						<?php checked( get_option( 'univoucher_wc_show_unassigned_notice', true ), true ); ?>
-						style="margin-right: 10px;"
-					/>
-					<strong style="color: #0c5460;">
-						<?php esc_html_e( 'Show processing notice for on-demand cards', 'univoucher-for-woocommerce' ); ?>
-					</strong>
-				</label>
-				<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-					<?php esc_html_e( 'When enabled, customers will see a notice on order details and thank you pages when their order contains cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
-
-			<div id="univoucher-notice-text-options" style="margin-top: 15px; padding-left: 20px; <?php echo get_option( 'univoucher_wc_show_unassigned_notice', true ) ? '' : 'display: none;'; ?>">
-				<label for="univoucher_wc_unassigned_notice_text" style="font-weight: bold; display: block; margin-bottom: 8px;">
-					<?php esc_html_e( 'Notice text:', 'univoucher-for-woocommerce' ); ?>
-				</label>
-				<input
-					type="text"
-					id="univoucher_wc_unassigned_notice_text"
-					name="univoucher_wc_unassigned_notice_text"
-					value="<?php echo esc_attr( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?>"
-					class="large-text"
-					style="width: 100%; max-width: 1000px; font-size: 14px; padding: 8px;"
-					placeholder="<?php esc_attr_e( 'Enter notice text...', 'univoucher-for-woocommerce' ); ?>"
-				/>
-				<p class="description" style="margin-top: 5px; font-size: 12px; color: #666;">
-					<?php esc_html_e( 'Customize the text shown to customers when their order has cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
-				</p>
-			</div>
-
+		<div id="univoucher-notice-text-options" style="margin-top: 15px; padding-left: 20px; <?php echo get_option( 'univoucher_wc_show_unassigned_notice', true ) ? '' : 'display: none;'; ?>">
+			<label for="univoucher_wc_unassigned_notice_text" style="font-weight: bold; display: block; margin-bottom: 8px;">
+				<?php esc_html_e( 'Notice text:', 'univoucher-for-woocommerce' ); ?>
+			</label>
+			<input
+				type="text"
+				id="univoucher_wc_unassigned_notice_text"
+				name="univoucher_wc_unassigned_notice_text"
+				value="<?php echo esc_attr( get_option( 'univoucher_wc_unassigned_notice_text', __( 'Your order contains gift cards that are still being processed. This page will automatically refresh once all cards are ready.', 'univoucher-for-woocommerce' ) ) ); ?>"
+				class="large-text"
+				style="width: 100%; max-width: 1000px; font-size: 14px; padding: 8px;"
+				placeholder="<?php esc_attr_e( 'Enter notice text...', 'univoucher-for-woocommerce' ); ?>"
+			/>
+			<p class="description" style="margin-top: 5px; font-size: 12px; color: #666;">
+				<?php esc_html_e( 'Customize the text shown to customers when their order has cards that are still being created on-demand.', 'univoucher-for-woocommerce' ); ?>
+			</p>
 		</div>
-
-
 	</div>
 
 	<?php

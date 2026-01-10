@@ -63,21 +63,31 @@ class UniVoucher_WC_Admin_Menus {
 		// Add Inventory Management submenu (same as parent).
 		add_submenu_page(
 			'univoucher-inventory',
-			esc_html__( 'Inventory', 'univoucher-for-woocommerce' ),
-			esc_html__( 'Inventory', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Store Inventory', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Store Inventory', 'univoucher-for-woocommerce' ),
 			'manage_options',
 			'univoucher-inventory',
 			array( $this, 'inventory_page' )
 		);
 
-		// Add Gift Cards submenu.
+		// Add Promotions submenu.
 		add_submenu_page(
 			'univoucher-inventory',
-			esc_html__( 'Add Gift Cards', 'univoucher-for-woocommerce' ),
-			esc_html__( 'Add Gift Cards', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Promotions', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Promotions', 'univoucher-for-woocommerce' ),
 			'manage_options',
-			'univoucher-add-cards',
-			array( $this, 'add_cards_page' )
+			'univoucher-promotions',
+			array( $this, 'promotions_page' )
+		);
+
+		// Add Promotional Cards submenu (hidden from menu, accessed via button).
+		add_submenu_page(
+			null,
+			esc_html__( 'Promotional Issued Cards', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Promotional Issued Cards', 'univoucher-for-woocommerce' ),
+			'manage_options',
+			'univoucher-promotional-cards',
+			array( $this, 'promotional_cards_page' )
 		);
 
 		// Add Settings submenu.
@@ -115,6 +125,22 @@ class UniVoucher_WC_Admin_Menus {
 	public function add_cards_page() {
 		$add_cards_page = UniVoucher_WC_Add_Cards_Page::instance();
 		$add_cards_page->render_page();
+	}
+
+	/**
+	 * Promotions page callback.
+	 */
+	public function promotions_page() {
+		$promotions_page = UniVoucher_WC_Promotions_Page::instance();
+		$promotions_page->render_page();
+	}
+
+	/**
+	 * Promotional Cards page callback.
+	 */
+	public function promotional_cards_page() {
+		$promotional_cards_page = UniVoucher_WC_Promotional_Cards_Page::instance();
+		$promotional_cards_page->render_page();
 	}
 
 	/**

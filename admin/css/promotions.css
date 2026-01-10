@@ -1,0 +1,365 @@
+/**
+ * UniVoucher Promotions Admin Styles
+ */
+
+/* Promotions Table */
+.univoucher-promotions-table {
+    margin-top: 20px;
+}
+
+.univoucher-promotions-table th {
+    font-weight: 600;
+}
+
+.univoucher-promotions-table td {
+    vertical-align: middle;
+}
+
+/* Column Widths */
+.univoucher-promotions-table th:nth-child(1),
+.univoucher-promotions-table td:nth-child(1) {
+    width: 2%;
+}
+
+.univoucher-promotions-table th:nth-child(2),
+.univoucher-promotions-table td:nth-child(2) {
+    width: 15%;
+}
+
+.univoucher-promotions-table th:nth-child(3),
+.univoucher-promotions-table td:nth-child(3) {
+    width: 35%;
+}
+
+.univoucher-promotions-table th:nth-child(4),
+.univoucher-promotions-table td:nth-child(4) {
+    width: 15%;
+}
+
+.univoucher-promotions-table th:nth-child(5),
+.univoucher-promotions-table td:nth-child(5) {
+    width: 10%;
+    text-align: center;
+}
+
+.univoucher-promotions-table th:nth-child(6),
+.univoucher-promotions-table td:nth-child(6) {
+    width: 8%;
+    text-align: center;
+}
+
+.univoucher-promotions-table th:nth-child(7),
+.univoucher-promotions-table td:nth-child(7) {
+    width: 7%;
+    text-align: center;
+}
+
+.univoucher-promotions-table th:nth-child(8),
+.univoucher-promotions-table td:nth-child(8) {
+    width: 8%;
+}
+
+.univoucher-actions {
+    white-space: nowrap;
+}
+
+.univoucher-actions .button {
+    margin-right: 5px;
+}
+
+/* Toggle Switch */
+.univoucher-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.univoucher-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.univoucher-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.univoucher-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .univoucher-toggle-slider {
+    background-color: #2196F3;
+}
+
+input:focus + .univoucher-toggle-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .univoucher-toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Promotion Sections */
+.univoucher-promotion-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.univoucher-promotion-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.univoucher-promotion-section .form-table {
+    margin-top: 15px;
+}
+
+.univoucher-promotion-section .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+}
+
+.univoucher-promotion-section .form-table td {
+    padding: 15px 10px;
+}
+
+.required {
+    color: #dc3232;
+}
+
+/* Rule Designer */
+#promotion-rules-container {
+    margin-bottom: 15px;
+}
+
+.univoucher-rule-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.rule-separator {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.rule-separator .rule-and-label {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    letter-spacing: 2px;
+}
+
+.univoucher-rule-row .rule-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.univoucher-rule-row .rule-field label {
+    font-weight: 600;
+    margin: 0;
+}
+
+.univoucher-rule-row .rule-field select,
+.univoucher-rule-row .rule-field input {
+    margin: 0;
+}
+
+.univoucher-rule-row .rule-value-field {
+    flex: 1;
+}
+
+.univoucher-rule-row .value-product .select2-container,
+.univoucher-rule-row .value-category .select2-container {
+    min-width: 300px;
+}
+
+.univoucher-rule-row .value-amount {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.univoucher-rule-row .value-amount input {
+    width: 150px;
+}
+
+.univoucher-rule-row .value-amount .currency-symbol {
+    font-weight: 600;
+    color: #666;
+}
+
+.univoucher-rule-row .value-amount .rule-value-single,
+.univoucher-rule-row .value-amount .rule-value-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.univoucher-rule-row .value-amount .rule-operator {
+    margin-right: 8px;
+}
+
+.univoucher-rule-row .rule-actions {
+    margin-left: auto;
+}
+
+.univoucher-rule-row .remove-rule {
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dc3232;
+    color: white;
+    border-color: #dc3232;
+}
+
+.univoucher-rule-row .remove-rule:hover {
+    background: #a00;
+    border-color: #a00;
+}
+
+.univoucher-rule-row .remove-rule .dashicons {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+}
+
+#add-rule {
+    margin-top: 10px;
+}
+
+/* Token Info Message */
+#token-info-message {
+    margin-top: 10px;
+}
+
+#token-info-message.notice {
+    padding: 10px 15px;
+    margin: 10px 0 0 0;
+    border-left-width: 4px;
+}
+
+#token-info-message.notice-success {
+    border-left-color: #46b450;
+    background-color: #ecf7ed;
+}
+
+#token-info-message.notice-error {
+    border-left-color: #dc3232;
+    background-color: #fef7f1;
+}
+
+#token-info-message.notice-info {
+    border-left-color: #00a0d2;
+    background-color: #e5f5fa;
+}
+
+#token-info-message p {
+    margin: 0;
+}
+
+/* Email Template Row */
+#email-template-row .wp-editor-container {
+    border: 1px solid #ddd;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .univoucher-rule-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .univoucher-rule-row .rule-field {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .univoucher-rule-row .rule-field label {
+        margin-bottom: 5px;
+    }
+
+    .univoucher-rule-row .rule-actions {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    .univoucher-rule-row .value-product .select2-container,
+    .univoucher-rule-row .value-category .select2-container {
+        width: 100% !important;
+        min-width: auto;
+    }
+
+    .univoucher-actions .button {
+        display: block;
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+}
+
+/* Spinner */
+.spinner.is-active {
+    visibility: visible;
+    display: inline-block;
+}
+
+/* Button Spacing */
+.submit {
+    margin-top: 20px;
+}
+
+.submit .button {
+    margin-right: 10px;
+}
+
+/* Select2 Overrides */
+.select2-container--default .select2-selection--multiple {
+    min-height: 38px;
+    padding: 4px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    margin: 4px 4px 0 0;
+}
+
+/* Empty State */
+.univoucher-promotions-table tbody td[colspan] {
+    background: #f9f9f9;
+}
+
+.univoucher-promotions-table tbody td[colspan] a.button-primary {
+    margin-top: 10px;
+}

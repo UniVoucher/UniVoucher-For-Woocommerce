@@ -1,0 +1,804 @@
+<?php
+/**
+ * UniVoucher For WooCommerce Promotion Processor
+ *
+ * @package UniVoucher_For_WooCommerce
+ * @subpackage Promotion_Processor
+ */
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * UniVoucher_WC_Promotion_Processor class.
+ */
+class UniVoucher_WC_Promotion_Processor {
+
+	/**
+	 * The single instance of the class.
+	 *
+	 * @var UniVoucher_WC_Promotion_Processor
+	 */
+	protected static $_instance = null;
+
+	/**
+	 * Database instance.
+	 *
+	 * @var UniVoucher_WC_Database
+	 */
+	private $database;
+
+	/**
+	 * Main UniVoucher_WC_Promotion_Processor Instance.
+	 *
+	 * @return UniVoucher_WC_Promotion_Processor - Main instance.
+	 */
+	public static function instance() {
+		if ( is_null( self::$_instance ) ) {
+			self::$_instance = new self();
+		}
+		return self::$_instance;
+	}
+
+	/**
+	 * UniVoucher_WC_Promotion_Processor Constructor.
+	 */
+	public function __construct() {
+		$this->database = UniVoucher_WC_Database::instance();
+		$this->init_hooks();
+	}
+
+	/**
+	 * Initialize hooks.
+	 */
+	private function init_hooks() {
+		add_action( 'woocommerce_order_status_completed', array( $this, 'process_order_promotions' ), 10, 1 );
+		add_action( 'woocommerce_email_before_order_table', array( $this, 'add_promotion_to_completed_order_email' ), 10, 4 );
+	}
+
+	/**
+	 * Process promotions for completed order.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	public function process_order_promotions( $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		$user_id = $order->get_user_id();
+		if ( ! $user_id ) {
+			return;
+		}
+
+		// Get all active promotions.
+		$promotions = $this->get_active_promotions();
+		if ( empty( $promotions ) ) {
+			return;
+		}
+
+		// Phase 1: Evaluate all promotions first (before creating any tracking records).
+		$qualifying_promotions = array();
+		foreach ( $promotions as $promotion ) {
+			if ( $this->should_promotion_trigger( $promotion, $order, $user_id ) ) {
+				$qualifying_promotions[] = $promotion;
+			}
+		}
+
+		// Phase 2: Create cards and tracking for all qualifying promotions.
+		foreach ( $qualifying_promotions as $promotion ) {
+			$this->create_promotion_card_and_track( $promotion, $order, $user_id );
+		}
+	}
+
+	/**
+	 * Get all active promotions.
+	 *
+	 * @return array
+	 */
+	private function get_active_promotions() {
+		global $wpdb;
+		$table = $this->database->uv_get_promotions_table();
+
+		$promotions = $wpdb->get_results(
+			"SELECT * FROM $table WHERE is_active = 1 ORDER BY id ASC",
+			ARRAY_A
+		);
+
+		return $promotions ? $promotions : array();
+	}
+
+	/**
+	 * Check if a promotion should trigger for an order.
+	 *
+	 * @param array    $promotion Promotion data.
+	 * @param WC_Order $order     Order object.
+	 * @param int      $user_id   User ID.
+	 * @return bool
+	 */
+	private function should_promotion_trigger( $promotion, $order, $user_id ) {
+		// Check max total limit.
+		if ( $promotion['max_total'] > 0 && $promotion['total_issued'] >= $promotion['max_total'] ) {
+			return false;
+		}
+
+		// Check per-user limit.
+		if ( $promotion['max_per_user'] > 0 ) {
+			$user_count = $this->get_user_promotion_count( $user_id, $promotion['id'] );
+			if ( $user_count >= $promotion['max_per_user'] ) {
+				return false;
+			}
+		}
+
+		// Evaluate rules.
+		if ( ! $this->evaluate_promotion_rules( $promotion, $order, $user_id ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Create promotional card and tracking for a qualifying promotion.
+	 *
+	 * @param array    $promotion Promotion data.
+	 * @param WC_Order $order     Order object.
+	 * @param int      $user_id   User ID.
+	 */
+	private function create_promotion_card_and_track( $promotion, $order, $user_id ) {
+		// Generate promotional gift card.
+		$card_data = $this->generate_promotional_card( $promotion, $order, $user_id );
+		if ( ! $card_data ) {
+			return;
+		}
+
+		// Counters are updated in handle_promotion_callback() when card creation is confirmed.
+		// Emails are also sent from callback when card is ready.
+	}
+
+	/**
+	 * Get user's promotion count.
+	 *
+	 * @param int $user_id      User ID.
+	 * @param int $promotion_id Promotion ID.
+	 * @return int
+	 */
+	private function get_user_promotion_count( $user_id, $promotion_id ) {
+		global $wpdb;
+		$table = $this->database->uv_get_promotion_user_tracking_table();
+
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT times_received FROM $table WHERE user_id = %d AND promotion_id = %d",
+				$user_id,
+				$promotion_id
+			)
+		);
+
+		return $count ? (int) $count : 0;
+	}
+
+	/**
+	 * Evaluate promotion rules.
+	 *
+	 * @param array    $promotion Promotion data.
+	 * @param WC_Order $order     Order object.
+	 * @param int      $user_id   User ID.
+	 * @return bool
+	 */
+	private function evaluate_promotion_rules( $promotion, $order, $user_id ) {
+		$rules = json_decode( $promotion['rules'], true );
+		if ( empty( $rules ) || ! is_array( $rules ) ) {
+			error_log( 'UniVoucher Promotion: No valid rules found for promotion ' . $promotion['id'] );
+			return false;
+		}
+
+		// All rules must pass (AND logic).
+		foreach ( $rules as $rule ) {
+			if ( ! $this->evaluate_single_rule( $rule, $order, $user_id ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Evaluate a single rule.
+	 *
+	 * @param array    $rule    Rule data.
+	 * @param WC_Order $order   Order object.
+	 * @param int      $user_id User ID.
+	 * @return bool
+	 */
+	private function evaluate_single_rule( $rule, $order, $user_id ) {
+		$type = isset( $rule['type'] ) ? $rule['type'] : 'order';
+		$condition = isset( $rule['condition'] ) ? $rule['condition'] : '';
+		$value = isset( $rule['value'] ) ? $rule['value'] : '';
+		$operator = isset( $rule['operator'] ) ? $rule['operator'] : '';
+
+		if ( 'order' === $type ) {
+			return $this->evaluate_order_rule( $condition, $operator, $value, $order );
+		} elseif ( 'user' === $type ) {
+			return $this->evaluate_user_rule( $condition, $operator, $value, $user_id );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Evaluate order rule.
+	 *
+	 * @param string   $condition Rule condition.
+	 * @param string   $operator  Rule operator.
+	 * @param mixed    $value     Rule value.
+	 * @param WC_Order $order     Order object.
+	 * @return bool
+	 */
+	private function evaluate_order_rule( $condition, $operator, $value, $order ) {
+		switch ( $condition ) {
+			case 'includes_product':
+				$product_id = absint( $value );
+				foreach ( $order->get_items() as $item ) {
+					if ( $item->get_product_id() === $product_id || $item->get_variation_id() === $product_id ) {
+						return true;
+					}
+				}
+				return false;
+
+			case 'includes_category':
+				$category_id = absint( $value );
+				foreach ( $order->get_items() as $item ) {
+					$product = $item->get_product();
+					if ( $product ) {
+						$categories = $product->get_category_ids();
+						if ( in_array( $category_id, $categories, true ) ) {
+							return true;
+						}
+					}
+				}
+				return false;
+
+			case 'total_value':
+				$order_total = (float) $order->get_total();
+
+				if ( 'more_than' === $operator ) {
+					return $order_total > (float) $value;
+				} elseif ( 'less_than' === $operator ) {
+					return $order_total < (float) $value;
+				} elseif ( 'between' === $operator && is_array( $value ) ) {
+					$min = isset( $value['min'] ) ? (float) $value['min'] : 0;
+					$max = isset( $value['max'] ) ? (float) $value['max'] : 0;
+					return $order_total >= $min && $order_total <= $max;
+				}
+				return false;
+
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Evaluate user rule.
+	 *
+	 * @param string $condition Rule condition.
+	 * @param string $operator  Rule operator.
+	 * @param mixed  $value     Rule value.
+	 * @param int    $user_id   User ID.
+	 * @return bool
+	 */
+	private function evaluate_user_rule( $condition, $operator, $value, $user_id ) {
+		$user = get_userdata( $user_id );
+		if ( ! $user ) {
+			return false;
+		}
+
+		switch ( $condition ) {
+			case 'registration_date':
+				$registration_date = strtotime( $user->user_registered );
+				$target_date = strtotime( $value );
+
+				if ( 'before' === $operator ) {
+					return $registration_date < $target_date;
+				} elseif ( 'after' === $operator ) {
+					return $registration_date > $target_date;
+				}
+				return false;
+
+			case 'never_received_promotion':
+				global $wpdb;
+				$tracking_table = $this->database->uv_get_promotion_user_tracking_table();
+				$count = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM $tracking_table WHERE user_id = %d",
+						$user_id
+					)
+				);
+				return 0 === (int) $count;
+
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Generate promotional gift card using UniVoucher API.
+	 *
+	 * @param array    $promotion Promotion data.
+	 * @param WC_Order $order     Order object.
+	 * @param int      $user_id   User ID.
+	 * @return array|false
+	 */
+	private function generate_promotional_card( $promotion, $order, $user_id ) {
+		// Get internal wallet private key.
+		$encryption = UniVoucher_WC_Encryption::instance();
+		$encrypted_private_key = get_option( 'univoucher_wc_wallet_private_key', '' );
+
+		if ( ! $encrypted_private_key ) {
+			error_log( 'UniVoucher Promotion: Cannot create card - internal wallet not configured' );
+			return false;
+		}
+
+		$private_key = $encryption->uv_decrypt_data( $encrypted_private_key );
+		if ( is_wp_error( $private_key ) ) {
+			error_log( 'UniVoucher Promotion: Cannot create card - invalid wallet configuration' );
+			return false;
+		}
+
+		// Ensure private key has 0x prefix.
+		if ( ! empty( $private_key ) && strpos( $private_key, '0x' ) !== 0 ) {
+			$private_key = '0x' . $private_key;
+		}
+
+		// Convert amount to wei.
+		$token_amount_wei = $this->decimal_to_wei( $promotion['card_amount'], $promotion['token_decimals'] );
+
+		// Handle token address format - for native tokens, use zero address.
+		$token_address = $promotion['token_address'];
+		if ( $promotion['token_type'] === 'native' || empty( $token_address ) ) {
+			$token_address = '0x0000000000000000000000000000000000000000';
+		}
+
+		// Validate network is supported.
+		$supported_networks = array( 1, 8453, 56, 137, 42161, 10, 43114 );
+		if ( ! in_array( intval( $promotion['chain_id'] ), $supported_networks, true ) ) {
+			error_log( 'UniVoucher Promotion: Cannot create card - unsupported network ' . $promotion['chain_id'] );
+			return false;
+		}
+
+		// Generate unique order ID for this request.
+		$api_order_id = 'promo_' . $promotion['id'] . '_' . $order->get_id() . '_' . time();
+
+		// Generate callback URL.
+		$callback_url = home_url( '/wp-json/univoucher/v1/promotion-callback' );
+
+		// Generate auth token.
+		$auth_token = wp_generate_password( 32, false );
+
+		// Store auth token and context for callback verification (expires in 1 hour).
+		set_transient( 'univoucher_promo_callback_auth_' . $api_order_id, $auth_token, HOUR_IN_SECONDS );
+		set_transient(
+			'univoucher_promo_callback_context_' . $api_order_id,
+			array(
+				'promotion_id' => $promotion['id'],
+				'user_id'      => $user_id,
+				'order_id'     => $order->get_id(),
+				'promotion'    => $promotion,
+			),
+			HOUR_IN_SECONDS
+		);
+
+		// Prepare API request.
+		$api_data = array(
+			'network'      => intval( $promotion['chain_id'] ),
+			'tokenAddress' => $token_address,
+			'amount'       => (string) $token_amount_wei,
+			'quantity'     => 1,
+			'privateKey'   => $private_key,
+			'orderId'      => $api_order_id,
+			'callbackUrl'  => $callback_url,
+			'authToken'    => $auth_token,
+		);
+
+		// Make API request.
+		$response = wp_remote_post(
+			'https://api.univoucher.com/v1/cards/create',
+			array(
+				'headers' => array(
+					'Content-Type' => 'application/json',
+				),
+				'body'    => wp_json_encode( $api_data ),
+				'timeout' => 30,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			error_log( 'UniVoucher Promotion: Failed to create card - ' . $response->get_error_message() );
+			return false;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$response_data = json_decode( $response_body, true );
+
+		if ( $response_code === 202 && isset( $response_data['success'] ) && $response_data['success'] ) {
+			// Success - card creation initiated.
+			// The actual card will be stored via callback.
+			$order->add_order_note(
+				sprintf(
+					// translators: %s is the promotion title
+					__( 'UniVoucher: Promotional gift card creation initiated for "%s"', 'univoucher-for-woocommerce' ),
+					$promotion['title']
+				)
+			);
+
+			// Return temporary placeholder data.
+			return array(
+				'status'      => 'pending',
+				'api_order_id' => $api_order_id,
+			);
+		} else {
+			// Error.
+			$error_message = isset( $response_data['error'] ) ? $response_data['error'] : 'Unknown error';
+			error_log( 'UniVoucher Promotion: Failed to create card - ' . $error_message );
+			return false;
+		}
+	}
+
+	/**
+	 * Convert decimal amount to wei format.
+	 *
+	 * @param string $decimal_amount Decimal amount.
+	 * @param int    $decimals Number of decimals.
+	 * @return string Wei amount as string.
+	 */
+	private function decimal_to_wei( $decimal_amount, $decimals ) {
+		// Use bcmath for precision if available.
+		if ( function_exists( 'bcmul' ) ) {
+			$multiplier = bcpow( '10', $decimals );
+			return bcmul( $decimal_amount, $multiplier, 0 );
+		}
+
+		// Fallback to regular multiplication.
+		$multiplier = pow( 10, $decimals );
+		return (string) ( $decimal_amount * $multiplier );
+	}
+
+	/**
+	 * Handle promotional card creation callback from UniVoucher API.
+	 *
+	 * @param string $api_order_id The API order ID.
+	 * @param array  $callback_data The callback data from API.
+	 * @return bool Success status.
+	 */
+	public function handle_promotion_callback( $api_order_id, $callback_data ) {
+		// Get stored context.
+		$context = get_transient( 'univoucher_promo_callback_context_' . $api_order_id );
+		if ( ! $context ) {
+			error_log( 'UniVoucher Promotion: Callback context not found for ' . $api_order_id );
+			return false;
+		}
+
+		$promotion = $context['promotion'];
+		$order = wc_get_order( $context['order_id'] );
+		if ( ! $order ) {
+			error_log( 'UniVoucher Promotion: Order not found for callback ' . $api_order_id );
+			return false;
+		}
+
+		// Check callback status.
+		$status = isset( $callback_data['status'] ) ? $callback_data['status'] : '';
+
+		if ( $status === 'success' && isset( $callback_data['cards'] ) && ! empty( $callback_data['cards'] ) ) {
+			// Success - card was created.
+			$card = $callback_data['cards'][0];
+
+			// Get transaction hash from callback data.
+			$transaction_hash = null;
+			if ( ! empty( $callback_data['creationTransactionHashes'] ) && is_array( $callback_data['creationTransactionHashes'] ) ) {
+				$transaction_hash = $callback_data['creationTransactionHashes'][0];
+			}
+
+			global $wpdb;
+			$card_data = array(
+				'promotion_id'     => $context['promotion_id'],
+				'user_id'          => $context['user_id'],
+				'order_id'         => $context['order_id'],
+				'card_id'          => $card['cardId'],
+				'card_secret'      => $card['cardSecret'],
+				'chain_id'         => $callback_data['network'],
+				'token_address'    => $card['tokenAddress'],
+				'token_symbol'     => $promotion['token_symbol'],
+				'token_type'       => $promotion['token_type'],
+				'token_decimals'   => $promotion['token_decimals'],
+				'amount'           => $promotion['card_amount'],
+				'transaction_hash' => $transaction_hash,
+				'status'           => 'active',
+			);
+
+			$table = $this->database->uv_get_promotional_cards_table();
+			$inserted = $wpdb->insert( $table, $card_data );
+
+			if ( $inserted ) {
+				// Update promotion counters.
+				$this->update_promotion_counters( $context['promotion_id'], $context['user_id'] );
+
+				// Add order note with transaction details.
+				$note_message = sprintf(
+					// translators: %1$s is the promotion title, %2$s is the card ID
+					__( 'UniVoucher: Promotional gift card created for "%1$s" (Card ID: %2$s)', 'univoucher-for-woocommerce' ),
+					$promotion['title'],
+					$card['cardId']
+				);
+
+				// Add transaction hashes if available.
+				if ( ! empty( $callback_data['creationTransactionHashes'] ) ) {
+					$creation_hashes = implode( ', ', $callback_data['creationTransactionHashes'] );
+					$note_message .= sprintf(
+						// translators: %s is the creation transaction hashes
+						__( ' - TX: %s', 'univoucher-for-woocommerce' ),
+						$creation_hashes
+					);
+				}
+
+				$order->add_order_note( $note_message );
+
+				// Send promotion emails.
+				$card_data['id'] = $wpdb->insert_id;
+				$this->send_promotion_emails( $promotion, $order, $card_data );
+
+				// Clean up transients.
+				delete_transient( 'univoucher_promo_callback_auth_' . $api_order_id );
+				delete_transient( 'univoucher_promo_callback_context_' . $api_order_id );
+
+				return true;
+			} else {
+				error_log( 'UniVoucher Promotion: Failed to insert card into database - ' . $wpdb->last_error );
+			}
+		} else {
+			// Error.
+			$error_message = isset( $callback_data['error'] ) ? $callback_data['error'] : 'Unknown error';
+			$order->add_order_note(
+				sprintf(
+					// translators: %1$s is the promotion title, %2$s is the error message
+					__( 'UniVoucher: Failed to create promotional gift card for "%1$s" - %2$s', 'univoucher-for-woocommerce' ),
+					$promotion['title'],
+					$error_message
+				)
+			);
+
+			// Clean up transients.
+			delete_transient( 'univoucher_promo_callback_auth_' . $api_order_id );
+			delete_transient( 'univoucher_promo_callback_context_' . $api_order_id );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Update promotion counters.
+	 *
+	 * @param int $promotion_id Promotion ID.
+	 * @param int $user_id      User ID.
+	 */
+	private function update_promotion_counters( $promotion_id, $user_id ) {
+		global $wpdb;
+
+		// Update total_issued counter.
+		$promotions_table = $this->database->uv_get_promotions_table();
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $promotions_table SET total_issued = total_issued + 1 WHERE id = %d",
+				$promotion_id
+			)
+		);
+
+		// Update user tracking.
+		$tracking_table = $this->database->uv_get_promotion_user_tracking_table();
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM $tracking_table WHERE user_id = %d AND promotion_id = %d",
+				$user_id,
+				$promotion_id
+			)
+		);
+
+		if ( $existing ) {
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE $tracking_table SET times_received = times_received + 1, last_received_at = NOW() WHERE user_id = %d AND promotion_id = %d",
+					$user_id,
+					$promotion_id
+				)
+			);
+		} else {
+			$wpdb->insert(
+				$tracking_table,
+				array(
+					'user_id'      => $user_id,
+					'promotion_id' => $promotion_id,
+					'times_received' => 1,
+				)
+			);
+		}
+	}
+
+	/**
+	 * Send promotion emails.
+	 *
+	 * @param array    $promotion Promotion data.
+	 * @param WC_Order $order     Order object.
+	 * @param array    $card_data Card data.
+	 */
+	private function send_promotion_emails( $promotion, $order, $card_data ) {
+		$user = get_userdata( $card_data['user_id'] );
+		if ( ! $user ) {
+			return;
+		}
+
+		$card_info = sprintf(
+			"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s",
+			$card_data['card_id'],
+			$card_data['card_secret'],
+			$this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ),
+			$card_data['token_symbol']
+		);
+
+		// Send separate email if configured.
+		if ( ! empty( $promotion['send_separate_email'] ) ) {
+			// Use user-defined email subject or default.
+			if ( ! empty( $promotion['email_subject'] ) ) {
+				$subject = $promotion['email_subject'];
+			} else {
+				$site_name = get_bloginfo( 'name' );
+				$subject = sprintf( "You've received a special gift from %s!", $site_name );
+			}
+
+			// Replace placeholders in subject.
+			$subject = str_replace( '{site_name}', get_bloginfo( 'name' ), $subject );
+			$subject = str_replace( '{user_name}', $user->display_name, $subject );
+			$subject = str_replace( '{order_id}', $order->get_id(), $subject );
+
+			if ( ! empty( $promotion['email_template'] ) ) {
+				$message = $promotion['email_template'];
+				$message = str_replace( '{card_id}', $card_data['card_id'], $message );
+				$message = str_replace( '{card_secret}', $card_data['card_secret'], $message );
+				$message = str_replace( '{amount}', $this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ), $message );
+				$message = str_replace( '{token_symbol}', $card_data['token_symbol'], $message );
+				$message = str_replace( '{user_name}', $user->display_name, $message );
+				$message = str_replace( '{customer_name}', $user->display_name, $message );
+				$message = str_replace( '{order_id}', $order->get_id(), $message );
+				$message = str_replace( '{order_number}', $order->get_id(), $message );
+				$message = str_replace( '{site_name}', get_bloginfo( 'name' ), $message );
+				$message = str_replace( '{gift_card_details}', $card_info, $message );
+			} else {
+				$message = sprintf(
+					"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you for your order!",
+					$user->display_name,
+					$card_info
+				);
+			}
+
+			// Set HTML content type for email.
+			add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
+
+			wp_mail( $user->user_email, $subject, $message );
+
+			// Reset content type to avoid conflicts with other emails.
+			remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
+		}
+
+		// Store promotion data in order meta for email display if configured.
+		if ( ! empty( $promotion['include_in_order_email'] ) ) {
+			// Get existing promotional cards from order meta.
+			$promo_cards = $order->get_meta( '_univoucher_promo_cards', true );
+			if ( ! is_array( $promo_cards ) ) {
+				$promo_cards = array();
+			}
+
+			// Add new card to the list.
+			$promo_cards[] = array(
+				'promotion_id'           => $promotion['id'],
+				'promotion_title'        => $promotion['title'],
+				'order_email_template'   => $promotion['order_email_template'],
+				'card_id'                => $card_data['card_id'],
+				'card_secret'            => $card_data['card_secret'],
+				'amount'                 => $card_data['amount'],
+				'token_symbol'           => $card_data['token_symbol'],
+				'token_decimals'         => $card_data['token_decimals'],
+			);
+
+			$order->update_meta_data( '_univoucher_promo_cards', $promo_cards );
+			$order->save();
+		}
+	}
+
+	/**
+	 * Set email content type to HTML.
+	 *
+	 * @return string
+	 */
+	public function set_html_content_type() {
+		return 'text/html';
+	}
+
+	/**
+	 * Format token amount with proper decimals.
+	 *
+	 * @param string|float $amount   The amount to format.
+	 * @param int          $decimals Number of decimals (default 6).
+	 * @return string Formatted amount.
+	 */
+	private function format_token_amount( $amount, $decimals = 6 ) {
+		// Format to specified decimals
+		$formatted = number_format( (float) $amount, $decimals, '.', '' );
+		// Remove trailing zeros
+		$formatted = rtrim( $formatted, '0' );
+		// Remove trailing decimal point if no decimals remain
+		$formatted = rtrim( $formatted, '.' );
+		return $formatted;
+	}
+
+	/**
+	 * Add promotional cards to completed order email.
+	 *
+	 * @param WC_Order $order         Order object.
+	 * @param bool     $sent_to_admin Whether the email is being sent to admin.
+	 * @param bool     $plain_text    Whether the email is plain text.
+	 * @param WC_Email $email         Email object.
+	 */
+	public function add_promotion_to_completed_order_email( $order, $sent_to_admin, $plain_text, $email ) {
+		// Only add to customer completed order email.
+	//	if ( $sent_to_admin || $email->id !== 'customer_completed_order' ) {
+	//		return;
+	//	}
+
+		// Get promotional cards from order meta.
+		$promo_cards = $order->get_meta( '_univoucher_promo_cards', true );
+		if ( empty( $promo_cards ) || ! is_array( $promo_cards ) ) {
+			return;
+		}
+
+		// Get user data for template placeholders.
+		$user_id = $order->get_user_id();
+		$user = $user_id ? get_userdata( $user_id ) : null;
+		$user_name = $user ? $user->display_name : $order->get_billing_first_name();
+
+		// Display each promotional card.
+		foreach ( $promo_cards as $card ) {
+			$template = ! empty( $card['order_email_template'] ) ? $card['order_email_template'] : '';
+
+			if ( empty( $template ) ) {
+				continue;
+			}
+
+			// Prepare gift card details.
+			$decimals = isset( $card['token_decimals'] ) ? (int) $card['token_decimals'] : 6;
+			$gift_card_details = sprintf(
+				"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s",
+				$card['card_id'],
+				$card['card_secret'],
+				$this->format_token_amount( $card['amount'], $decimals ),
+				$card['token_symbol']
+			);
+
+			// Replace placeholders.
+			$template = str_replace( '{card_id}', $card['card_id'], $template );
+			$template = str_replace( '{card_secret}', $card['card_secret'], $template );
+			$template = str_replace( '{amount}', $this->format_token_amount( $card['amount'], $decimals ), $template );
+			$template = str_replace( '{token_symbol}', $card['token_symbol'], $template );
+			$template = str_replace( '{user_name}', $user_name, $template );
+			$template = str_replace( '{customer_name}', $user_name, $template );
+			$template = str_replace( '{order_id}', $order->get_id(), $template );
+			$template = str_replace( '{order_number}', $order->get_id(), $template );
+			$template = str_replace( '{site_name}', get_bloginfo( 'name' ), $template );
+			$template = str_replace( '{gift_card_details}', $gift_card_details, $template );
+
+			// Output the template.
+			echo wp_kses_post( $template );
+		}
+	}
+}

@@ -40,7 +40,7 @@ function univoucher_auto_complete_orders_callback( $args ) {
 		
 		<div style="margin-bottom: 15px;">
 			<p style="margin: 5px 0 8px 0; font-size: 13px;">
-				<?php esc_html_e( 'Automatically mark orders as "Completed" when they contain only UniVoucher products or other products that don\'t require processing.', 'univoucher-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Automatically mark orders as "Completed" when all UniVoucher products have their cards assigned AND payment has been received.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 		</div>
 
@@ -58,7 +58,7 @@ function univoucher_auto_complete_orders_callback( $args ) {
 				</strong>
 			</label>
 			<p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460;">
-				<?php esc_html_e( 'When enabled, orders containing only UniVoucher products or other products that don\'t require processing will automatically be marked as "Completed" upon payment, allowing immediate gift card delivery.', 'univoucher-for-woocommerce' ); ?>
+				<?php esc_html_e( 'When enabled, orders will automatically be marked as "Completed" when all UniVoucher products have their cards assigned AND payment has been received. Orders with unpaid payment methods (BACS, COD, check) will remain in their current status until payment is confirmed.', 'univoucher-for-woocommerce' ); ?>
 			</p>
 		</div>
 
@@ -70,8 +70,10 @@ function univoucher_auto_complete_orders_callback( $args ) {
 			<div style="margin-top: 8px; font-size: 12px; color: #856404;">
 				<div style="margin: 2px 0;">• <?php esc_html_e( 'This tells WooCommerce that UniVoucher products are non-processing products (don\'t need manual processing).', 'univoucher-for-woocommerce' ); ?></div>
 				<div style="margin: 2px 0;">• <?php esc_html_e( 'Orders with only UniVoucher products or other non-processing products will auto-complete.', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'Orders auto-complete only when BOTH cards are assigned AND payment is received.', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'Unpaid orders (BACS, COD, check, etc.) remain on-hold/pending until payment is confirmed.', 'univoucher-for-woocommerce' ); ?></div>
+				<div style="margin: 2px 0;">• <?php esc_html_e( 'For backorder/on-demand cards, orders complete when cards are created AND payment is received.', 'univoucher-for-woocommerce' ); ?></div>
 				<div style="margin: 2px 0;">• <?php esc_html_e( 'Orders with mixed products (UniVoucher + physical items) will still require manual processing.', 'univoucher-for-woocommerce' ); ?></div>
-				<div style="margin: 2px 0;">• <?php esc_html_e( 'Gift cards will be delivered immediately upon order completion.', 'univoucher-for-woocommerce' ); ?></div>
 			</div>
 		</div>
 

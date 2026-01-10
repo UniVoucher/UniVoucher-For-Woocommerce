@@ -5,19 +5,26 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.3.7
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and sell blockchain-based gift cards for any token.
+Integrate UniVoucher decentralized crypto gift cards with WooCommerce.
+Create and sell blockchain-based gift cards or reward your customers with a crypto gift card when their orders meet specific rules.
 
 == Description ==
 
-UniVoucher For WooCommerce integrates the power of decentralized crypto gift cards with your WooCommerce store. This plugin allows you to:
+Transform your WooCommerce store into a crypto gift card store with UniVoucher - the complete solution for selling blockchain-based gift cards. Sell cryptocurrency gift vouchers for cryptos like Ethereum, USDT, USDC, BNB, and any ERC-20 token across multiple blockchain networks.
+Create rule-based promotions that automatically generate and send UniVoucher gift cards to customers when their orders meet specific conditions. Perfect for customer rewards, loyalty programs, first-time buyer incentives, and marketing campaigns.
 
-* **Sell UniVoucher crypto gift cards** for Ethereum,BNB, USDT, USDC, or any ERC-20 token or native cryptocurrency
-* **Manage gift card inventory** with automatic stock synchronization
-* **Bulk import gift cards** via CSV upload
+**Why Choose UniVoucher For WooCommerce?**
+
+* **Sell Crypto Gift Cards & Vouchers** - Create a digital gift card store for Ethereum, BNB, USDT, USDC, or any ERC-20 token and native cryptocurrency across 7+ blockchain networks
+* **Automated Gift Card Management** - Smart inventory system with automatic stock synchronization, real-time tracking, and bulk CSV import capabilities
+* **On-Demand Card Creation** - Automatically generate blockchain gift cards when customers order, eliminating the need for pre-loaded inventory
+* **Promotional Gift Card Campaigns** - Run automated marketing campaigns with rule-based promotional gift cards to reward customers and boost sales
+* **Multi-Network Blockchain Support** - Issue gift vouchers on Ethereum, Base, Polygon, Arbitrum, Optimism, BNB Chain, and Avalanche networks
+* **Secure & Encrypted** - Industry-standard encryption protects all gift card secrets and customer data with built-in backup key management
 
 = Key Features =
 
@@ -59,6 +66,17 @@ UniVoucher For WooCommerce integrates the power of decentralized crypto gift car
 
 * Automatically create cards after customers place orders
 * Cards are created on demand using the internal wallet private key with the UniVoucher API
+
+**🎁 Promotional Gift Cards**
+
+* Create automated promotional campaigns with rule-based triggers
+* Configure conditions based on order value, products, categories, and customer criteria
+* Set per-user and global distribution limits to control promotion budgets
+* Automatic gift card issuance when orders meet all promotion rules
+* Customer notifications via website banners and order page notices
+* Flexible email delivery options (separate emails, order email integration, or both)
+* Complete tracking and reporting of all issued promotional cards
+* Support for all blockchain networks and token types
 
 = Supported Networks =
 
@@ -177,6 +195,18 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 11. Gift card template variations showing support for multiple cryptocurrencies and blockchain networks
 
 == Changelog ==
+
+= 1.4.0 =
+* Added comprehensive promotional gift card system for automated marketing campaigns
+* Introduced rule-based promotion triggers (order value, products, categories, customer criteria)
+* Added per-user and global distribution limits for promotion budget control
+* Implemented automatic gift card issuance when orders meet promotion rules
+* Added customer notification system with website banners and order page notices
+* Introduced flexible email delivery options for promotional cards (separate emails, order email integration, or both)
+* Added promotional cards tracking and reporting dashboard
+* Implemented promotional card verification and status updates from blockchain
+* Added dismissible notices with auto-reappear after 7 days for unredeemed cards
+* Full support for all blockchain networks and token types in promotions
 
 = 1.3.7 =
 * Fixed product image generation failing when using custom uploaded templates
@@ -305,6 +335,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Major feature update introducing promotional gift cards system. This version adds a complete promotional campaign management system with rule-based triggers, automatic gift card issuance, customer notifications, and comprehensive tracking. Perfect for running automated marketing campaigns and customer rewards programs. Requires internal wallet configuration to use promotional features.
 
 = 1.3.7 =
 Bug fix for custom template image generation. This version fixes an issue where the "Generate Product Image" button would fail silently when using custom uploaded templates. Recommended for users who upload custom image templates.

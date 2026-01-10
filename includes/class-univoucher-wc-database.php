@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.0.0';
+	const DB_VERSION = '3.5.1';
 
 	/**
 	 * Gift cards table name.
@@ -36,6 +36,27 @@ class UniVoucher_WC_Database {
 	 * @var string
 	 */
 	private $uv_gift_cards_table;
+
+	/**
+	 * Promotions table name.
+	 *
+	 * @var string
+	 */
+	private $uv_promotions_table;
+
+	/**
+	 * Promotion user tracking table name.
+	 *
+	 * @var string
+	 */
+	private $uv_promotion_user_tracking_table;
+
+	/**
+	 * Promotional gift cards table name.
+	 *
+	 * @var string
+	 */
+	private $uv_promotional_cards_table;
 
 	/**
 	 * Main UniVoucher_WC_Database Instance.
@@ -55,6 +76,9 @@ class UniVoucher_WC_Database {
 	public function __construct() {
 		global $wpdb;
 		$this->uv_gift_cards_table = $wpdb->prefix . 'univoucher_gift_cards';
+		$this->uv_promotions_table = $wpdb->prefix . 'univoucher_promotions';
+		$this->uv_promotion_user_tracking_table = $wpdb->prefix . 'univoucher_promotion_user_tracking';
+		$this->uv_promotional_cards_table = $wpdb->prefix . 'univoucher_promotional_cards';
 		$this->init_hooks();
 	}
 
@@ -72,6 +96,33 @@ class UniVoucher_WC_Database {
 	 */
 	public function uv_get_gift_cards_table() {
 		return $this->uv_gift_cards_table;
+	}
+
+	/**
+	 * Get promotions table name.
+	 *
+	 * @return string
+	 */
+	public function uv_get_promotions_table() {
+		return $this->uv_promotions_table;
+	}
+
+	/**
+	 * Get promotion user tracking table name.
+	 *
+	 * @return string
+	 */
+	public function uv_get_promotion_user_tracking_table() {
+		return $this->uv_promotion_user_tracking_table;
+	}
+
+	/**
+	 * Get promotional cards table name.
+	 *
+	 * @return string
+	 */
+	public function uv_get_promotional_cards_table() {
+		return $this->uv_promotional_cards_table;
 	}
 
 	/**
@@ -124,6 +175,90 @@ class UniVoucher_WC_Database {
 		) $charset_collate;";
 
 		dbDelta( $sql );
+
+		// Promotions table.
+		$sql_promotions = "CREATE TABLE $this->uv_promotions_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			title varchar(255) NOT NULL,
+			description text DEFAULT NULL,
+			chain_id bigint(20) unsigned NOT NULL,
+			token_type enum('native','erc20') NOT NULL DEFAULT 'native',
+			token_address varchar(42) DEFAULT NULL,
+			token_symbol varchar(20) NOT NULL,
+			token_decimals tinyint unsigned NOT NULL DEFAULT 18,
+			card_amount decimal(36,18) NOT NULL,
+			rules longtext NOT NULL,
+			max_per_user int unsigned NOT NULL DEFAULT 0,
+			max_total int unsigned NOT NULL DEFAULT 0,
+			total_issued int unsigned NOT NULL DEFAULT 0,
+			include_in_order_email tinyint(1) NOT NULL DEFAULT 1,
+			order_email_template longtext DEFAULT NULL,
+			send_separate_email tinyint(1) NOT NULL DEFAULT 0,
+			email_subject varchar(255) DEFAULT NULL,
+			email_template longtext DEFAULT NULL,
+			show_account_notice tinyint(1) NOT NULL DEFAULT 0,
+			account_notice_message text DEFAULT NULL,
+			show_order_notice tinyint(1) NOT NULL DEFAULT 0,
+			order_notice_title varchar(255) DEFAULT NULL,
+			order_notice_message text DEFAULT NULL,
+			show_shortcode_notice tinyint(1) NOT NULL DEFAULT 0,
+			shortcode_notice_message text DEFAULT NULL,
+			is_active tinyint(1) NOT NULL DEFAULT 1,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY is_active (is_active),
+			KEY chain_id (chain_id),
+			KEY created_at (created_at)
+		) $charset_collate;";
+
+		dbDelta( $sql_promotions );
+
+		// Promotion user tracking table.
+		$sql_user_tracking = "CREATE TABLE $this->uv_promotion_user_tracking_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) unsigned NOT NULL,
+			promotion_id bigint(20) unsigned NOT NULL,
+			times_received int unsigned NOT NULL DEFAULT 1,
+			last_received_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY user_promotion (user_id, promotion_id),
+			KEY promotion_id (promotion_id),
+			KEY user_id (user_id)
+		) $charset_collate;";
+
+		dbDelta( $sql_user_tracking );
+
+		// Promotional gift cards table.
+		$sql_promotional_cards = "CREATE TABLE $this->uv_promotional_cards_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			promotion_id bigint(20) unsigned NOT NULL,
+			user_id bigint(20) unsigned NOT NULL,
+			order_id bigint(20) unsigned NOT NULL,
+			card_id varchar(20) NOT NULL,
+			card_secret varchar(255) NOT NULL,
+			chain_id bigint(20) unsigned NOT NULL,
+			token_address varchar(42) DEFAULT NULL,
+			token_symbol varchar(20) NOT NULL,
+			token_type enum('native','erc20') NOT NULL DEFAULT 'native',
+			token_decimals tinyint unsigned NOT NULL DEFAULT 18,
+			amount decimal(36,18) NOT NULL,
+			transaction_hash varchar(66) DEFAULT NULL,
+			status enum('active','redeemed','cancelled') NOT NULL DEFAULT 'active',
+			redeemed_at datetime DEFAULT NULL,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY card_id (card_id),
+			UNIQUE KEY card_secret (card_secret),
+			KEY promotion_id (promotion_id),
+			KEY user_id (user_id),
+			KEY order_id (order_id),
+			KEY status (status),
+			KEY created_at (created_at)
+		) $charset_collate;";
+
+		dbDelta( $sql_promotional_cards );
 	}
 
 

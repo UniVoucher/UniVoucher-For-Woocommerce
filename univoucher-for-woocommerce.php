@@ -3,7 +3,7 @@
  * Plugin Name: UniVoucher For WooCommerce
  * Plugin URI: https://univoucher.com
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.3.7
+ * Version: 1.4.0
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -34,7 +34,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.3.7
+	 * @version 1.4.0
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.3.7';
+		public $version = '1.4.0';
 
 		/**
 		 * The single instance of the class.
@@ -96,17 +96,22 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-encryption.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-product-manager.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-order-manager.php';
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-product-fields.php';
 
 			// Include gift card and stock management classes (needed for both admin and frontend).
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-gift-card-manager.php';
-			
+
 			// Include on-demand manager
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-on-demand-manager.php';
-			
+
 			// Include cart limits
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-cart-limits.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-stock-manager.php';
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-callback-manager.php';
+
+			// Include promotion processor.
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-promotion-processor.php';
+			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-promotion-notices.php';
 
 			// Include integration classes.
 			include_once UNIVOUCHER_WC_ABSPATH . 'includes/class-univoucher-wc-lmfwc-integration.php';
@@ -336,7 +341,9 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 				UniVoucher_WC_Order_Manager::instance();
 				UniVoucher_WC_LMFWC_Integration::instance();
 				UniVoucher_WC_Cart_Limits::instance();
-				
+				UniVoucher_WC_Promotion_Processor::instance();
+				UniVoucher_WC_Promotion_Notices::instance();
+
 				// Initialize admin components
 				if ( is_admin() ) {
 					UniVoucher_WC_Internal_Wallet::instance();
@@ -367,6 +374,13 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			register_rest_route( 'univoucher/v1', '/callback', array(
 				'methods' => 'POST',
 				'callback' => array( $callback_manager, 'handle_univoucher_callback' ),
+				'permission_callback' => '__return_true',
+			) );
+
+			// Register promotion callback endpoint.
+			register_rest_route( 'univoucher/v1', '/promotion-callback', array(
+				'methods' => 'POST',
+				'callback' => array( $callback_manager, 'handle_promotion_callback' ),
 				'permission_callback' => '__return_true',
 			) );
 		}

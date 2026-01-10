@@ -56,6 +56,8 @@ class UniVoucher_WC_Admin {
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-product-fields.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-inventory-page.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-add-cards-page.php';
+		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-promotions-page.php';
+		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-promotional-cards-page.php';
 		include_once UNIVOUCHER_WC_ABSPATH . 'includes/admin/class-univoucher-wc-csv-handler.php';
 	}
 
@@ -87,6 +89,8 @@ class UniVoucher_WC_Admin {
 		UniVoucher_WC_Gift_Card_Manager::instance();
 		UniVoucher_WC_Add_Cards_Page::instance();
 		UniVoucher_WC_Inventory_Page::instance();
+		UniVoucher_WC_Promotions_Page::instance();
+		UniVoucher_WC_Promotional_Cards_Page::instance();
 	}
 
 	/**

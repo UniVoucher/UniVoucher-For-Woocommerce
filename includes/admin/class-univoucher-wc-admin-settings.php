@@ -181,15 +181,8 @@ class UniVoucher_WC_Admin_Settings {
 		);
 
 		// Register backorders settings.
-		register_setting(
-			'univoucher_wc_backorders_settings',
-			'univoucher_wc_backorder_initial_status',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_text_field',
-				'default'           => 'processing',
-			)
-		);
+		// Note: univoucher_wc_backorder_initial_status setting has been removed
+		// Auto-complete behavior is now handled by univoucher_wc_auto_complete_orders
 
 		register_setting(
 			'univoucher_wc_backorders_settings',
@@ -551,15 +544,15 @@ class UniVoucher_WC_Admin_Settings {
 			)
 		);
 
-		// Add backorder initial status field.
+		// Add backorder notice settings field.
 		add_settings_field(
-			'univoucher_wc_backorder_initial_status',
-			esc_html__( 'On-Demand Order Status', 'univoucher-for-woocommerce' ),
-			array( $this, 'backorder_initial_status_callback' ),
+			'univoucher_wc_backorder_notice_settings',
+			esc_html__( 'On-Demand Processing Notice', 'univoucher-for-woocommerce' ),
+			array( $this, 'backorder_notice_settings_callback' ),
 			'univoucher_wc_backorders_settings',
 			'univoucher_wc_backorders_section',
 			array(
-				'label_for' => 'univoucher_wc_backorder_initial_status',
+				'label_for' => 'univoucher_wc_backorder_notice_settings',
 				'class'     => 'univoucher-wc-row',
 			)
 		);
@@ -791,12 +784,12 @@ class UniVoucher_WC_Admin_Settings {
 	}
 
 	/**
-	 * Backorder initial status field callback.
+	 * Backorder notice settings field callback.
 	 *
 	 * @param array $args Field arguments.
 	 */
-	public function backorder_initial_status_callback( $args ) {
-		univoucher_backorder_initial_status_callback( $args );
+	public function backorder_notice_settings_callback( $args ) {
+		univoucher_backorder_notice_settings_callback( $args );
 	}
 
 	/**

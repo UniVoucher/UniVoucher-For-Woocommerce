@@ -204,16 +204,28 @@ class UniVoucher_WC_Callback_Manager {
 				$order_manager->send_gift_cards_email( $order->get_id() );
 			}
 		} else {
-			// Update status using official WooCommerce logic only if order is not completed
-			// Force refresh the order to ensure needs_processing() reflects current state
+			// Order NOT completed yet - handle status update after backorder cards assigned
+
+			// Refresh order to ensure needs_processing() reflects current state
 			$order = wc_get_order( $order->get_id() );
-			
+
 			// Clear the needs_processing transient to force recalculation
-			$transient_name = 'wc_order_' . $order->get_id() . '_needs_processing';
-			delete_transient( $transient_name );
-			
-			$order->set_status( apply_filters( 'woocommerce_payment_complete_order_status', $order->needs_processing() ? 'processing' : 'completed', $order->get_id(), $order ) );
-			$order->save();
+			delete_transient( 'wc_order_' . $order->get_id() . '_needs_processing' );
+
+			// Only auto-complete if ALL conditions are met:
+			// 1. Auto-complete setting is enabled
+			// 2. Order has actually been paid (has paid date set)
+			// 3. All cards are assigned (doesn't need processing)
+			$auto_complete_enabled = get_option( 'univoucher_wc_auto_complete_orders', true );
+			$has_been_paid = ! is_null( $order->get_date_paid() );
+
+			if ( $auto_complete_enabled && $has_been_paid && ! $order->needs_processing() ) {
+				// All conditions met - complete the order
+				$order->set_status( 'completed' );
+				$order->save();
+			}
+			// Otherwise, keep the current status (on-hold, processing, etc.)
+			// Do NOT change status to 'processing' - respect what payment gateway set
 		}
 	}
 
@@ -278,5 +290,35 @@ class UniVoucher_WC_Callback_Manager {
 		// Fallback to regular division.
 		$divisor = pow( 10, $decimals );
 		return number_format( $wei_amount / $divisor, $decimals, '.', '' );
+	}
+
+	/**
+	 * Handle UniVoucher API promotion callback.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response The response object.
+	 */
+	public function handle_promotion_callback( $request ) {
+		$body = $request->get_json_params();
+
+		if ( ! $body || ! isset( $body['orderId'] ) || ! isset( $body['authToken'] ) ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid callback data' ), 400 );
+		}
+
+		$order_id = sanitize_text_field( $body['orderId'] );
+		$auth_token = sanitize_text_field( $body['authToken'] );
+
+		// Verify auth token.
+		$stored_auth_token = get_transient( 'univoucher_promo_callback_auth_' . $order_id );
+		if ( ! $stored_auth_token || $stored_auth_token !== $auth_token ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid auth token' ), 401 );
+		}
+
+		// Process the callback - the processor handles all transient cleanup internally.
+		$promotion_processor = UniVoucher_WC_Promotion_Processor::instance();
+		$promotion_processor->handle_promotion_callback( $order_id, $body );
+
+		// Always return success as the API expects, matching the regular callback behavior.
+		return new WP_REST_Response( array( 'success' => true ), 200 );
 	}
 } 
