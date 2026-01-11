@@ -670,8 +670,17 @@ class UniVoucher_WC_Order_Manager {
 
 		// Send email
 		$to = $order->get_billing_email();
+		$from_email = get_option( 'admin_email' );
+		$from_name = get_bloginfo( 'name' );
+
 		$headers = array(
-		    'Content-Type: text/html; charset=UTF-8'
+		    'Content-Type: text/html; charset=UTF-8',
+		    'From: ' . $from_name . ' <' . $from_email . '>',
+		    'X-Priority: 1',
+		    'X-MSMail-Priority: High',
+		    'Importance: High',
+		    'X-Mailer: WooCommerce',
+		    'X-Auto-Response-Suppress: OOF, DR, RN, NRN, AutoReply'
 		);
 
 		$email_sent = wp_mail( $to, $email_subject, $email_content, $headers );

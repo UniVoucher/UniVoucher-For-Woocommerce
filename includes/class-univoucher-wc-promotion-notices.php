@@ -57,8 +57,11 @@ class UniVoucher_WC_Promotion_Notices {
 		// Display account notice on My Account dashboard only.
 		add_action( 'woocommerce_account_content', array( $this, 'display_account_notice' ), 1 );
 
-		// Display order page notice.
-		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_order_notice' ), 1, 1 );
+		// Display order page notice before thank you message.
+		add_action( 'woocommerce_before_thankyou', array( $this, 'display_order_notice' ), 99, 1 );
+
+		// Display order page notice before order table (but not on thank you page).
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'display_order_notice_before_table' ), 99, 1 );
 
 		// Register shortcode for displaying notices.
 		add_shortcode( 'univoucher_unredeemed_promotion', array( $this, 'shortcode_notice' ) );
@@ -237,17 +240,41 @@ class UniVoucher_WC_Promotion_Notices {
 	}
 
 	/**
-	 * Display order page notice for active promotional cards.
+	 * Display order page notice before order table (only if not on thank you page).
 	 *
-	 * @param int $order_id Order ID.
+	 * @param WC_Order|int $order Order object or order ID.
 	 */
-	public function display_order_notice( $order_id ) {
-		if ( ! is_user_logged_in() ) {
+	public function display_order_notice_before_table( $order ) {
+		// Check if we're on the thank you page - if so, skip this hook.
+		if ( is_order_received_page() || is_wc_endpoint_url( 'order-received' ) ) {
 			return;
 		}
 
-		$order = wc_get_order( $order_id );
+		// Otherwise, display the notice.
+		$this->display_order_notice( $order );
+	}
+
+	/**
+	 * Display order page notice for active promotional cards.
+	 *
+	 * @param WC_Order|int $order Order object or order ID.
+	 */
+	public function display_order_notice( $order ) {
+		// Handle both order object and order ID.
+		if ( is_numeric( $order ) ) {
+			$order_id = absint( $order );
+			$order = wc_get_order( $order_id );
+		} elseif ( is_a( $order, 'WC_Order' ) ) {
+			$order_id = $order->get_id();
+		} else {
+			return;
+		}
+
 		if ( ! $order ) {
+			return;
+		}
+
+		if ( ! is_user_logged_in() ) {
 			return;
 		}
 
@@ -256,6 +283,7 @@ class UniVoucher_WC_Promotion_Notices {
 			return;
 		}
 
+		// Get all active promotional cards for this user.
 		$cards = $this->get_active_promotional_cards( $user_id );
 
 		if ( empty( $cards ) ) {
@@ -263,6 +291,11 @@ class UniVoucher_WC_Promotion_Notices {
 		}
 
 		foreach ( $cards as $card ) {
+			// Only show cards for this specific order.
+			if ( ! isset( $card['order_id'] ) || (int) $card['order_id'] !== (int) $order_id ) {
+				continue;
+			}
+
 			// Get promotion settings.
 			$promotion = $this->get_promotion( $card['promotion_id'] );
 			if ( ! $promotion ) {

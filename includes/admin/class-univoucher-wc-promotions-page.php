@@ -1172,11 +1172,11 @@ class UniVoucher_WC_Promotions_Page {
 		<p style="margin: 0 0 20px 0; font-size: 18px; color: #333;">Dear {customer_name},</p>
 
 		<p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #555;">
-			Great news! Your recent order <strong>#{order_number}</strong> qualifies for a special promotional gift card. We\'re thrilled to share this exclusive reward with you!
+			Great news! Your recent order <strong>#{order_number}</strong> qualifies for a special gift card. We\'re thrilled to share this exclusive reward with you!
 		</p>
 
 		<div style="background-color: #ffffff; border-radius: 12px; padding: 30px; margin: 30px 0; border: 2px solid #96588a;">
-			<h2 style="margin: 0 0 20px 0; font-size: 24px; text-align: center; color: #96588a;">Your Promotional Gift Card</h2>
+			<h2 style="margin: 0 0 20px 0; font-size: 24px; text-align: center; color: #96588a;">Your Gift Card</h2>
 			{gift_card_details}
 		</div>
 
@@ -1197,10 +1197,6 @@ class UniVoucher_WC_Promotions_Page {
 		<p style="margin: 0; font-size: 14px; text-align: center; color: #777;">
 			If you have any questions, please don\'t hesitate to contact us.
 		</p>
-	</div>
-
-	<div style="padding: 20px; text-align: center; font-size: 12px; color: #999;">
-		<p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
 	</div>
 </div>';
 
@@ -1239,7 +1235,7 @@ class UniVoucher_WC_Promotions_Page {
 							<td>
 								<label>
 									<input type="checkbox" name="show_order_notice" id="show_order_notice" value="1" <?php checked( $promotion->show_order_notice, 1 ); ?>>
-									<?php esc_html_e( 'Show an elegant notice on all user\'s order pages if the user has an active promotional gift card (not redeemed nor cancelled)', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Show an elegant notice on the order details and thank you page if the user has an active promotional gift card (not redeemed nor cancelled)', 'univoucher-for-woocommerce' ); ?>
 								</label>
 							</td>
 						</tr>
