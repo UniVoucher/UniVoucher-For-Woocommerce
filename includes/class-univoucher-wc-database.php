@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.4';
+	const DB_VERSION = '3.5.5';
 
 	/**
 	 * Gift cards table name.
@@ -187,16 +187,13 @@ class UniVoucher_WC_Database {
 			max_per_user int unsigned NOT NULL DEFAULT 0,
 			max_total int unsigned NOT NULL DEFAULT 0,
 			total_issued int unsigned NOT NULL DEFAULT 0,
-			include_in_order_email tinyint(1) NOT NULL DEFAULT 1,
-			order_email_template longtext DEFAULT NULL,
 			send_separate_email tinyint(1) NOT NULL DEFAULT 0,
 			email_subject varchar(255) DEFAULT NULL,
 			email_template longtext DEFAULT NULL,
 			show_account_notice tinyint(1) NOT NULL DEFAULT 0,
 			account_notice_message text DEFAULT NULL,
 			show_order_notice tinyint(1) NOT NULL DEFAULT 0,
-			order_notice_title varchar(255) DEFAULT NULL,
-			order_notice_message text DEFAULT NULL,
+			order_notice_message longtext DEFAULT NULL,
 			show_shortcode_notice tinyint(1) NOT NULL DEFAULT 0,
 			shortcode_notice_message text DEFAULT NULL,
 			is_active tinyint(1) NOT NULL DEFAULT 1,

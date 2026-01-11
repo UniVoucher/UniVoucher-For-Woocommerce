@@ -80,26 +80,6 @@
             updateOperatorFields($(this));
         });
 
-        // Show/hide order email template based on checkbox
-        $('#include_in_order_email').on('change', function() {
-            if ($(this).is(':checked')) {
-                $('#order-email-template-row').show();
-
-                // Resize TinyMCE editor when it becomes visible
-                if (typeof tinymce !== 'undefined') {
-                    var editor = tinymce.get('order_email_template');
-                    if (editor) {
-                        // Set a larger height for the editor
-                        setTimeout(function() {
-                            editor.theme.resizeTo(null, 300);
-                        }, 100);
-                    }
-                }
-            } else {
-                $('#order-email-template-row').hide();
-            }
-        });
-
         // Show/hide separate email fields based on checkbox
         $('#send_separate_email').on('change', function() {
             if ($(this).is(':checked')) {
@@ -382,6 +362,9 @@
         const $valueAmount = $ruleRow.find('.value-amount');
         const $valueRegistrationDate = $ruleRow.find('.value-registration-date');
         const $valueNeverReceived = $ruleRow.find('.value-never-received');
+        const $valueUserId = $ruleRow.find('.value-user-id');
+        const $valueCompletedOrders = $ruleRow.find('.value-completed-orders');
+        const $valueUserRole = $ruleRow.find('.value-user-role');
 
         // Hide all value fields first
         $valueProduct.hide().find('select, input').prop('disabled', true);
@@ -389,6 +372,9 @@
         $valueAmount.hide().find('select, input').prop('disabled', true);
         $valueRegistrationDate.hide().find('select, input').prop('disabled', true);
         $valueNeverReceived.hide().find('input').prop('disabled', true);
+        $valueUserId.hide().find('input').prop('disabled', true);
+        $valueCompletedOrders.hide().find('select, input').prop('disabled', true);
+        $valueUserRole.hide().find('select').prop('disabled', true);
 
         // Show the appropriate value field
         if (condition === 'includes_product') {
@@ -406,6 +392,15 @@
         } else if (condition === 'never_received_promotion') {
             $valueNeverReceived.show();
             $valueNeverReceived.find('input').prop('disabled', false);
+        } else if (condition === 'user_id') {
+            $valueUserId.show();
+            $valueUserId.find('input').prop('disabled', false);
+        } else if (condition === 'completed_orders_count') {
+            $valueCompletedOrders.show();
+            $valueCompletedOrders.find('select, input').prop('disabled', false);
+        } else if (condition === 'user_role') {
+            $valueUserRole.show();
+            $valueUserRole.find('select').prop('disabled', false);
         }
     }
 
@@ -631,6 +626,22 @@
                 }
             } else if (condition === 'never_received_promotion') {
                 hasValidRule = true;
+            } else if (condition === 'user_id') {
+                const userIdValue = $(this).find('.rule-value-user-id').val();
+                if (userIdValue && userIdValue.trim()) {
+                    hasValidRule = true;
+                }
+            } else if (condition === 'completed_orders_count') {
+                const ordersValue = $(this).find('.rule-value-orders-count').val();
+                const ordersCount = parseInt(ordersValue);
+                if (ordersValue && !isNaN(ordersCount) && ordersCount >= 0) {
+                    hasValidRule = true;
+                }
+            } else if (condition === 'user_role') {
+                const selectedRoles = $(this).find('.rule-value-user-role').val();
+                if (selectedRoles && selectedRoles.length > 0) {
+                    hasValidRule = true;
+                }
             }
         });
 

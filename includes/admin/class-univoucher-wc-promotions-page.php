@@ -258,15 +258,12 @@ class UniVoucher_WC_Promotions_Page {
 			'%d', // max_per_user
 			'%d', // max_total
 			'%d', // total_issued
-			'%d', // include_in_order_email
-			'%s', // order_email_template
 			'%d', // send_separate_email
 			'%s', // email_subject
 			'%s', // email_template
 			'%d', // show_account_notice
 			'%s', // account_notice_message
 			'%d', // show_order_notice
-			'%s', // order_notice_title
 			'%s', // order_notice_message
 			'%d', // show_shortcode_notice
 			'%s', // shortcode_notice_message
@@ -319,15 +316,12 @@ class UniVoucher_WC_Promotions_Page {
 			'rules'                  => wp_json_encode( $rules ),
 			'max_per_user'           => isset( $_POST['max_per_user'] ) ? absint( $_POST['max_per_user'] ) : 0,
 			'max_total'              => isset( $_POST['max_total'] ) ? absint( $_POST['max_total'] ) : 0,
-			'include_in_order_email' => isset( $_POST['include_in_order_email'] ) ? 1 : 0,
-			'order_email_template'   => isset( $_POST['order_email_template'] ) ? wp_kses_post( wp_unslash( $_POST['order_email_template'] ) ) : '',
 			'send_separate_email'    => isset( $_POST['send_separate_email'] ) ? 1 : 0,
 			'email_subject'          => isset( $_POST['email_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['email_subject'] ) ) : '',
 			'email_template'         => isset( $_POST['email_template'] ) ? wp_kses_post( wp_unslash( $_POST['email_template'] ) ) : '',
 			'show_account_notice'      => isset( $_POST['show_account_notice'] ) ? 1 : 0,
 			'account_notice_message'   => isset( $_POST['account_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['account_notice_message'] ) ) : '',
 			'show_order_notice'        => isset( $_POST['show_order_notice'] ) ? 1 : 0,
-			'order_notice_title'       => isset( $_POST['order_notice_title'] ) ? sanitize_text_field( wp_unslash( $_POST['order_notice_title'] ) ) : '',
 			'order_notice_message'     => isset( $_POST['order_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['order_notice_message'] ) ) : '',
 			'show_shortcode_notice'    => isset( $_POST['show_shortcode_notice'] ) ? 1 : 0,
 			'shortcode_notice_message' => isset( $_POST['shortcode_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['shortcode_notice_message'] ) ) : '',
@@ -364,15 +358,12 @@ class UniVoucher_WC_Promotions_Page {
 			'%s', // rules
 			'%d', // max_per_user
 			'%d', // max_total
-			'%d', // include_in_order_email
-			'%s', // order_email_template
 			'%d', // send_separate_email
 			'%s', // email_subject
 			'%s', // email_template
 			'%d', // show_account_notice
 			'%s', // account_notice_message
 			'%d', // show_order_notice
-			'%s', // order_notice_title
 			'%s', // order_notice_message
 			'%d', // show_shortcode_notice
 			'%s', // shortcode_notice_message
@@ -466,7 +457,37 @@ class UniVoucher_WC_Promotions_Page {
 					}
 				}
 			} elseif ( 'user' === $rule['type'] ) {
-				if ( 'registration_date' === $rule['condition'] ) {
+				if ( 'user_id' === $rule['condition'] ) {
+					$user_ids = isset( $rule['value'] ) ? $rule['value'] : '';
+					if ( $user_ids ) {
+						$rule_text = sprintf( esc_html__( 'User ID is: %s', 'univoucher-for-woocommerce' ), $user_ids );
+					}
+				} elseif ( 'completed_orders_count' === $rule['condition'] ) {
+					$operator = isset( $rule['operator'] ) ? $rule['operator'] : 'more_than';
+					$count = isset( $rule['value'] ) ? $rule['value'] : '';
+					if ( 'more_than' === $operator ) {
+						$rule_text = sprintf( esc_html__( 'User has more than %s completed orders', 'univoucher-for-woocommerce' ), $count );
+					} elseif ( 'less_than' === $operator ) {
+						$rule_text = sprintf( esc_html__( 'User has less than %s completed orders', 'univoucher-for-woocommerce' ), $count );
+					}
+				} elseif ( 'user_role' === $rule['condition'] ) {
+					$roles = isset( $rule['value'] ) ? ( is_array( $rule['value'] ) ? $rule['value'] : explode( ',', $rule['value'] ) ) : array();
+					if ( ! empty( $roles ) ) {
+						global $wp_roles;
+						if ( ! isset( $wp_roles ) ) {
+							$wp_roles = new WP_Roles();
+						}
+						$role_names = array();
+						foreach ( $roles as $role_key ) {
+							if ( isset( $wp_roles->role_names[ $role_key ] ) ) {
+								$role_names[] = translate_user_role( $wp_roles->role_names[ $role_key ] );
+							}
+						}
+						if ( ! empty( $role_names ) ) {
+							$rule_text = sprintf( esc_html__( 'User role is: %s', 'univoucher-for-woocommerce' ), implode( ', ', $role_names ) );
+						}
+					}
+				} elseif ( 'registration_date' === $rule['condition'] ) {
 					$operator = isset( $rule['operator'] ) ? $rule['operator'] : 'after';
 					$date = isset( $rule['value'] ) ? $rule['value'] : '';
 					if ( 'before' === $operator ) {
@@ -475,7 +496,7 @@ class UniVoucher_WC_Promotions_Page {
 						$rule_text = sprintf( esc_html__( 'User registered after %s', 'univoucher-for-woocommerce' ), $date );
 					}
 				} elseif ( 'never_received_promotion' === $rule['condition'] ) {
-					$rule_text = esc_html__( 'User never received a promotion before', 'univoucher-for-woocommerce' );
+					$rule_text = esc_html__( 'User never received any promotions before', 'univoucher-for-woocommerce' );
 				}
 			}
 
@@ -789,7 +810,7 @@ class UniVoucher_WC_Promotions_Page {
 								<th class="check-column">
 									<input type="checkbox" name="promotion_ids[]" value="<?php echo absint( $promotion->id ); ?>">
 								</th>
-								<td><strong><?php echo esc_html( $promotion->title ); ?></strong></td>
+								<td><strong><a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-promotions&action=edit&promotion_id=' . $promotion->id ) ); ?>"><?php echo esc_html( $promotion->title ); ?></a></strong></td>
 								<td><?php echo wp_kses_post( $rules_display ); ?></td>
 								<td><?php echo esc_html( $this->format_token_amount( $promotion->card_amount, $promotion->token_decimals ) . ' ' . $promotion->token_symbol ); ?></td>
 								<td><?php echo esc_html( $network_name ); ?></td>
@@ -904,15 +925,12 @@ class UniVoucher_WC_Promotions_Page {
 				'rules'                     => '[]',
 				'max_per_user'              => 0,
 				'max_total'                 => 0,
-				'include_in_order_email'    => 1,
-				'order_email_template'      => '',
 				'send_separate_email'       => 1,
 				'email_subject'             => '',
 				'email_template'            => '',
 				'show_account_notice'       => 1,
 				'account_notice_message'    => '',
 				'show_order_notice'         => 1,
-				'order_notice_title'        => '',
 				'order_notice_message'      => '',
 				'show_shortcode_notice'     => 1,
 				'shortcode_notice_message'  => '',
@@ -1050,7 +1068,7 @@ class UniVoucher_WC_Promotions_Page {
 						<?php esc_html_e( 'All rules must be satisfied for the promotion to trigger. Add multiple rules to create precise targeting.', 'univoucher-for-woocommerce' ); ?>
 						<br>
 						<strong><?php esc_html_e( 'Example:', 'univoucher-for-woocommerce' ); ?></strong>
-						<?php esc_html_e( '"Order total more than $100 AND user never received a promotion" ensures only first-time high-value customers get the reward.', 'univoucher-for-woocommerce' ); ?>
+						<?php esc_html_e( '"Order total more than $100 AND user never received any promotions before" ensures only first-time high-value customers get the reward.', 'univoucher-for-woocommerce' ); ?>
 					</p>
 
 					<div id="promotion-rules-container">
@@ -1115,58 +1133,6 @@ class UniVoucher_WC_Promotions_Page {
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<?php esc_html_e( 'Include in Order Complete Email', 'univoucher-for-woocommerce' ); ?>
-							</th>
-							<td>
-								<label>
-									<input type="checkbox" name="include_in_order_email" id="include_in_order_email" value="1" <?php checked( $promotion->include_in_order_email, 1 ); ?>>
-									<?php esc_html_e( 'Include gift card details in the WooCommerce order complete email', 'univoucher-for-woocommerce' ); ?>
-								</label>
-							</td>
-						</tr>
-						<tr id="order-email-template-row" style="<?php echo ( $promotion->include_in_order_email ) ? '' : 'display:none;'; ?>">
-							<th scope="row">
-								<label for="order_email_template"><?php esc_html_e( 'Order Email Template', 'univoucher-for-woocommerce' ); ?></label>
-							</th>
-							<td>
-								<?php
-								$default_order_template = '<div style="margin-bottom: 40px; padding: 20px; background-color: #f7f7f7; border-left: 4px solid #96588a;">
-	<h2 style="color: #96588a; margin-top: 0;">🎁 Special Gift For You!</h2>
-	<p style="margin: 10px 0;">Thank you for your order! As a token of our appreciation, you\'ve received a promotional gift card.</p>
-
-	<div style="background-color: #ffffff; padding: 15px; margin: 15px 0; border-radius: 4px;">
-		<p style="margin: 5px 0;"><strong>Amount:</strong> {amount} {token_symbol}</p>
-		<p style="margin: 5px 0;"><strong>Card ID:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{card_id}</code></p>
-		<p style="margin: 5px 0;"><strong>Card Secret:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{card_secret}</code></p>
-	</div>
-
-	<p style="margin: 10px 0; font-size: 14px;">Redeem your gift card at <a href="https://univoucher.com" style="color: #96588a; text-decoration: none;">univoucher.com</a></p>
-</div>';
-
-								$order_template = ! empty( $promotion->order_email_template ) ? $promotion->order_email_template : $default_order_template;
-
-								wp_editor(
-									$order_template,
-									'order_email_template',
-									array(
-										'textarea_name' => 'order_email_template',
-										'textarea_rows' => 20,
-										'media_buttons' => false,
-										'teeny'         => false,
-										'tinymce'       => array(
-											'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,alignleft,aligncenter,alignright,forecolor,backcolor',
-											'toolbar2' => '',
-										),
-									)
-								);
-								?>
-								<p class="description">
-									<?php esc_html_e( 'This template will be added to the WooCommerce order complete email. Available placeholders: {customer_name}, {user_name}, {order_number}, {order_id}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {token_symbol}, {site_name}', 'univoucher-for-woocommerce' ); ?>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
 								<?php esc_html_e( 'Send Separate Email', 'univoucher-for-woocommerce' ); ?>
 							</th>
 							<td>
@@ -1182,12 +1148,12 @@ class UniVoucher_WC_Promotions_Page {
 							</th>
 							<td>
 								<?php
-								$default_subject = 'You\'ve received a special gift from {site_name}!';
+								$default_subject = 'Your order #{order_id} got a free gift card 🎁';
 								$email_subject = ! empty( $promotion->email_subject ) ? $promotion->email_subject : $default_subject;
 								?>
 								<input type="text" id="email_subject" name="email_subject" class="large-text" value="<?php echo esc_attr( $email_subject ); ?>">
 								<p class="description">
-									<?php esc_html_e( 'Subject line for the separate gift card email. Available placeholders: {customer_name}, {order_number}, {site_name}', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Subject line for the separate gift card email. Available placeholders: {customer_name}, {order_number}, {order_id}, {site_name}', 'univoucher-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -1256,7 +1222,7 @@ class UniVoucher_WC_Promotions_Page {
 								);
 								?>
 								<p class="description">
-									<?php esc_html_e( 'This is the complete email template that will be sent as a separate email. Available placeholders: {customer_name}, {user_name}, {order_number}, {order_id}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {token_symbol}, {site_name}', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'This is the complete email template that will be sent as a separate email. Available placeholders: {customer_name}, {user_name}, {order_number}, {order_id}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {symbol}, {network}, {site_name}', 'univoucher-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -1273,31 +1239,53 @@ class UniVoucher_WC_Promotions_Page {
 							<td>
 								<label>
 									<input type="checkbox" name="show_order_notice" id="show_order_notice" value="1" <?php checked( $promotion->show_order_notice, 1 ); ?>>
-									<?php esc_html_e( 'Show a notice in all user\'s order pages if the user has an active promotional gift card (not redeemed nor cancelled) or until user dismisses the notification (dismiss stops the notification for 7 days)', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Show an elegant notice on all user\'s order pages if the user has an active promotional gift card (not redeemed nor cancelled)', 'univoucher-for-woocommerce' ); ?>
 								</label>
-							</td>
-						</tr>
-						<tr id="order-notice-title-row" style="<?php echo ( $promotion->show_order_notice ) ? '' : 'display:none;'; ?>">
-							<th scope="row">
-								<label for="order_notice_title"><?php esc_html_e( 'Notice Title', 'univoucher-for-woocommerce' ); ?></label>
-							</th>
-							<td>
-								<input type="text" id="order_notice_title" name="order_notice_title" class="regular-text" value="<?php echo esc_attr( ! empty( $promotion->order_notice_title ) ? $promotion->order_notice_title : 'You have got a free gift' ); ?>">
 							</td>
 						</tr>
 						<tr id="order-notice-message-row" style="<?php echo ( $promotion->show_order_notice ) ? '' : 'display:none;'; ?>">
 							<th scope="row">
-								<label for="order_notice_message"><?php esc_html_e( 'Notice Message', 'univoucher-for-woocommerce' ); ?></label>
+								<label for="order_notice_message"><?php esc_html_e( 'Order Page Notice Template', 'univoucher-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<textarea id="order_notice_message" name="order_notice_message" class="large-text" rows="10"><?php echo esc_textarea( ! empty( $promotion->order_notice_message ) ? $promotion->order_notice_message : 'Thank you for being our customer, please enjoy the free {amount} {symbol} on {network} UniVoucher gift card.<br><br>
-<strong>Card Value:</strong> {amount} {symbol}<br>
-<strong>Card ID:</strong> {card_id}<br>
-<strong>Card Secret:</strong> {card_secret}<br>
-<strong>Network:</strong> {network}<br><br>
-To redeem this card, please visit <a href="https://univoucher.com" target="_blank" rel="noopener noreferrer">univoucher.com</a>' ); ?></textarea>
+								<?php
+								$default_order_notice_template = '<div style="border-left:4px solid #667eea;background:#f8f9fa;padding:15px;margin:15px 0;border-radius:5px">
+	<h4 style="margin:0 0 5px 0;color:#667eea">🎁 You have got a Reward !</h4>
+	<h3 style="margin:0 0 15px 0;color:#2c3e50">{amount} {symbol} UniVoucher Gift Card</h3>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:10px">
+		<small><strong style="color:#667eea">CARD ID:</strong></small>
+		<div style="font-family:monospace;margin-top:3px;word-break:break-all"><small>{card_id}</small></div>
+	</div>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:10px">
+		<small><strong style="color:#667eea">CARD SECRET:</strong></small>
+		<div style="font-family:monospace;margin-top:3px;word-break:break-all"><small>{card_secret}</small></div>
+	</div>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:12px">
+		<small><strong style="color:#667eea">NETWORK:</strong></small>
+		<div style="font-family:monospace;margin-top:3px"><small>{network}</small></div>
+	</div>
+	<a href="https://univoucher.com" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#667eea;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none">Redeem Now →</a>
+</div>';
+
+								$order_notice_template = ! empty( $promotion->order_notice_message ) ? $promotion->order_notice_message : $default_order_notice_template;
+
+								wp_editor(
+									$order_notice_template,
+									'order_notice_message',
+									array(
+										'textarea_name' => 'order_notice_message',
+										'textarea_rows' => 30,
+										'media_buttons' => false,
+										'teeny'         => false,
+										'tinymce'       => array(
+											'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,alignleft,aligncenter,alignright,forecolor,backcolor',
+											'toolbar2' => '',
+										),
+									)
+								);
+								?>
 								<p class="description">
-									<?php esc_html_e( 'Available placeholders: {amount}, {symbol}, {network}, {card_id}, {card_secret}', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Design an elegant notice that will be displayed on order pages. Available placeholders: {amount}, {symbol}, {network}, {card_id}, {card_secret}', 'univoucher-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -1314,7 +1302,7 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 							<td>
 								<label>
 									<input type="checkbox" name="show_account_notice" id="show_account_notice" value="1" <?php checked( $promotion->show_account_notice, 1 ); ?>>
-									<?php esc_html_e( 'Show a notice in My Account pages if the user has an active promotional gift card (not redeemed nor cancelled) or until user dismisses the notification (dismiss stops the notification for 7 days)', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Show a notice in My Account dashboard if the user has an active promotional gift card (not redeemed nor cancelled) or until user dismisses the notification (dismiss stops the notification for 7 days)', 'univoucher-for-woocommerce' ); ?>
 								</label>
 							</td>
 						</tr>
@@ -1416,8 +1404,11 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 					<option value="includes_category" <?php selected( $rule['condition'], 'includes_category' ); ?> data-type="order"><?php esc_html_e( 'Includes a product from this category', 'univoucher-for-woocommerce' ); ?></option>
 					<option value="total_value" <?php selected( $rule['condition'], 'total_value' ); ?> data-type="order"><?php esc_html_e( 'Total value is', 'univoucher-for-woocommerce' ); ?></option>
 					<!-- User conditions -->
+					<option value="user_id" <?php selected( $rule['condition'], 'user_id' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'User ID is', 'univoucher-for-woocommerce' ); ?></option>
+					<option value="completed_orders_count" <?php selected( $rule['condition'], 'completed_orders_count' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'Completed orders count', 'univoucher-for-woocommerce' ); ?></option>
+					<option value="user_role" <?php selected( $rule['condition'], 'user_role' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'User role is', 'univoucher-for-woocommerce' ); ?></option>
 					<option value="registration_date" <?php selected( $rule['condition'], 'registration_date' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'Registration date', 'univoucher-for-woocommerce' ); ?></option>
-					<option value="never_received_promotion" <?php selected( $rule['condition'], 'never_received_promotion' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'Never received a promotion before', 'univoucher-for-woocommerce' ); ?></option>
+					<option value="never_received_promotion" <?php selected( $rule['condition'], 'never_received_promotion' ); ?> data-type="user" style="display:none;"><?php esc_html_e( 'never received any promotions before before', 'univoucher-for-woocommerce' ); ?></option>
 				</select>
 			</div>
 
@@ -1486,7 +1477,48 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 				</div>
 				<div class="value-never-received" style="<?php echo ( 'never_received_promotion' === $rule['condition'] ) ? '' : 'display:none;'; ?>">
 					<input type="hidden" name="rules[<?php echo esc_attr( $index_attr ); ?>][value]" value="1">
-					<span class="description"><?php esc_html_e( 'User has never received a promotion before', 'univoucher-for-woocommerce' ); ?></span>
+					<span class="description"><?php esc_html_e( 'User has never received any promotions before before', 'univoucher-for-woocommerce' ); ?></span>
+				</div>
+				<div class="value-user-id" style="<?php echo ( 'user_id' === $rule['condition'] ) ? '' : 'display:none;'; ?>">
+					<?php
+					$user_id_value = ( 'user_id' === $rule['condition'] && isset( $rule['value'] ) ) ? $rule['value'] : '';
+					?>
+					<input type="text" name="rules[<?php echo esc_attr( $index_attr ); ?>][value]" class="rule-value-user-id" value="<?php echo esc_attr( $user_id_value ); ?>" style="width: 300px;" placeholder="<?php esc_attr_e( 'User ID(s) separated by comma, e.g. 1,2,3', 'univoucher-for-woocommerce' ); ?>">
+					<span class="description"><?php esc_html_e( 'Enter one or more user IDs separated by commas', 'univoucher-for-woocommerce' ); ?></span>
+				</div>
+				<div class="value-completed-orders" style="<?php echo ( 'completed_orders_count' === $rule['condition'] ) ? '' : 'display:none;'; ?>">
+					<?php
+					$orders_operator = isset( $rule['operator'] ) ? $rule['operator'] : 'more_than';
+					$orders_value = ( 'completed_orders_count' === $rule['condition'] && isset( $rule['value'] ) ) ? $rule['value'] : '';
+					?>
+					<select name="rules[<?php echo esc_attr( $index_attr ); ?>][operator]" class="rule-orders-operator" style="width: 150px;">
+						<option value="more_than" <?php selected( $orders_operator, 'more_than' ); ?>><?php esc_html_e( 'More than', 'univoucher-for-woocommerce' ); ?></option>
+						<option value="less_than" <?php selected( $orders_operator, 'less_than' ); ?>><?php esc_html_e( 'Less than', 'univoucher-for-woocommerce' ); ?></option>
+					</select>
+					<input type="number" name="rules[<?php echo esc_attr( $index_attr ); ?>][value]" class="rule-value-orders-count" value="<?php echo esc_attr( $orders_value ); ?>" min="0" step="1" style="width: 150px;" placeholder="<?php esc_attr_e( 'Number of orders', 'univoucher-for-woocommerce' ); ?>">
+				</div>
+				<div class="value-user-role" style="<?php echo ( 'user_role' === $rule['condition'] ) ? '' : 'display:none;'; ?>">
+					<?php
+					// Get all WordPress roles
+					global $wp_roles;
+					if ( ! isset( $wp_roles ) ) {
+						$wp_roles = new WP_Roles();
+					}
+					$all_roles = $wp_roles->get_names();
+
+					$selected_roles = ( 'user_role' === $rule['condition'] && isset( $rule['value'] ) ) ? ( is_array( $rule['value'] ) ? $rule['value'] : explode( ',', $rule['value'] ) ) : array();
+					?>
+					<select name="rules[<?php echo esc_attr( $index_attr ); ?>][value][]" class="rule-value-user-role" multiple style="width: 300px; height: 150px;">
+						<?php
+						if ( ! empty( $all_roles ) ) {
+							foreach ( $all_roles as $role_key => $role_name ) {
+								$selected = in_array( $role_key, $selected_roles, false ) ? 'selected' : '';
+								echo '<option value="' . esc_attr( $role_key ) . '" ' . $selected . '>' . esc_html( $role_name ) . '</option>';
+							}
+						}
+						?>
+					</select>
+					<span class="description"><?php esc_html_e( 'User must have one of the selected roles (Hold Ctrl/Cmd to select multiple)', 'univoucher-for-woocommerce' ); ?></span>
 				</div>
 			</div>
 

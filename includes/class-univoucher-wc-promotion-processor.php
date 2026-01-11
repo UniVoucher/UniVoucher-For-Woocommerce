@@ -55,7 +55,6 @@ class UniVoucher_WC_Promotion_Processor {
 	 */
 	private function init_hooks() {
 		add_action( 'woocommerce_order_status_completed', array( $this, 'process_order_promotions' ), 10, 1 );
-		add_action( 'woocommerce_email_before_order_table', array( $this, 'add_promotion_to_completed_order_email' ), 10, 4 );
 	}
 
 	/**
@@ -297,6 +296,52 @@ class UniVoucher_WC_Promotion_Processor {
 		}
 
 		switch ( $condition ) {
+			case 'user_id':
+				// Value is a comma-separated list of user IDs
+				if ( is_string( $value ) ) {
+					$allowed_user_ids = array_map( 'absint', explode( ',', $value ) );
+					return in_array( $user_id, $allowed_user_ids, true );
+				}
+				return false;
+
+			case 'completed_orders_count':
+				// Get count of completed orders for this user
+				$customer = new WC_Customer( $user_id );
+				$orders_count = wc_get_orders(
+					array(
+						'customer_id' => $user_id,
+						'status'      => 'completed',
+						'return'      => 'ids',
+						'limit'       => -1,
+					)
+				);
+				$total_completed = is_array( $orders_count ) ? count( $orders_count ) : 0;
+
+				if ( 'more_than' === $operator ) {
+					return $total_completed > (int) $value;
+				} elseif ( 'less_than' === $operator ) {
+					return $total_completed < (int) $value;
+				}
+				return false;
+
+			case 'user_role':
+				// Check if user has any of the specified roles
+				$allowed_roles = is_array( $value ) ? $value : explode( ',', $value );
+				$allowed_roles = array_map( 'trim', $allowed_roles );
+
+				if ( empty( $allowed_roles ) ) {
+					return false;
+				}
+
+				// Check if user has any of the allowed roles
+				$user_roles = $user->roles;
+				foreach ( $allowed_roles as $role ) {
+					if ( in_array( $role, $user_roles, true ) ) {
+						return true;
+					}
+				}
+				return false;
+
 			case 'registration_date':
 				$registration_date = strtotime( $user->user_registered );
 				$target_date = strtotime( $value );
@@ -639,6 +684,10 @@ class UniVoucher_WC_Promotion_Processor {
 			return;
 		}
 
+		// Get network name.
+		$network_data = UniVoucher_WC_Product_Fields::get_network_data( $card_data['chain_id'] );
+		$network_name = $network_data ? $network_data['name'] : 'Unknown';
+
 		$card_info = sprintf(
 			"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s",
 			$card_data['card_id'],
@@ -654,7 +703,7 @@ class UniVoucher_WC_Promotion_Processor {
 				$subject = $promotion['email_subject'];
 			} else {
 				$site_name = get_bloginfo( 'name' );
-				$subject = sprintf( "You've received a special gift from %s!", $site_name );
+				$subject = sprintf( 'Your order #%s got a free gift card 🎁', $order->get_id() );
 			}
 
 			// Replace placeholders in subject.
@@ -667,7 +716,9 @@ class UniVoucher_WC_Promotion_Processor {
 				$message = str_replace( '{card_id}', $card_data['card_id'], $message );
 				$message = str_replace( '{card_secret}', $card_data['card_secret'], $message );
 				$message = str_replace( '{amount}', $this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ), $message );
-				$message = str_replace( '{token_symbol}', $card_data['token_symbol'], $message );
+				$message = str_replace( '{symbol}', $card_data['token_symbol'], $message );
+				$message = str_replace( '{token_symbol}', $card_data['token_symbol'], $message ); // Backward compatibility.
+				$message = str_replace( '{network}', $network_name, $message );
 				$message = str_replace( '{user_name}', $user->display_name, $message );
 				$message = str_replace( '{customer_name}', $user->display_name, $message );
 				$message = str_replace( '{order_id}', $order->get_id(), $message );
@@ -685,34 +736,18 @@ class UniVoucher_WC_Promotion_Processor {
 			// Set HTML content type for email.
 			add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
 
-			wp_mail( $user->user_email, $subject, $message );
+			// Build headers to improve deliverability and avoid promotions tab.
+			$headers = array(
+				'Content-Type: text/html; charset=UTF-8',
+				'X-Priority: 1',
+				'Importance: high',
+				'X-Auto-Response-Suppress: OOF, AutoReply',
+			);
+
+			wp_mail( $user->user_email, $subject, $message, $headers );
 
 			// Reset content type to avoid conflicts with other emails.
 			remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
-		}
-
-		// Store promotion data in order meta for email display if configured.
-		if ( ! empty( $promotion['include_in_order_email'] ) ) {
-			// Get existing promotional cards from order meta.
-			$promo_cards = $order->get_meta( '_univoucher_promo_cards', true );
-			if ( ! is_array( $promo_cards ) ) {
-				$promo_cards = array();
-			}
-
-			// Add new card to the list.
-			$promo_cards[] = array(
-				'promotion_id'           => $promotion['id'],
-				'promotion_title'        => $promotion['title'],
-				'order_email_template'   => $promotion['order_email_template'],
-				'card_id'                => $card_data['card_id'],
-				'card_secret'            => $card_data['card_secret'],
-				'amount'                 => $card_data['amount'],
-				'token_symbol'           => $card_data['token_symbol'],
-				'token_decimals'         => $card_data['token_decimals'],
-			);
-
-			$order->update_meta_data( '_univoucher_promo_cards', $promo_cards );
-			$order->save();
 		}
 	}
 
@@ -742,63 +777,4 @@ class UniVoucher_WC_Promotion_Processor {
 		return $formatted;
 	}
 
-	/**
-	 * Add promotional cards to completed order email.
-	 *
-	 * @param WC_Order $order         Order object.
-	 * @param bool     $sent_to_admin Whether the email is being sent to admin.
-	 * @param bool     $plain_text    Whether the email is plain text.
-	 * @param WC_Email $email         Email object.
-	 */
-	public function add_promotion_to_completed_order_email( $order, $sent_to_admin, $plain_text, $email ) {
-		// Only add to customer completed order email.
-	//	if ( $sent_to_admin || $email->id !== 'customer_completed_order' ) {
-	//		return;
-	//	}
-
-		// Get promotional cards from order meta.
-		$promo_cards = $order->get_meta( '_univoucher_promo_cards', true );
-		if ( empty( $promo_cards ) || ! is_array( $promo_cards ) ) {
-			return;
-		}
-
-		// Get user data for template placeholders.
-		$user_id = $order->get_user_id();
-		$user = $user_id ? get_userdata( $user_id ) : null;
-		$user_name = $user ? $user->display_name : $order->get_billing_first_name();
-
-		// Display each promotional card.
-		foreach ( $promo_cards as $card ) {
-			$template = ! empty( $card['order_email_template'] ) ? $card['order_email_template'] : '';
-
-			if ( empty( $template ) ) {
-				continue;
-			}
-
-			// Prepare gift card details.
-			$decimals = isset( $card['token_decimals'] ) ? (int) $card['token_decimals'] : 6;
-			$gift_card_details = sprintf(
-				"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s",
-				$card['card_id'],
-				$card['card_secret'],
-				$this->format_token_amount( $card['amount'], $decimals ),
-				$card['token_symbol']
-			);
-
-			// Replace placeholders.
-			$template = str_replace( '{card_id}', $card['card_id'], $template );
-			$template = str_replace( '{card_secret}', $card['card_secret'], $template );
-			$template = str_replace( '{amount}', $this->format_token_amount( $card['amount'], $decimals ), $template );
-			$template = str_replace( '{token_symbol}', $card['token_symbol'], $template );
-			$template = str_replace( '{user_name}', $user_name, $template );
-			$template = str_replace( '{customer_name}', $user_name, $template );
-			$template = str_replace( '{order_id}', $order->get_id(), $template );
-			$template = str_replace( '{order_number}', $order->get_id(), $template );
-			$template = str_replace( '{site_name}', get_bloginfo( 'name' ), $template );
-			$template = str_replace( '{gift_card_details}', $gift_card_details, $template );
-
-			// Output the template.
-			echo wp_kses_post( $template );
-		}
-	}
 }

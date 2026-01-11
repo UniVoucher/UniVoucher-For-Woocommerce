@@ -626,11 +626,11 @@ class UniVoucher_WC_Promotional_Cards_Page {
 									<th class="check-column">
 										<input type="checkbox" name="card_ids[]" value="<?php echo absint( $card->id ); ?>">
 									</th>
-									<td><strong><?php echo esc_html( $card->promotion_title ); ?></strong></td>
+									<td><strong><a href="<?php echo esc_url( admin_url( 'admin.php?page=univoucher-promotions&action=edit&promotion_id=' . $card->promotion_id ) ); ?>"><?php echo esc_html( $card->promotion_title ); ?></a></strong></td>
 									<td>
 										<?php
 										if ( $card->user_email ) {
-											echo esc_html( $card->display_name ) . '<br><small>' . esc_html( $card->user_email ) . '</small>';
+											echo '<a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . absint( $card->user_id ) ) ) . '">' . esc_html( $card->display_name ) . '</a><br><small>' . esc_html( $card->user_email ) . '</small>';
 										} else {
 											esc_html_e( 'N/A', 'univoucher-for-woocommerce' );
 										}

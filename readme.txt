@@ -5,12 +5,11 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.3
+Stable tag: 1.4.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Integrate UniVoucher decentralized crypto gift cards with WooCommerce.
-Create and sell blockchain-based gift cards or reward your customers with a crypto gift card when their orders meet specific rules.
+Integrate UniVoucher crypto gift cards with WooCommerce. Sell blockchain-based gift cards or reward customers based on order rules.
 
 == Description ==
 
@@ -196,6 +195,11 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.4.4 =
+* Enhanced promotion rules designer with additional conditions
+* Improved promotion template functionality
+* Fixed minor bugs
+
 = 1.4.3 =
 * Fixed critical timing issue preventing database initialization on plugin load
 * Database instance now created automatically in plugin constructor
@@ -350,6 +354,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.4.4 =
+Enhancement update with improved promotion rules designer and template improvements. This version adds more condition options to the promotion rules designer and enhances promotion template functionality. Includes minor bug fixes.
 
 = 1.4.3 =
 Critical fix for database initialization. Resolves hook timing issue that prevented tables from being created. Essential for all users on 1.4.0, 1.4.1, or 1.4.2.

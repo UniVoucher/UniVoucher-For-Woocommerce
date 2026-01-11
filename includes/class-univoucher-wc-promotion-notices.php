@@ -54,7 +54,7 @@ class UniVoucher_WC_Promotion_Notices {
 	 * Initialize hooks.
 	 */
 	private function init_hooks() {
-		// Display account notice on My Account pages (except order pages).
+		// Display account notice on My Account dashboard only.
 		add_action( 'woocommerce_account_content', array( $this, 'display_account_notice' ), 1 );
 
 		// Display order page notice.
@@ -108,14 +108,15 @@ class UniVoucher_WC_Promotion_Notices {
 	private function get_notice_styles() {
 		return "
 			.univoucher-promotion-notice {
-				position: relative;
-				padding: 15px 40px 15px 15px;
-				margin: 15px auto;
+				position: relative !important;
+				padding: 15px 40px 15px 15px !important;
+				margin: 15px auto !important;
 				max-width: 1200px;
 				border: 1px solid currentColor;
 				border-radius: 4px;
 				font-size: 14px;
 				line-height: 1.6;
+				display: block !important;
 			}
 			.univoucher-promotion-notice-title {
 				font-weight: bold;
@@ -126,22 +127,28 @@ class UniVoucher_WC_Promotion_Notices {
 				margin: 0;
 			}
 			.univoucher-promotion-notice-dismiss {
-				position: absolute;
-				top: 10px;
-				right: 10px;
-				background: transparent;
-				border: none;
-				font-size: 20px;
-				cursor: pointer;
-				padding: 0;
-				width: 24px;
-				height: 24px;
-				line-height: 1;
-				color: inherit;
-				opacity: 0.7;
+				position: absolute !important;
+				top: 10px !important;
+				right: 10px !important;
+				background: transparent !important;
+				border: none !important;
+				font-size: 20px !important;
+				cursor: pointer !important;
+				padding: 0 !important;
+				width: 24px !important;
+				height: 24px !important;
+				line-height: 1 !important;
+				color: inherit !important;
+				opacity: 0.5;
+				z-index: 10 !important;
+				margin: 0 !important;
+				float: none !important;
+				transition: opacity 0.2s ease;
 			}
 			.univoucher-promotion-notice-dismiss:hover {
 				opacity: 1;
+				color: inherit !important;
+				background: transparent !important;
 			}
 			.univoucher-promotion-card-details {
 				margin-top: 10px;
@@ -153,19 +160,35 @@ class UniVoucher_WC_Promotion_Notices {
 			.univoucher-promotion-card-details div {
 				margin: 5px 0;
 			}
+			.univoucher-order-promotion-notice {
+				margin: 20px 0;
+			}
 		";
 	}
 
 	/**
-	 * Display account notice for active promotional cards.
+	 * Display account notice for active promotional cards on dashboard.
 	 */
 	public function display_account_notice() {
-		// Don't show on order pages.
-		if ( is_wc_endpoint_url( 'order-received' ) || is_wc_endpoint_url( 'view-order' ) ) {
+		if ( ! is_user_logged_in() ) {
 			return;
 		}
 
-		if ( ! is_user_logged_in() ) {
+		// Only show on dashboard page (when no specific endpoint is set).
+		global $wp;
+		$is_dashboard = true;
+
+		// Check if any WooCommerce endpoint is active (other than dashboard).
+		if ( isset( $wp->query_vars ) ) {
+			foreach ( WC()->query->get_query_vars() as $key => $value ) {
+				if ( isset( $wp->query_vars[ $key ] ) && 'dashboard' !== $key ) {
+					$is_dashboard = false;
+					break;
+				}
+			}
+		}
+
+		if ( ! $is_dashboard ) {
 			return;
 		}
 
@@ -251,28 +274,31 @@ class UniVoucher_WC_Promotion_Notices {
 				continue;
 			}
 
-			// Check if notice is dismissed.
-			if ( $this->is_notice_dismissed( $user_id, $card['id'], 'order' ) ) {
-				continue;
-			}
 
 			// Get network name.
 			$network_data = UniVoucher_WC_Product_Fields::get_network_data( $card['chain_id'] );
 			$network_name = $network_data ? $network_data['name'] : 'Unknown';
 
-			// Prepare title and message.
-			$title = ! empty( $promotion['order_notice_title'] )
-				? $promotion['order_notice_title']
-				: 'You have got a free gift';
-
+			// Prepare message.
 			$message = ! empty( $promotion['order_notice_message'] )
 				? $promotion['order_notice_message']
-				: 'Thank you for being our customer, please enjoy the free {amount} {symbol} on {network} UniVoucher gift card.<br><br>
-<strong>Card Value:</strong> {amount} {symbol}<br>
-<strong>Card ID:</strong> {card_id}<br>
-<strong>Card Secret:</strong> {card_secret}<br>
-<strong>Network:</strong> {network}<br><br>
-To redeem this card, please visit <a href="https://univoucher.com" target="_blank" rel="noopener noreferrer">univoucher.com</a>';
+				: '<div style="border-left:4px solid #667eea;background:#f8f9fa;padding:15px;margin:15px 0;border-radius:5px">
+	<h4 style="margin:0 0 5px 0;color:#667eea">🎁 You have got a Reward !</h4>
+	<h3 style="margin:0 0 15px 0;color:#2c3e50">{amount} {symbol} UniVoucher Gift Card</h3>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:10px">
+		<small><strong style="color:#667eea">CARD ID:</strong></small>
+		<div style="font-family:monospace;margin-top:3px;word-break:break-all"><small>{card_id}</small></div>
+	</div>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:10px">
+		<small><strong style="color:#667eea">CARD SECRET:</strong></small>
+		<div style="font-family:monospace;margin-top:3px;word-break:break-all"><small>{card_secret}</small></div>
+	</div>
+	<div style="background:#fff;padding:10px;border-radius:4px;margin-bottom:12px">
+		<small><strong style="color:#667eea">NETWORK:</strong></small>
+		<div style="font-family:monospace;margin-top:3px"><small>{network}</small></div>
+	</div>
+	<a href="https://univoucher.com" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#667eea;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none">Redeem Now →</a>
+</div>';
 
 			$message = str_replace( '{amount}', $this->format_token_amount( $card['amount'] ), $message );
 			$message = str_replace( '{symbol}', $card['token_symbol'], $message );
@@ -280,8 +306,8 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 			$message = str_replace( '{card_id}', $card['card_id'], $message );
 			$message = str_replace( '{card_secret}', $card['card_secret'], $message );
 
-			// Display notice with title.
-			$this->render_notice( $card, $message, 'order', $title );
+			// Display notice without title and dismiss button for order pages.
+			$this->render_order_notice( $message );
 		}
 	}
 
@@ -345,6 +371,19 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 	}
 
 	/**
+	 * Render order notice HTML (no dismiss button, no frame, no title).
+	 *
+	 * @param string $message Notice message.
+	 */
+	private function render_order_notice( $message ) {
+		?>
+		<div class="univoucher-order-promotion-notice">
+			<?php echo wp_kses_post( $message ); ?>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render notice HTML.
 	 *
 	 * @param array  $card    Card data.
@@ -405,20 +444,13 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 	 * @return string Updated card status.
 	 */
 	private function verify_card_status( $card ) {
-		// Get UniVoucher API key.
-		$api_key = get_option( 'univoucher_wc_api_key', '' );
-		if ( empty( $api_key ) ) {
-			return $card['status'];
-		}
-
 		// Call UniVoucher API to check card status.
 		$api_url = 'https://api.univoucher.com/v1/cards/single?id=' . urlencode( $card['card_id'] );
 		$response = wp_remote_get(
 			$api_url,
 			array(
 				'headers' => array(
-					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
+					'Accept' => 'application/json',
 				),
 				'timeout' => 10,
 			)
@@ -436,16 +468,20 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 			return $card['status'];
 		}
 
-		// Check if card is redeemed or cancelled
-		$is_redeemed = isset( $data['isRedeemed'] ) && $data['isRedeemed'];
-		$is_cancelled = isset( $data['isCancelled'] ) && $data['isCancelled'];
-
-		if ( $is_redeemed ) {
-			$new_status = 'redeemed';
-		} elseif ( $is_cancelled ) {
-			$new_status = 'cancelled';
+		// Check card status from API response
+		if ( isset( $data['status'] ) ) {
+			$api_status = strtolower( $data['status'] );
+			if ( 'redeemed' === $api_status ) {
+				$new_status = 'redeemed';
+			} elseif ( 'cancelled' === $api_status ) {
+				$new_status = 'cancelled';
+			} else {
+				// Check active flag
+				$new_status = ( isset( $data['active'] ) && $data['active'] ) ? 'active' : 'inactive';
+			}
 		} else {
-			$new_status = 'active';
+			// Fallback to active flag if status not present
+			$new_status = ( isset( $data['active'] ) && $data['active'] ) ? 'active' : 'inactive';
 		}
 
 		// Update card status in database if changed.
@@ -454,15 +490,18 @@ To redeem this card, please visit <a href="https://univoucher.com" target="_blan
 			$table = $this->database->uv_get_promotional_cards_table();
 
 			$update_data = array( 'status' => $new_status );
+			$format = array( '%s' );
+
 			if ( 'redeemed' === $new_status ) {
 				$update_data['redeemed_at'] = current_time( 'mysql' );
+				$format[] = '%s';
 			}
 
 			$wpdb->update(
 				$table,
 				$update_data,
 				array( 'id' => $card['id'] ),
-				array( '%s', '%s' ),
+				$format,
 				array( '%d' )
 			);
 		}
