@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.5
+Stable tag: 1.4.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -195,6 +195,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.4.6 =
+* Fixed minor bugs
+
 = 1.4.5 =
 * UI improvments
 
@@ -357,6 +360,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.4.6 =
+* Bug fix update addressing minor issues.
 
 = 1.4.5 =
 * Enhancement update with improved UI and better email headers.

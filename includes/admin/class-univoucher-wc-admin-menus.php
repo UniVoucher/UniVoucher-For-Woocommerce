@@ -80,6 +80,16 @@ class UniVoucher_WC_Admin_Menus {
 			array( $this, 'promotions_page' )
 		);
 
+		// Add Gift Cards submenu (hidden from menu, accessed via button).
+		add_submenu_page(
+			null,
+			esc_html__( 'Add Gift Cards', 'univoucher-for-woocommerce' ),
+			esc_html__( 'Add Gift Cards', 'univoucher-for-woocommerce' ),
+			'manage_options',
+			'univoucher-add-cards',
+			array( $this, 'add_cards_page' )
+		);
+
 		// Add Promotional Cards submenu (hidden from menu, accessed via button).
 		add_submenu_page(
 			null,

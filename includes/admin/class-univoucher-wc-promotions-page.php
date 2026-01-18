@@ -1124,6 +1124,37 @@ class UniVoucher_WC_Promotions_Page {
 				</div>
 
 				<div class="univoucher-promotion-section">
+					<h2><?php esc_html_e( 'Card Expiration Settings', 'univoucher-for-woocommerce' ); ?></h2>
+					<p class="description" style="margin: 0 0 15px 0;">
+						<?php esc_html_e( 'Configure automatic expiration for promotional gift cards. All expired cards will be automatically cancelled once you visit any page of the UniVoucher plugin to avoid unnecessary cron jobs. The card\'s value will be returned to your internal wallet once cancelled.', 'univoucher-for-woocommerce' ); ?>
+					</p>
+					<table class="form-table">
+						<tr>
+							<th scope="row">
+								<label for="card_expiration_days"><?php esc_html_e( 'Card Expiration After Days', 'univoucher-for-woocommerce' ); ?></label>
+							</th>
+							<td>
+								<input type="number" id="card_expiration_days" name="card_expiration_days" class="small-text" value="<?php echo isset( $promotion->card_expiration_days ) ? absint( $promotion->card_expiration_days ) : 0; ?>" min="0">
+								<p class="description">
+									<?php esc_html_e( 'Number of days after which the promotional gift card will expire. Set to 0 for cards that never expire.', 'univoucher-for-woocommerce' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<?php esc_html_e( 'Auto-Cancel After Expiration', 'univoucher-for-woocommerce' ); ?>
+							</th>
+							<td>
+								<label>
+									<input type="checkbox" id="auto_cancel_expired" name="auto_cancel_expired" value="1" <?php checked( ! empty( $promotion->auto_cancel_expired ) ); ?>>
+									<?php esc_html_e( 'Automatically cancel expired cards and return their value to the internal wallet', 'univoucher-for-woocommerce' ); ?>
+								</label>
+							</td>
+						</tr>
+					</table>
+				</div>
+
+				<div class="univoucher-promotion-section">
 					<h2><?php esc_html_e( 'Email Settings', 'univoucher-for-woocommerce' ); ?></h2>
 					<p class="description" style="margin: 0 0 15px 0;">
 						<?php esc_html_e( 'Configure how customers receive their promotional gift cards.', 'univoucher-for-woocommerce' ); ?>

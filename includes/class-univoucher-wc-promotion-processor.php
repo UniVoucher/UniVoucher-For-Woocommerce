@@ -689,11 +689,12 @@ class UniVoucher_WC_Promotion_Processor {
 		$network_name = $network_data ? $network_data['name'] : 'Unknown';
 
 		$card_info = sprintf(
-			"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s",
+			"Card ID: %s<br>Card Secret: %s<br>Amount: %s %s<br>Network: %s",
 			$card_data['card_id'],
 			$card_data['card_secret'],
 			$this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ),
-			$card_data['token_symbol']
+			$card_data['token_symbol'],
+			$network_name
 		);
 
 		// Send separate email if configured.
