@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.5';
+	const DB_VERSION = '3.5.7';
 
 	/**
 	 * Gift cards table name.
@@ -196,6 +196,8 @@ class UniVoucher_WC_Database {
 			order_notice_message longtext DEFAULT NULL,
 			show_shortcode_notice tinyint(1) NOT NULL DEFAULT 0,
 			shortcode_notice_message text DEFAULT NULL,
+			card_expiration_days int unsigned NOT NULL DEFAULT 0,
+			auto_cancel_expired tinyint(1) NOT NULL DEFAULT 0,
 			is_active tinyint(1) NOT NULL DEFAULT 1,
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -238,7 +240,7 @@ class UniVoucher_WC_Database {
 			token_decimals tinyint unsigned NOT NULL DEFAULT 18,
 			amount decimal(36,18) NOT NULL,
 			transaction_hash varchar(66) DEFAULT NULL,
-			status enum('active','redeemed','cancelled') NOT NULL DEFAULT 'active',
+			status enum('active','redeemed','cancelled','expired') NOT NULL DEFAULT 'active',
 			redeemed_at datetime DEFAULT NULL,
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),

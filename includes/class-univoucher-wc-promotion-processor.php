@@ -778,4 +778,281 @@ class UniVoucher_WC_Promotion_Processor {
 		return $formatted;
 	}
 
+	/**
+	 * Process expired promotional cards - mark as expired or cancel them if auto-cancel is enabled.
+	 *
+	 * This method is called when visiting any UniVoucher admin page to avoid cron jobs.
+	 */
+	public function process_expired_promotional_cards() {
+		global $wpdb;
+
+		// Get all active promotions with expiration days set.
+		$promotions_table = $this->database->uv_get_promotions_table();
+		$promotions = $wpdb->get_results(
+			"SELECT * FROM $promotions_table
+			WHERE is_active = 1
+			AND card_expiration_days > 0",
+			ARRAY_A
+		);
+
+		if ( empty( $promotions ) ) {
+			return;
+		}
+
+		// Process each promotion.
+		foreach ( $promotions as $promotion ) {
+			if ( ! empty( $promotion['auto_cancel_expired'] ) ) {
+				// Auto-cancel is enabled - cancel cards via API.
+				$this->cancel_expired_cards_for_promotion( $promotion );
+			} else {
+				// Auto-cancel is disabled - just mark cards as expired.
+				$this->mark_expired_cards_for_promotion( $promotion );
+			}
+		}
+	}
+
+	/**
+	 * Mark expired cards as 'expired' status without cancelling them on-chain.
+	 *
+	 * @param array $promotion Promotion data.
+	 */
+	private function mark_expired_cards_for_promotion( $promotion ) {
+		global $wpdb;
+
+		$cards_table = $this->database->uv_get_promotional_cards_table();
+		$expiration_days = absint( $promotion['card_expiration_days'] );
+
+		// Update expired active cards to 'expired' status.
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $cards_table
+				SET status = 'expired'
+				WHERE promotion_id = %d
+				AND status = 'active'
+				AND DATEDIFF(NOW(), created_at) > %d",
+				$promotion['id'],
+				$expiration_days
+			)
+		);
+
+		if ( $updated > 0 ) {
+			error_log(
+				sprintf(
+					'UniVoucher Promotion: Marked %d cards as expired for promotion "%s" (no auto-cancel)',
+					$updated,
+					$promotion['title']
+				)
+			);
+		}
+	}
+
+	/**
+	 * Cancel expired cards for a specific promotion.
+	 *
+	 * @param array $promotion Promotion data.
+	 */
+	private function cancel_expired_cards_for_promotion( $promotion ) {
+		global $wpdb;
+
+		$cards_table = $this->database->uv_get_promotional_cards_table();
+		$expiration_days = absint( $promotion['card_expiration_days'] );
+
+		// Find expired active cards for this promotion.
+		$expired_cards = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM $cards_table
+				WHERE promotion_id = %d
+				AND status = 'active'
+				AND DATEDIFF(NOW(), created_at) > %d
+				LIMIT 100",
+				$promotion['id'],
+				$expiration_days
+			),
+			ARRAY_A
+		);
+
+		if ( empty( $expired_cards ) ) {
+			return;
+		}
+
+		// Group cards by chain_id for batch processing.
+		$cards_by_chain = array();
+		foreach ( $expired_cards as $card ) {
+			$chain_id = $card['chain_id'];
+			if ( ! isset( $cards_by_chain[ $chain_id ] ) ) {
+				$cards_by_chain[ $chain_id ] = array();
+			}
+			$cards_by_chain[ $chain_id ][] = $card;
+		}
+
+		// Process each chain separately.
+		foreach ( $cards_by_chain as $chain_id => $cards ) {
+			$this->cancel_cards_batch( $cards, $promotion );
+		}
+	}
+
+	/**
+	 * Cancel a batch of promotional cards using UniVoucher API.
+	 *
+	 * @param array $cards     Array of card data.
+	 * @param array $promotion Promotion data.
+	 */
+	private function cancel_cards_batch( $cards, $promotion ) {
+		// Get internal wallet private key.
+		$encryption = UniVoucher_WC_Encryption::instance();
+		$encrypted_private_key = get_option( 'univoucher_wc_wallet_private_key', '' );
+
+		if ( ! $encrypted_private_key ) {
+			error_log( 'UniVoucher Promotion: Cannot cancel cards - internal wallet not configured' );
+			return;
+		}
+
+		$private_key = $encryption->uv_decrypt_data( $encrypted_private_key );
+		if ( is_wp_error( $private_key ) ) {
+			error_log( 'UniVoucher Promotion: Cannot cancel cards - invalid wallet configuration' );
+			return;
+		}
+
+		// Ensure private key has 0x prefix.
+		if ( ! empty( $private_key ) && strpos( $private_key, '0x' ) !== 0 ) {
+			$private_key = '0x' . $private_key;
+		}
+
+		// Extract card IDs.
+		$card_ids = array_map(
+			function( $card ) {
+				return $card['card_id'];
+			},
+			$cards
+		);
+
+		// Generate callback URL and auth token.
+		$callback_url = home_url( '/wp-json/univoucher/v1/promotion-cancel-callback' );
+		$auth_token = wp_generate_password( 32, false );
+		$cancel_batch_id = 'cancel_promo_' . $promotion['id'] . '_' . time();
+
+		// Store auth token and context for callback verification.
+		set_transient( 'univoucher_cancel_callback_auth_' . $cancel_batch_id, $auth_token, HOUR_IN_SECONDS );
+		set_transient(
+			'univoucher_cancel_callback_context_' . $cancel_batch_id,
+			array(
+				'promotion_id' => $promotion['id'],
+				'card_ids'     => $card_ids,
+				'cards'        => $cards,
+			),
+			HOUR_IN_SECONDS
+		);
+
+		// Prepare API request.
+		$api_data = array(
+			'cardIds'     => $card_ids,
+			'privateKey'  => $private_key,
+			'callbackUrl' => $callback_url,
+			'authToken'   => $auth_token,
+		);
+
+		// Make API request.
+		$response = wp_remote_post(
+			'https://api.univoucher.com/v1/cards/cancel',
+			array(
+				'headers' => array(
+					'Content-Type' => 'application/json',
+				),
+				'body'    => wp_json_encode( $api_data ),
+				'timeout' => 30,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			error_log( 'UniVoucher Promotion Cancellation: Failed to cancel cards - ' . $response->get_error_message() );
+			return;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$response_data = json_decode( $response_body, true );
+
+		if ( $response_code === 202 && isset( $response_data['success'] ) && $response_data['success'] ) {
+			// Success - cancellation initiated.
+			error_log(
+				sprintf(
+					'UniVoucher Promotion: Initiated cancellation of %d expired cards for promotion "%s"',
+					count( $card_ids ),
+					$promotion['title']
+				)
+			);
+		} else {
+			// Error.
+			$error_message = isset( $response_data['error'] ) ? $response_data['error'] : 'Unknown error';
+			error_log( 'UniVoucher Promotion Cancellation: Failed to cancel cards - ' . $error_message );
+		}
+	}
+
+	/**
+	 * Handle promotional card cancellation callback from UniVoucher API.
+	 *
+	 * @param string $cancel_batch_id The cancellation batch ID.
+	 * @param array  $callback_data   The callback data from API.
+	 * @return bool Success status.
+	 */
+	public function handle_cancellation_callback( $cancel_batch_id, $callback_data ) {
+		// Get stored context.
+		$context = get_transient( 'univoucher_cancel_callback_context_' . $cancel_batch_id );
+		if ( ! $context ) {
+			error_log( 'UniVoucher Promotion Cancellation: Callback context not found for ' . $cancel_batch_id );
+			return false;
+		}
+
+		global $wpdb;
+		$cards_table = $this->database->uv_get_promotional_cards_table();
+
+		// Check callback status.
+		$status = isset( $callback_data['status'] ) ? $callback_data['status'] : '';
+
+		if ( $status === 'completed' && isset( $callback_data['cancelledCards'] ) && ! empty( $callback_data['cancelledCards'] ) ) {
+			// Success - cards were cancelled.
+			$cancelled_count = 0;
+
+			foreach ( $callback_data['cancelledCards'] as $cancelled_card ) {
+				$card_id = $cancelled_card['cardId'];
+
+				// Update card status.
+				$updated = $wpdb->update(
+					$cards_table,
+					array( 'status' => 'cancelled' ),
+					array( 'card_id' => $card_id ),
+					array( '%s' ),
+					array( '%s' )
+				);
+
+				if ( $updated !== false ) {
+					$cancelled_count++;
+				}
+			}
+
+			error_log(
+				sprintf(
+					'UniVoucher Promotion: Successfully cancelled %d expired promotional cards',
+					$cancelled_count
+				)
+			);
+
+			// Clean up transients.
+			delete_transient( 'univoucher_cancel_callback_auth_' . $cancel_batch_id );
+			delete_transient( 'univoucher_cancel_callback_context_' . $cancel_batch_id );
+
+			return true;
+		} else {
+			// Error.
+			$error_message = isset( $callback_data['error'] ) ? $callback_data['error'] : 'Unknown error';
+			error_log( 'UniVoucher Promotion Cancellation: Failed to cancel cards - ' . $error_message );
+
+			// Clean up transients.
+			delete_transient( 'univoucher_cancel_callback_auth_' . $cancel_batch_id );
+			delete_transient( 'univoucher_cancel_callback_context_' . $cancel_batch_id );
+		}
+
+		return false;
+	}
+
 }

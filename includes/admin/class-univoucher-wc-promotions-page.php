@@ -325,6 +325,8 @@ class UniVoucher_WC_Promotions_Page {
 			'order_notice_message'     => isset( $_POST['order_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['order_notice_message'] ) ) : '',
 			'show_shortcode_notice'    => isset( $_POST['show_shortcode_notice'] ) ? 1 : 0,
 			'shortcode_notice_message' => isset( $_POST['shortcode_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['shortcode_notice_message'] ) ) : '',
+			'card_expiration_days'     => isset( $_POST['card_expiration_days'] ) ? absint( $_POST['card_expiration_days'] ) : 0,
+			'auto_cancel_expired'      => isset( $_POST['auto_cancel_expired'] ) ? 1 : 0,
 		);
 
 		// Validate required fields.
@@ -367,6 +369,8 @@ class UniVoucher_WC_Promotions_Page {
 			'%s', // order_notice_message
 			'%d', // show_shortcode_notice
 			'%s', // shortcode_notice_message
+			'%d', // card_expiration_days
+			'%d', // auto_cancel_expired
 		);
 
 		if ( $promotion_id ) {
@@ -1742,7 +1746,7 @@ class UniVoucher_WC_Promotions_Page {
 
 		$args = array(
 			'post_type'      => 'product',
-			'post_status'    => 'publish',
+			'post_status'    => 'any',
 			'posts_per_page' => 20,
 			's'              => $term,
 		);

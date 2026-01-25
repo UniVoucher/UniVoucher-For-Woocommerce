@@ -3,7 +3,7 @@
  * Plugin Name: UniVoucher For WooCommerce
  * Plugin URI: https://univoucher.com
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.4.6
+ * Version: 1.4.7
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -34,7 +34,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.4.6
+	 * @version 1.4.7
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.4.6';
+		public $version = '1.4.7';
 
 		/**
 		 * The single instance of the class.
@@ -419,6 +419,13 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 			register_rest_route( 'univoucher/v1', '/promotion-callback', array(
 				'methods' => 'POST',
 				'callback' => array( $callback_manager, 'handle_promotion_callback' ),
+				'permission_callback' => '__return_true',
+			) );
+
+			// Register promotion cancellation callback endpoint.
+			register_rest_route( 'univoucher/v1', '/promotion-cancel-callback', array(
+				'methods' => 'POST',
+				'callback' => array( $callback_manager, 'handle_promotion_cancel_callback' ),
 				'permission_callback' => '__return_true',
 			) );
 		}

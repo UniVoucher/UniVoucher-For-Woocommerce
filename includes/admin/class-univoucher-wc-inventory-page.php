@@ -441,7 +441,7 @@ class UniVoucher_WC_Inventory_List_Table extends WP_List_Table {
 				// Get products that have UniVoucher enabled
 				$univoucher_products = get_posts( array(
 					'post_type'      => 'product',
-					'post_status'    => 'publish',
+					'post_status'    => 'any',
 					'posts_per_page' => -1,
 					'meta_query'     => array(
 						array(

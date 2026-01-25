@@ -782,10 +782,22 @@
                     $('#tx-cost-card-amount').text(`${cardAmount} ${tokenSymbol}`);
                     $('#tx-cost-univoucher-fee').text(`${univoucherFee.toFixed(6)} ${tokenSymbol}`);
                     $('#tx-cost-quantity').text(quantity);
+
+                    // Show/hide total rows based on quantity
+                    if (quantity > 1) {
+                        $('#tx-total-cards-amount-row').show();
+                        $('#tx-total-fees-row').show();
+                        $('#tx-total-cards-amount').text(`${(cardAmount * quantity).toFixed(6)} ${tokenSymbol}`);
+                        $('#tx-total-fees').text(`${(univoucherFee * quantity).toFixed(6)} ${tokenSymbol}`);
+                    } else {
+                        $('#tx-total-cards-amount-row').hide();
+                        $('#tx-total-fees-row').hide();
+                    }
+
                     $('#tx-gas-required').text(gasEstimation.gasLimit.toLocaleString());
                     $('#tx-gas-cost').text(`${gasEstimation.gasCostEth.toFixed(6)} ${nativeSymbol}`);
                     $('#tx-total-cost').text(`${(totalPerCard * quantity).toFixed(6)} ${tokenSymbol} + ${gasEstimation.gasCostEth.toFixed(6)} ${nativeSymbol}`);
-                    
+
                     $('#gas-estimation-loading').hide();
                     $('#transaction-summary').show();
                 }).catch((error) => {
@@ -819,7 +831,8 @@
                     if (tokenAddress === '0x0000000000000000000000000000000000000000') {
                         // Native token - check ETH balance
                         provider.getBalance(wallet.address).then((balance) => {
-                            const requiredWei = ethers.parseUnits(requiredAmount.toString(), 18);
+                            // Fix floating point precision by using toFixed before parsing
+                            const requiredWei = ethers.parseUnits(requiredAmount.toFixed(18), 18);
                             resolve(balance >= requiredWei);
                         }).catch(reject);
                     } else {
@@ -828,9 +841,10 @@
                             'function balanceOf(address owner) view returns (uint256)'
                         ];
                         const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
-                        
+
                         tokenContract.balanceOf(wallet.address).then((balance) => {
-                            const requiredWei = ethers.parseUnits(requiredAmount.toString(), tokenDecimals);
+                            // Fix floating point precision by using toFixed before parsing
+                            const requiredWei = ethers.parseUnits(requiredAmount.toFixed(tokenDecimals), tokenDecimals);
                             resolve(balance >= requiredWei);
                         }).catch(reject);
                     }

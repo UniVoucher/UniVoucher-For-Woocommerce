@@ -321,4 +321,76 @@ class UniVoucher_WC_Callback_Manager {
 		// Always return success as the API expects, matching the regular callback behavior.
 		return new WP_REST_Response( array( 'success' => true ), 200 );
 	}
+
+	/**
+	 * Handle UniVoucher API promotion cancellation callback.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response The response object.
+	 */
+	public function handle_promotion_cancel_callback( $request ) {
+		$body = $request->get_json_params();
+
+		if ( ! $body || ! isset( $body['authToken'] ) ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid callback data' ), 400 );
+		}
+
+		$auth_token = sanitize_text_field( $body['authToken'] );
+
+		// Extract cancel_batch_id from the callback data or construct it.
+		// The API doesn't return orderId in cancel callbacks, so we need to find it via auth token.
+		$cancel_batch_id = $this->find_cancel_batch_id_by_auth_token( $auth_token );
+
+		if ( ! $cancel_batch_id ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid auth token or expired session' ), 401 );
+		}
+
+		// Verify auth token.
+		$stored_auth_token = get_transient( 'univoucher_cancel_callback_auth_' . $cancel_batch_id );
+		if ( ! $stored_auth_token || $stored_auth_token !== $auth_token ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid auth token' ), 401 );
+		}
+
+		// Process the callback.
+		$promotion_processor = UniVoucher_WC_Promotion_Processor::instance();
+		$promotion_processor->handle_cancellation_callback( $cancel_batch_id, $body );
+
+		// Always return success as the API expects.
+		return new WP_REST_Response( array( 'success' => true ), 200 );
+	}
+
+	/**
+	 * Find cancel batch ID by auth token.
+	 *
+	 * @param string $auth_token The auth token.
+	 * @return string|bool Cancel batch ID or false if not found.
+	 */
+	private function find_cancel_batch_id_by_auth_token( $auth_token ) {
+		global $wpdb;
+
+		// Search through transients to find matching auth token.
+		// This is a fallback approach since WordPress doesn't provide a direct way to search transients.
+		$transient_prefix = '_transient_univoucher_cancel_callback_auth_';
+		$transient_timeout_prefix = '_transient_timeout_univoucher_cancel_callback_auth_';
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, option_value FROM $wpdb->options
+				WHERE option_name LIKE %s
+				AND option_value = %s
+				LIMIT 1",
+				$wpdb->esc_like( $transient_prefix ) . '%',
+				$auth_token
+			)
+		);
+
+		if ( ! empty( $results ) ) {
+			$option_name = $results[0]->option_name;
+			// Extract cancel_batch_id from option_name.
+			$cancel_batch_id = str_replace( $transient_prefix, '', $option_name );
+			return $cancel_batch_id;
+		}
+
+		return false;
+	}
 } 

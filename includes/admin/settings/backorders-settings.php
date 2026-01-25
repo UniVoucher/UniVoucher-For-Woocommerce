@@ -147,7 +147,7 @@ function univoucher_auto_create_backordered_cards_callback( $args ) {
 				// Check if at least one UniVoucher product has backorder enabled
 				$backorder_products = get_posts( array(
 					'post_type' => 'product',
-					'post_status' => 'publish',
+					'post_status' => 'any',
 					'meta_query' => array(
 						array(
 							'key' => '_univoucher_enabled',

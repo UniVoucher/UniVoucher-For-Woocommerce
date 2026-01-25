@@ -420,6 +420,14 @@ class UniVoucher_WC_Add_Cards_Page {
 												<td><?php esc_html_e( 'Quantity:', 'univoucher-for-woocommerce' ); ?></td>
 												<td id="tx-cost-quantity">-</td>
 											</tr>
+											<tr id="tx-total-cards-amount-row" style="display: none;">
+												<td><?php esc_html_e( 'Total Cards Amount:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-total-cards-amount">-</td>
+											</tr>
+											<tr id="tx-total-fees-row" style="display: none;">
+												<td><?php esc_html_e( 'Total UniVoucher Fees:', 'univoucher-for-woocommerce' ); ?></td>
+												<td id="tx-total-fees">-</td>
+											</tr>
 											<tr>
 												<td><?php esc_html_e( 'Gas Required:', 'univoucher-for-woocommerce' ); ?></td>
 												<td id="tx-gas-required">-</td>
@@ -533,7 +541,7 @@ class UniVoucher_WC_Add_Cards_Page {
 		// Get products with UniVoucher enabled.
 		$args = array(
 			'post_type'      => 'product',
-			'post_status'    => 'publish',
+			'post_status'    => 'any',
 			'posts_per_page' => -1,
 			'meta_query'     => array(
 				array(

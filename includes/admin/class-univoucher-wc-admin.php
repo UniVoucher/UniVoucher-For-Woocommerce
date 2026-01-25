@@ -91,6 +91,32 @@ class UniVoucher_WC_Admin {
 		UniVoucher_WC_Inventory_Page::instance();
 		UniVoucher_WC_Promotions_Page::instance();
 		UniVoucher_WC_Promotional_Cards_Page::instance();
+
+		// Process expired promotional cards (only on UniVoucher pages to avoid unnecessary overhead).
+		$this->process_expired_promotional_cards();
+	}
+
+	/**
+	 * Process expired promotional cards when visiting UniVoucher admin pages.
+	 */
+	private function process_expired_promotional_cards() {
+		// Only process on UniVoucher pages to avoid overhead.
+		if ( ! isset( $_GET['page'] ) || strpos( $_GET['page'], 'univoucher' ) !== 0 ) {
+			return;
+		}
+
+		// Use a transient to limit processing to once every 12 hours.
+		$last_check = get_transient( 'univoucher_last_expiration_check' );
+		if ( $last_check ) {
+			return;
+		}
+
+		// Set transient for 12 hours.
+		set_transient( 'univoucher_last_expiration_check', time(), 12 * HOUR_IN_SECONDS );
+
+		// Process expired cards.
+		$promotion_processor = UniVoucher_WC_Promotion_Processor::instance();
+		$promotion_processor->process_expired_promotional_cards();
 	}
 
 	/**

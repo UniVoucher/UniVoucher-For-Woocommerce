@@ -352,7 +352,7 @@ class UniVoucher_WC_Admin_Tools {
 			FROM {$wpdb->posts} p
 			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
 			WHERE p.post_type = 'product'
-				AND p.post_status = 'publish'
+				AND p.post_status IN ('publish', 'private', 'draft', 'pending', 'future')
 				AND pm.meta_key = '_univoucher_enabled'
 				AND pm.meta_value = 'yes'
 			ORDER BY p.post_title ASC"
@@ -565,7 +565,7 @@ class UniVoucher_WC_Admin_Tools {
 				FROM {$wpdb->posts} p
 				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
 				WHERE p.post_type = 'product'
-					AND p.post_status = 'publish'
+					AND p.post_status IN ('publish', 'private', 'draft', 'pending', 'future')
 					AND pm.meta_key = '_univoucher_enabled'
 					AND pm.meta_value = 'yes'
 				ORDER BY p.ID ASC
@@ -627,7 +627,7 @@ class UniVoucher_WC_Admin_Tools {
 			FROM {$wpdb->posts} p
 			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
 			WHERE p.post_type = 'product'
-				AND p.post_status = 'publish'
+				AND p.post_status IN ('publish', 'private', 'draft', 'pending', 'future')
 				AND pm.meta_key = '_univoucher_enabled'
 				AND pm.meta_value = 'yes'"
 		);
