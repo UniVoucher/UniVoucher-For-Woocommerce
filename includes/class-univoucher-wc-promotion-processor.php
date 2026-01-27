@@ -857,12 +857,25 @@ class UniVoucher_WC_Promotion_Processor {
 		$cards_table = $this->database->uv_get_promotional_cards_table();
 		$expiration_days = absint( $promotion['card_expiration_days'] );
 
-		// Find expired active cards for this promotion.
+		// First, mark all expired active cards as 'expired'.
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $cards_table
+				SET status = 'expired'
+				WHERE promotion_id = %d
+				AND status = 'active'
+				AND DATEDIFF(NOW(), created_at) > %d",
+				$promotion['id'],
+				$expiration_days
+			)
+		);
+
+		// Now find the expired cards to cancel them.
 		$expired_cards = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $cards_table
 				WHERE promotion_id = %d
-				AND status = 'active'
+				AND status = 'expired'
 				AND DATEDIFF(NOW(), created_at) > %d
 				LIMIT 100",
 				$promotion['id'],
