@@ -896,6 +896,7 @@ class UniVoucher_WC_Promotion_Processor {
 	 *
 	 * @param array $cards     Array of card data.
 	 * @param array $promotion Promotion data.
+	 * @return bool|WP_Error True on success (202 accepted), WP_Error on failure.
 	 */
 	private function cancel_cards_batch( $cards, $promotion ) {
 		// Get internal wallet private key.
@@ -904,13 +905,13 @@ class UniVoucher_WC_Promotion_Processor {
 
 		if ( ! $encrypted_private_key ) {
 			error_log( 'UniVoucher Promotion: Cannot cancel cards - internal wallet not configured' );
-			return;
+			return new WP_Error( 'wallet_not_configured', __( 'Internal wallet not configured.', 'univoucher-for-woocommerce' ) );
 		}
 
 		$private_key = $encryption->uv_decrypt_data( $encrypted_private_key );
 		if ( is_wp_error( $private_key ) ) {
 			error_log( 'UniVoucher Promotion: Cannot cancel cards - invalid wallet configuration' );
-			return;
+			return new WP_Error( 'invalid_wallet', __( 'Invalid wallet configuration.', 'univoucher-for-woocommerce' ) );
 		}
 
 		// Ensure private key has 0x prefix.
@@ -965,7 +966,7 @@ class UniVoucher_WC_Promotion_Processor {
 
 		if ( is_wp_error( $response ) ) {
 			error_log( 'UniVoucher Promotion Cancellation: Failed to cancel cards - ' . $response->get_error_message() );
-			return;
+			return new WP_Error( 'api_request_failed', sprintf( __( 'API request failed: %s', 'univoucher-for-woocommerce' ), $response->get_error_message() ) );
 		}
 
 		$response_code = wp_remote_retrieve_response_code( $response );
@@ -976,15 +977,17 @@ class UniVoucher_WC_Promotion_Processor {
 			// Success - cancellation initiated.
 			error_log(
 				sprintf(
-					'UniVoucher Promotion: Initiated cancellation of %d expired cards for promotion "%s"',
+					'UniVoucher Promotion: Initiated cancellation of %d cards for promotion "%s"',
 					count( $card_ids ),
 					$promotion['title']
 				)
 			);
+			return true;
 		} else {
-			// Error.
+			// Error - API validation failed.
 			$error_message = isset( $response_data['error'] ) ? $response_data['error'] : 'Unknown error';
 			error_log( 'UniVoucher Promotion Cancellation: Failed to cancel cards - ' . $error_message );
+			return new WP_Error( 'api_validation_failed', $error_message );
 		}
 	}
 

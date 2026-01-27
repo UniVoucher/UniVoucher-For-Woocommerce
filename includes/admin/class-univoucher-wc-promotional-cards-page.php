@@ -99,6 +99,22 @@ class UniVoucher_WC_Promotional_Cards_Page {
 			exit;
 		}
 
+		// Handle bulk cancel action.
+		if ( isset( $_POST['action'] ) && 'bulk_cancel' === $_POST['action'] && isset( $_POST['card_ids'] ) && is_array( $_POST['card_ids'] ) ) {
+			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bulk_cancel_promotional_cards' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
+			}
+
+			$card_ids = array_map( 'absint', $_POST['card_ids'] );
+			$result = $this->bulk_cancel_promotional_cards( $card_ids );
+			if ( is_wp_error( $result ) ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=univoucher-promotional-cards&error=' . urlencode( $result->get_error_message() ) ) );
+			} else {
+				wp_safe_redirect( admin_url( 'admin.php?page=univoucher-promotional-cards&cancelled=' . $result ) );
+			}
+			exit;
+		}
+
 		// Handle single delete action.
 		if ( isset( $_GET['action'] ) && 'delete' === $_GET['action'] && isset( $_GET['card_id'] ) ) {
 			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'delete_promotional_card' ) ) {
@@ -107,6 +123,21 @@ class UniVoucher_WC_Promotional_Cards_Page {
 
 			$this->delete_promotional_cards( array( absint( $_GET['card_id'] ) ) );
 			wp_safe_redirect( admin_url( 'admin.php?page=univoucher-promotional-cards&deleted=1' ) );
+			exit;
+		}
+
+		// Handle card cancellation action.
+		if ( isset( $_GET['action'] ) && 'cancel' === $_GET['action'] && isset( $_GET['card_id'] ) ) {
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'cancel_promotional_card' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'univoucher-for-woocommerce' ) );
+			}
+
+			$result = $this->cancel_promotional_card( absint( $_GET['card_id'] ) );
+			if ( is_wp_error( $result ) ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=univoucher-promotional-cards&error=' . urlencode( $result->get_error_message() ) ) );
+			} else {
+				wp_safe_redirect( admin_url( 'admin.php?page=univoucher-promotional-cards&cancelled=1' ) );
+			}
 			exit;
 		}
 	}
@@ -184,6 +215,154 @@ class UniVoucher_WC_Promotional_Cards_Page {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Cancel a promotional card via UniVoucher API.
+	 *
+	 * @param int $card_id Card ID to cancel.
+	 * @return bool|WP_Error True on success, WP_Error on failure.
+	 */
+	private function cancel_promotional_card( $card_id ) {
+		global $wpdb;
+		$database = UniVoucher_WC_Database::instance();
+		$cards_table = $database->uv_get_promotional_cards_table();
+
+		// Get card data.
+		$card = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $cards_table WHERE id = %d", $card_id ),
+			ARRAY_A
+		);
+
+		if ( ! $card ) {
+			return new WP_Error( 'card_not_found', __( 'Promotional card not found.', 'univoucher-for-woocommerce' ) );
+		}
+
+		// Check if card status allows cancellation.
+		if ( 'active' !== $card['status'] ) {
+			if ( 'cancelled' === $card['status'] ) {
+				return new WP_Error( 'already_cancelled', __( 'This card is already cancelled.', 'univoucher-for-woocommerce' ) );
+			} elseif ( 'redeemed' === $card['status'] ) {
+				return new WP_Error( 'card_redeemed', __( 'Cannot cancel a redeemed card.', 'univoucher-for-woocommerce' ) );
+			} elseif ( 'expired' === $card['status'] ) {
+				return new WP_Error( 'card_expired', __( 'Cannot cancel an expired card.', 'univoucher-for-woocommerce' ) );
+			} else {
+				return new WP_Error( 'invalid_status', __( 'Cannot cancel this card. Only active cards can be cancelled.', 'univoucher-for-woocommerce' ) );
+			}
+		}
+
+		// Get promotion data.
+		$promotions_table = $database->uv_get_promotions_table();
+		$promotion = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $promotions_table WHERE id = %d", $card['promotion_id'] ),
+			ARRAY_A
+		);
+
+		if ( ! $promotion ) {
+			return new WP_Error( 'promotion_not_found', __( 'Associated promotion not found.', 'univoucher-for-woocommerce' ) );
+		}
+
+		// Call the promotion processor to cancel the card.
+		$processor = UniVoucher_WC_Promotion_Processor::instance();
+
+		// Use reflection to call private method.
+		$reflection = new ReflectionClass( $processor );
+		$method = $reflection->getMethod( 'cancel_cards_batch' );
+		$method->setAccessible( true );
+
+		// Cancel the card via API and check the result.
+		$result = $method->invoke( $processor, array( $card ), $promotion );
+
+		// Return the result from the API call.
+		return $result;
+	}
+
+	/**
+	 * Bulk cancel promotional cards via UniVoucher API.
+	 *
+	 * @param array $card_ids Array of card IDs to cancel.
+	 * @return int|WP_Error Number of cards cancelled, or WP_Error on failure.
+	 */
+	private function bulk_cancel_promotional_cards( $card_ids ) {
+		if ( empty( $card_ids ) ) {
+			return new WP_Error( 'no_cards', __( 'No cards selected.', 'univoucher-for-woocommerce' ) );
+		}
+
+		global $wpdb;
+		$database = UniVoucher_WC_Database::instance();
+		$cards_table = $database->uv_get_promotional_cards_table();
+		$promotions_table = $database->uv_get_promotions_table();
+
+		$placeholders = implode( ',', array_fill( 0, count( $card_ids ), '%d' ) );
+
+		// Get cards data - only active cards can be cancelled.
+		$cards = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM $cards_table WHERE id IN ($placeholders) AND status = 'active'",
+				$card_ids
+			),
+			ARRAY_A
+		);
+
+		if ( empty( $cards ) ) {
+			return new WP_Error( 'no_active_cards', __( 'No active cards selected. Only active cards can be cancelled.', 'univoucher-for-woocommerce' ) );
+		}
+
+		// Group cards by promotion_id and chain_id for batch processing.
+		$cards_by_promotion_and_chain = array();
+		foreach ( $cards as $card ) {
+			$key = $card['promotion_id'] . '_' . $card['chain_id'];
+			if ( ! isset( $cards_by_promotion_and_chain[ $key ] ) ) {
+				$cards_by_promotion_and_chain[ $key ] = array(
+					'promotion_id' => $card['promotion_id'],
+					'chain_id'     => $card['chain_id'],
+					'cards'        => array(),
+				);
+			}
+			$cards_by_promotion_and_chain[ $key ]['cards'][] = $card;
+		}
+
+		// Process each group.
+		$processor = UniVoucher_WC_Promotion_Processor::instance();
+		$reflection = new ReflectionClass( $processor );
+		$method = $reflection->getMethod( 'cancel_cards_batch' );
+		$method->setAccessible( true );
+
+		$total_cancelled = 0;
+		$errors = array();
+
+		foreach ( $cards_by_promotion_and_chain as $group ) {
+			// Get promotion data.
+			$promotion = $wpdb->get_row(
+				$wpdb->prepare( "SELECT * FROM $promotions_table WHERE id = %d", $group['promotion_id'] ),
+				ARRAY_A
+			);
+
+			if ( $promotion ) {
+				// Cancel the cards via API and check the result.
+				$result = $method->invoke( $processor, $group['cards'], $promotion );
+
+				if ( is_wp_error( $result ) ) {
+					// Store error for this batch.
+					$errors[] = sprintf(
+						'Promotion "%s": %s',
+						$promotion['title'],
+						$result->get_error_message()
+					);
+				} else {
+					// Success - count the cards.
+					$total_cancelled += count( $group['cards'] );
+				}
+			}
+		}
+
+		// If all batches failed, return the first error.
+		if ( $total_cancelled === 0 && ! empty( $errors ) ) {
+			return new WP_Error( 'all_failed', implode( ' | ', $errors ) );
+		}
+
+		// If some succeeded, return the count (partial success).
+		return $total_cancelled;
 	}
 
 	/**
@@ -449,6 +628,16 @@ class UniVoucher_WC_Promotional_Cards_Page {
 					'</p></div>';
 			}
 
+			if ( isset( $_GET['cancelled'] ) ) {
+				$count = absint( $_GET['cancelled'] );
+				echo '<div class="notice notice-success is-dismissible"><p>' .
+					sprintf(
+						esc_html( _n( 'Cancellation initiated for %d card. The card status will be updated once the blockchain transaction is confirmed.', 'Cancellation initiated for %d cards. The card statuses will be updated once the blockchain transactions are confirmed.', $count, 'univoucher-for-woocommerce' ) ),
+						$count
+					) .
+					'</p></div>';
+			}
+
 			if ( isset( $_GET['error'] ) ) {
 				echo '<div class="notice notice-error is-dismissible"><p>' .
 					esc_html( sanitize_text_field( wp_unslash( $_GET['error'] ) ) ) .
@@ -563,13 +752,16 @@ class UniVoucher_WC_Promotional_Cards_Page {
 			</div>
 
 			<form method="post" id="promotional-cards-form">
-				<?php wp_nonce_field( 'bulk_delete_promotional_cards' ); ?>
-				<input type="hidden" name="action" value="bulk_delete">
+				<input type="hidden" name="action" id="bulk-action-field" value="bulk_delete">
+				<input type="hidden" name="_wpnonce" id="bulk-nonce-field" value="<?php echo esc_attr( wp_create_nonce( 'bulk_delete_promotional_cards' ) ); ?>">
 
 				<div class="tablenav top">
 					<div class="alignleft actions bulkactions">
-						<button type="submit" class="button action" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete the selected promotional cards?', 'univoucher-for-woocommerce' ); ?>');">
+						<button type="submit" name="bulk_action" value="delete" class="button action" onclick="document.getElementById('bulk-action-field').value='bulk_delete'; document.getElementById('bulk-nonce-field').value='<?php echo esc_js( wp_create_nonce( 'bulk_delete_promotional_cards' ) ); ?>'; return confirm('<?php esc_attr_e( 'Are you sure you want to delete the selected promotional cards? This only removes records from the database, it does not cancel cards on-chain.', 'univoucher-for-woocommerce' ); ?>');">
 							<?php esc_html_e( 'Delete Selected', 'univoucher-for-woocommerce' ); ?>
+						</button>
+						<button type="submit" name="bulk_action" value="cancel" class="button action" style="margin-left: 5px;" onclick="document.getElementById('bulk-action-field').value='bulk_cancel'; document.getElementById('bulk-nonce-field').value='<?php echo esc_js( wp_create_nonce( 'bulk_cancel_promotional_cards' ) ); ?>'; return confirm('<?php esc_attr_e( 'Are you sure you want to cancel the selected cards? This will return funds to your internal wallet via blockchain transactions. Only active cards will be cancelled.', 'univoucher-for-woocommerce' ); ?>');">
+							<?php esc_html_e( 'Cancel Selected', 'univoucher-for-woocommerce' ); ?>
 						</button>
 					</div>
 					<div class="tablenav-pages">
@@ -620,7 +812,16 @@ class UniVoucher_WC_Promotional_Cards_Page {
 								<?php
 								$network_data = UniVoucher_WC_Product_Fields::get_network_data( $card->chain_id );
 								$network_name = $network_data ? $network_data['name'] : esc_html__( 'Unknown', 'univoucher-for-woocommerce' );
-								$status_class = 'active' === $card->status ? 'status-active' : ( 'redeemed' === $card->status ? 'status-redeemed' : 'status-cancelled' );
+
+								// Determine status class based on card status.
+								$status_class = 'status-cancelled';
+								if ( 'active' === $card->status ) {
+									$status_class = 'status-active';
+								} elseif ( 'redeemed' === $card->status ) {
+									$status_class = 'status-redeemed';
+								} elseif ( 'expired' === $card->status ) {
+									$status_class = 'status-expired';
+								}
 								?>
 								<tr>
 									<th class="check-column">
@@ -682,9 +883,16 @@ class UniVoucher_WC_Promotional_Cards_Page {
 										?>
 									</td>
 									<td>
+										<?php if ( 'active' === $card->status ) : ?>
+											<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=univoucher-promotional-cards&action=cancel&card_id=' . $card->id ), 'cancel_promotional_card' ) ); ?>"
+												class="button button-small"
+												onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to cancel this card? This will return the funds to your internal wallet via blockchain transaction.', 'univoucher-for-woocommerce' ); ?>');">
+												<?php esc_html_e( 'Cancel', 'univoucher-for-woocommerce' ); ?>
+											</a>
+										<?php endif; ?>
 										<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=univoucher-promotional-cards&action=delete&card_id=' . $card->id ), 'delete_promotional_card' ) ); ?>"
 											class="button button-small button-link-delete"
-											onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this promotional card?', 'univoucher-for-woocommerce' ); ?>');">
+											onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this promotional card record? This only removes the record from the database, it does not cancel the card on-chain.', 'univoucher-for-woocommerce' ); ?>');">
 											<?php esc_html_e( 'Delete', 'univoucher-for-woocommerce' ); ?>
 										</a>
 									</td>
@@ -756,7 +964,12 @@ class UniVoucher_WC_Promotional_Cards_Page {
 					$('#promotional-cards-form').on('submit', function(e) {
 						if ($('input[name="card_ids[]"]:checked').length === 0) {
 							e.preventDefault();
-							alert('<?php esc_html_e( 'Please select at least one promotional card to delete.', 'univoucher-for-woocommerce' ); ?>');
+							var action = $('#bulk-action-field').val();
+							if (action === 'bulk_cancel') {
+								alert('<?php esc_html_e( 'Please select at least one promotional card to cancel.', 'univoucher-for-woocommerce' ); ?>');
+							} else {
+								alert('<?php esc_html_e( 'Please select at least one promotional card to delete.', 'univoucher-for-woocommerce' ); ?>');
+							}
 							return false;
 						}
 					});
@@ -791,6 +1004,10 @@ class UniVoucher_WC_Promotional_Cards_Page {
 				.status-cancelled {
 					background: #f8d7da;
 					color: #721c24;
+				}
+				.status-expired {
+					background: #fff3cd;
+					color: #856404;
 				}
 				.check-column {
 					width: 40px;
