@@ -732,17 +732,21 @@ class UniVoucher_WC_Promotion_Processor {
 			}
 
 			// Use appropriate template based on whether this is manual or order-based
-			if ( $is_manual && ! empty( $promotion['manual_email_template'] ) ) {
-				$message = $promotion['manual_email_template'];
-			} elseif ( ! empty( $promotion['email_template'] ) ) {
-				$message = $promotion['email_template'];
-			} else {
-				if ( $is_manual ) {
+			if ( $is_manual ) {
+				// Manual card - use manual template or default
+				if ( ! empty( $promotion['manual_email_template'] ) ) {
+					$message = $promotion['manual_email_template'];
+				} else {
 					$message = sprintf(
 						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you!",
 						$user->display_name,
 						$card_info
 					);
+				}
+			} else {
+				// Order-based card - use order template or default
+				if ( ! empty( $promotion['email_template'] ) ) {
+					$message = $promotion['email_template'];
 				} else {
 					$message = sprintf(
 						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you for your order!",
@@ -763,9 +767,15 @@ class UniVoucher_WC_Promotion_Processor {
 			$message = str_replace( '{customer_name}', $user->display_name, $message );
 			$message = str_replace( '{site_name}', get_bloginfo( 'name' ), $message );
 			$message = str_replace( '{gift_card_details}', $card_info, $message );
+
+			// Replace or remove order placeholders
 			if ( $order ) {
 				$message = str_replace( '{order_id}', $order->get_id(), $message );
 				$message = str_replace( '{order_number}', $order->get_id(), $message );
+			} else {
+				// Remove order placeholders for manual cards
+				$message = str_replace( '{order_id}', '', $message );
+				$message = str_replace( '{order_number}', '', $message );
 			}
 
 			// Set HTML content type for email.

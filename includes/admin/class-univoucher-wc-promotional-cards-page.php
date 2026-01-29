@@ -853,9 +853,13 @@ class UniVoucher_WC_Promotional_Cards_Page {
 										?>
 									</td>
 									<td>
-										<a href="<?php echo esc_url( admin_url( 'post.php?post=' . absint( $card->order_id ) . '&action=edit' ) ); ?>" target="_blank">
-											#<?php echo absint( $card->order_id ); ?>
-										</a>
+										<?php if ( $card->order_id ) : ?>
+											<a href="<?php echo esc_url( admin_url( 'post.php?post=' . absint( $card->order_id ) . '&action=edit' ) ); ?>" target="_blank">
+												#<?php echo absint( $card->order_id ); ?>
+											</a>
+										<?php else : ?>
+											<span style="color: #999;">—</span>
+										<?php endif; ?>
 									</td>
 									<td><code><?php echo esc_html( $card->card_id ); ?></code></td>
 									<td><code><?php echo esc_html( $card->card_secret ); ?></code></td>
