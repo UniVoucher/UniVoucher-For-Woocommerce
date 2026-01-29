@@ -531,8 +531,8 @@ class UniVoucher_WC_Promotion_Processor {
 		}
 
 		$promotion = $context['promotion'];
-		$order = wc_get_order( $context['order_id'] );
-		if ( ! $order ) {
+		$order = $context['order_id'] ? wc_get_order( $context['order_id'] ) : null;
+		if ( $context['order_id'] && ! $order ) {
 			error_log( 'UniVoucher Promotion: Order not found for callback ' . $api_order_id );
 			return false;
 		}
@@ -592,7 +592,9 @@ class UniVoucher_WC_Promotion_Processor {
 					);
 				}
 
-				$order->add_order_note( $note_message );
+				if ( $order ) {
+					$order->add_order_note( $note_message );
+				}
 
 				// Send promotion emails.
 				$card_data['id'] = $wpdb->insert_id;
@@ -609,14 +611,16 @@ class UniVoucher_WC_Promotion_Processor {
 		} else {
 			// Error.
 			$error_message = isset( $callback_data['error'] ) ? $callback_data['error'] : 'Unknown error';
-			$order->add_order_note(
-				sprintf(
-					// translators: %1$s is the promotion title, %2$s is the error message
-					__( 'UniVoucher: Failed to create promotional gift card for "%1$s" - %2$s', 'univoucher-for-woocommerce' ),
-					$promotion['title'],
-					$error_message
-				)
-			);
+			if ( $order ) {
+				$order->add_order_note(
+					sprintf(
+						// translators: %1$s is the promotion title, %2$s is the error message
+						__( 'UniVoucher: Failed to create promotional gift card for "%1$s" - %2$s', 'univoucher-for-woocommerce' ),
+						$promotion['title'],
+						$error_message
+					)
+				);
+			}
 
 			// Clean up transients.
 			delete_transient( 'univoucher_promo_callback_auth_' . $api_order_id );
@@ -702,39 +706,66 @@ class UniVoucher_WC_Promotion_Processor {
 
 		// Send separate email if configured.
 		if ( ! empty( $promotion['send_separate_email'] ) ) {
+			// Determine if this is a manual card (no order)
+			$is_manual = ! $order;
+
 			// Use user-defined email subject or default.
-			if ( ! empty( $promotion['email_subject'] ) ) {
+			if ( $is_manual && ! empty( $promotion['manual_email_subject'] ) ) {
+				$subject = $promotion['manual_email_subject'];
+			} elseif ( ! empty( $promotion['email_subject'] ) ) {
 				$subject = $promotion['email_subject'];
 			} else {
 				$site_name = get_bloginfo( 'name' );
-				$subject = sprintf( 'Your order #%s got a free gift card 🎁', $order->get_id() );
+				if ( $is_manual ) {
+					$subject = sprintf( 'You received a free gift card from %s 🎁', $site_name );
+				} else {
+					$subject = sprintf( 'Your order #%s got a free gift card 🎁', $order->get_id() );
+				}
 			}
 
 			// Replace placeholders in subject.
 			$subject = str_replace( '{site_name}', get_bloginfo( 'name' ), $subject );
 			$subject = str_replace( '{user_name}', $user->display_name, $subject );
-			$subject = str_replace( '{order_id}', $order->get_id(), $subject );
+			if ( $order ) {
+				$subject = str_replace( '{order_id}', $order->get_id(), $subject );
+				$subject = str_replace( '{order_number}', $order->get_id(), $subject );
+			}
 
-			if ( ! empty( $promotion['email_template'] ) ) {
+			// Use appropriate template based on whether this is manual or order-based
+			if ( $is_manual && ! empty( $promotion['manual_email_template'] ) ) {
+				$message = $promotion['manual_email_template'];
+			} elseif ( ! empty( $promotion['email_template'] ) ) {
 				$message = $promotion['email_template'];
-				$message = str_replace( '{card_id}', $card_data['card_id'], $message );
-				$message = str_replace( '{card_secret}', $card_data['card_secret'], $message );
-				$message = str_replace( '{amount}', $this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ), $message );
-				$message = str_replace( '{symbol}', $card_data['token_symbol'], $message );
-				$message = str_replace( '{token_symbol}', $card_data['token_symbol'], $message ); // Backward compatibility.
-				$message = str_replace( '{network}', $network_name, $message );
-				$message = str_replace( '{user_name}', $user->display_name, $message );
-				$message = str_replace( '{customer_name}', $user->display_name, $message );
+			} else {
+				if ( $is_manual ) {
+					$message = sprintf(
+						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you!",
+						$user->display_name,
+						$card_info
+					);
+				} else {
+					$message = sprintf(
+						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you for your order!",
+						$user->display_name,
+						$card_info
+					);
+				}
+			}
+
+			// Replace placeholders in message.
+			$message = str_replace( '{card_id}', $card_data['card_id'], $message );
+			$message = str_replace( '{card_secret}', $card_data['card_secret'], $message );
+			$message = str_replace( '{amount}', $this->format_token_amount( $card_data['amount'], $card_data['token_decimals'] ), $message );
+			$message = str_replace( '{symbol}', $card_data['token_symbol'], $message );
+			$message = str_replace( '{token_symbol}', $card_data['token_symbol'], $message ); // Backward compatibility.
+			$message = str_replace( '{network}', $network_name, $message );
+			$message = str_replace( '{user_name}', $user->display_name, $message );
+			$message = str_replace( '{customer_name}', $user->display_name, $message );
+			$message = str_replace( '{site_name}', get_bloginfo( 'name' ), $message );
+			$message = str_replace( '{gift_card_details}', $card_info, $message );
+			if ( $order ) {
 				$message = str_replace( '{order_id}', $order->get_id(), $message );
 				$message = str_replace( '{order_number}', $order->get_id(), $message );
-				$message = str_replace( '{site_name}', get_bloginfo( 'name' ), $message );
-				$message = str_replace( '{gift_card_details}', $card_info, $message );
-			} else {
-				$message = sprintf(
-					"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you for your order!",
-					$user->display_name,
-					$card_info
-				);
 			}
 
 			// Set HTML content type for email.

@@ -28,7 +28,7 @@ class UniVoucher_WC_Database {
 	 *
 	 * @var string
 	 */
-	const DB_VERSION = '3.5.7';
+	const DB_VERSION = '3.5.8';
 
 	/**
 	 * Gift cards table name.
@@ -190,6 +190,8 @@ class UniVoucher_WC_Database {
 			send_separate_email tinyint(1) NOT NULL DEFAULT 0,
 			email_subject varchar(255) DEFAULT NULL,
 			email_template longtext DEFAULT NULL,
+			manual_email_subject varchar(255) DEFAULT NULL,
+			manual_email_template longtext DEFAULT NULL,
 			show_account_notice tinyint(1) NOT NULL DEFAULT 0,
 			account_notice_message text DEFAULT NULL,
 			show_order_notice tinyint(1) NOT NULL DEFAULT 0,

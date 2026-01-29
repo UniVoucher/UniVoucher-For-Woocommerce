@@ -83,9 +83,9 @@
         // Show/hide separate email fields based on checkbox
         $('#send_separate_email').on('change', function() {
             if ($(this).is(':checked')) {
-                $('#email-subject-row, #email-template-row').show();
+                $('#email-subject-row, #email-template-row, #manual-email-subject-row, #manual-email-template-row').show();
 
-                // Resize TinyMCE editor when it becomes visible
+                // Resize TinyMCE editors when they become visible
                 if (typeof tinymce !== 'undefined') {
                     var editor = tinymce.get('email_template');
                     if (editor) {
@@ -94,9 +94,16 @@
                             editor.theme.resizeTo(null, 600);
                         }, 100);
                     }
+                    var manualEditor = tinymce.get('manual_email_template');
+                    if (manualEditor) {
+                        // Set a larger height for the editor
+                        setTimeout(function() {
+                            manualEditor.theme.resizeTo(null, 600);
+                        }, 100);
+                    }
                 }
             } else {
-                $('#email-subject-row, #email-template-row').hide();
+                $('#email-subject-row, #email-template-row, #manual-email-subject-row, #manual-email-template-row').hide();
             }
         });
 

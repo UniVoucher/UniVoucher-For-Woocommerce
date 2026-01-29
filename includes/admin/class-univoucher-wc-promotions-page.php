@@ -261,6 +261,8 @@ class UniVoucher_WC_Promotions_Page {
 			'%d', // send_separate_email
 			'%s', // email_subject
 			'%s', // email_template
+			'%s', // manual_email_subject
+			'%s', // manual_email_template
 			'%d', // show_account_notice
 			'%s', // account_notice_message
 			'%d', // show_order_notice
@@ -319,6 +321,8 @@ class UniVoucher_WC_Promotions_Page {
 			'send_separate_email'    => isset( $_POST['send_separate_email'] ) ? 1 : 0,
 			'email_subject'          => isset( $_POST['email_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['email_subject'] ) ) : '',
 			'email_template'         => isset( $_POST['email_template'] ) ? wp_kses_post( wp_unslash( $_POST['email_template'] ) ) : '',
+			'manual_email_subject'   => isset( $_POST['manual_email_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['manual_email_subject'] ) ) : '',
+			'manual_email_template'  => isset( $_POST['manual_email_template'] ) ? wp_kses_post( wp_unslash( $_POST['manual_email_template'] ) ) : '',
 			'show_account_notice'      => isset( $_POST['show_account_notice'] ) ? 1 : 0,
 			'account_notice_message'   => isset( $_POST['account_notice_message'] ) ? wp_kses_post( wp_unslash( $_POST['account_notice_message'] ) ) : '',
 			'show_order_notice'        => isset( $_POST['show_order_notice'] ) ? 1 : 0,
@@ -363,6 +367,8 @@ class UniVoucher_WC_Promotions_Page {
 			'%d', // send_separate_email
 			'%s', // email_subject
 			'%s', // email_template
+			'%s', // manual_email_subject
+			'%s', // manual_email_template
 			'%d', // show_account_notice
 			'%s', // account_notice_message
 			'%d', // show_order_notice
@@ -932,6 +938,8 @@ class UniVoucher_WC_Promotions_Page {
 				'send_separate_email'       => 1,
 				'email_subject'             => '',
 				'email_template'            => '',
+				'manual_email_subject'      => '',
+				'manual_email_template'     => '',
 				'show_account_notice'       => 1,
 				'account_notice_message'    => '',
 				'show_order_notice'         => 1,
@@ -1253,7 +1261,87 @@ class UniVoucher_WC_Promotions_Page {
 								);
 								?>
 								<p class="description">
-									<?php esc_html_e( 'This is the complete email template that will be sent as a separate email. Available placeholders: {customer_name}, {user_name}, {order_number}, {order_id}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {symbol}, {network}, {site_name}', 'univoucher-for-woocommerce' ); ?>
+									<?php esc_html_e( 'This is the complete email template that will be sent as a separate email for order-based promotional cards. Available placeholders: {customer_name}, {user_name}, {order_number}, {order_id}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {symbol}, {network}, {site_name}', 'univoucher-for-woocommerce' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr id="manual-email-subject-row" style="<?php echo ( $promotion->send_separate_email ) ? '' : 'display:none;'; ?>">
+							<th scope="row">
+								<label for="manual_email_subject"><?php esc_html_e( 'Manual Card Email Subject', 'univoucher-for-woocommerce' ); ?></label>
+							</th>
+							<td>
+								<?php
+								$default_manual_subject = 'You received a free gift card from {site_name} 🎁';
+								$manual_email_subject = ! empty( $promotion->manual_email_subject ) ? $promotion->manual_email_subject : $default_manual_subject;
+								?>
+								<input type="text" id="manual_email_subject" name="manual_email_subject" class="large-text" value="<?php echo esc_attr( $manual_email_subject ); ?>">
+								<p class="description">
+									<?php esc_html_e( 'Subject line for manually created promotional cards (without order). Available placeholders: {customer_name}, {user_name}, {site_name}', 'univoucher-for-woocommerce' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr id="manual-email-template-row" style="<?php echo ( $promotion->send_separate_email ) ? '' : 'display:none;'; ?>">
+							<th scope="row">
+								<label for="manual_email_template"><?php esc_html_e( 'Manual Card Email Template', 'univoucher-for-woocommerce' ); ?></label>
+							</th>
+							<td>
+								<?php
+								$default_manual_template = '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+	<div style="background-color: #96588a; border-radius: 12px 12px 0 0; padding: 40px 30px; text-align: center; border-bottom: 3px solid #7a4872;">
+		<h1 style="margin: 0; font-size: 32px; color: #ffffff;">🎉 You\'ve Got a Gift! 🎉</h1>
+	</div>
+
+	<div style="background-color: #f7f7f7; padding: 40px 30px; border-radius: 0 0 12px 12px; border: 1px solid #ddd; border-top: none;">
+		<p style="margin: 0 0 20px 0; font-size: 18px; color: #333;">Dear {customer_name},</p>
+
+		<p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #555;">
+			Great news! You\'ve been selected to receive a special gift card. We\'re thrilled to share this exclusive reward with you!
+		</p>
+
+		<div style="background-color: #ffffff; border-radius: 12px; padding: 30px; margin: 30px 0; border: 2px solid #96588a;">
+			<h2 style="margin: 0 0 20px 0; font-size: 24px; text-align: center; color: #96588a;">Your Gift Card</h2>
+			{gift_card_details}
+		</div>
+
+		<div style="border-left: 4px solid #96588a; padding: 20px; margin: 30px 0; border-radius: 4px; background-color: #ffffff;">
+			<h3 style="margin: 0 0 10px 0; font-size: 18px; color: #96588a;">How to Redeem:</h3>
+			<ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #555;">
+				<li>Visit <a href="https://univoucher.com" style="color: #96588a; text-decoration: none; font-weight: bold;">UniVoucher.com</a></li>
+				<li>Enter your Card ID and Card Secret</li>
+				<li>Follow the redemption instructions</li>
+				<li>Enjoy your reward!</li>
+			</ol>
+		</div>
+
+		<p style="margin: 30px 0 10px 0; font-size: 16px; text-align: center; color: #333;">
+			Thank you for being a valued customer!
+		</p>
+
+		<p style="margin: 0; font-size: 14px; text-align: center; color: #777;">
+			If you have any questions, please don\'t hesitate to contact us.
+		</p>
+	</div>
+</div>';
+
+								$manual_template = ! empty( $promotion->manual_email_template ) ? $promotion->manual_email_template : $default_manual_template;
+
+								wp_editor(
+									$manual_template,
+									'manual_email_template',
+									array(
+										'textarea_name' => 'manual_email_template',
+										'textarea_rows' => 40,
+										'media_buttons' => false,
+										'teeny'         => false,
+										'tinymce'       => array(
+											'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,alignleft,aligncenter,alignright,forecolor,backcolor',
+											'toolbar2' => '',
+										),
+									)
+								);
+								?>
+								<p class="description">
+									<?php esc_html_e( 'This is the email template for manually created promotional cards (without order). Available placeholders: {customer_name}, {user_name}, {gift_card_details}, {card_id}, {card_secret}, {amount}, {symbol}, {network}, {site_name}', 'univoucher-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
