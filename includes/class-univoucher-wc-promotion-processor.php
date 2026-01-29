@@ -710,14 +710,18 @@ class UniVoucher_WC_Promotion_Processor {
 			$is_manual = ! $order;
 
 			// Use user-defined email subject or default.
-			if ( $is_manual && ! empty( $promotion['manual_email_subject'] ) ) {
-				$subject = $promotion['manual_email_subject'];
-			} elseif ( ! empty( $promotion['email_subject'] ) ) {
-				$subject = $promotion['email_subject'];
-			} else {
-				$site_name = get_bloginfo( 'name' );
-				if ( $is_manual ) {
+			if ( $is_manual ) {
+				// Manual card - use manual subject or default
+				if ( ! empty( $promotion['manual_email_subject'] ) ) {
+					$subject = $promotion['manual_email_subject'];
+				} else {
+					$site_name = get_bloginfo( 'name' );
 					$subject = sprintf( 'You received a free gift card from %s 🎁', $site_name );
+				}
+			} else {
+				// Order-based card - use order subject or default
+				if ( ! empty( $promotion['email_subject'] ) ) {
+					$subject = $promotion['email_subject'];
 				} else {
 					$subject = sprintf( 'Your order #%s got a free gift card 🎁', $order->get_id() );
 				}
@@ -729,6 +733,10 @@ class UniVoucher_WC_Promotion_Processor {
 			if ( $order ) {
 				$subject = str_replace( '{order_id}', $order->get_id(), $subject );
 				$subject = str_replace( '{order_number}', $order->get_id(), $subject );
+			} else {
+				// Remove order placeholders for manual cards
+				$subject = str_replace( '{order_id}', '', $subject );
+				$subject = str_replace( '{order_number}', '', $subject );
 			}
 
 			// Use appropriate template based on whether this is manual or order-based
@@ -737,22 +745,86 @@ class UniVoucher_WC_Promotion_Processor {
 				if ( ! empty( $promotion['manual_email_template'] ) ) {
 					$message = $promotion['manual_email_template'];
 				} else {
-					$message = sprintf(
-						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you!",
-						$user->display_name,
-						$card_info
-					);
+					// Default manual template
+					$message = '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+	<div style="background-color: #96588a; border-radius: 12px 12px 0 0; padding: 40px 30px; text-align: center; border-bottom: 3px solid #7a4872;">
+		<h1 style="margin: 0; font-size: 32px; color: #ffffff;">🎉 You\'ve Got a Gift! 🎉</h1>
+	</div>
+
+	<div style="background-color: #f7f7f7; padding: 40px 30px; border-radius: 0 0 12px 12px; border: 1px solid #ddd; border-top: none;">
+		<p style="margin: 0 0 20px 0; font-size: 18px; color: #333;">Dear {customer_name},</p>
+
+		<p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #555;">
+			Great news! You\'ve been selected to receive a special gift card. We\'re thrilled to share this exclusive reward with you!
+		</p>
+
+		<div style="background-color: #ffffff; border-radius: 12px; padding: 30px; margin: 30px 0; border: 2px solid #96588a;">
+			<h2 style="margin: 0 0 20px 0; font-size: 24px; text-align: center; color: #96588a;">Your Gift Card</h2>
+			{gift_card_details}
+		</div>
+
+		<div style="border-left: 4px solid #96588a; padding: 20px; margin: 30px 0; border-radius: 4px; background-color: #ffffff;">
+			<h3 style="margin: 0 0 10px 0; font-size: 18px; color: #96588a;">How to Redeem:</h3>
+			<ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #555;">
+				<li>Visit <a href="https://univoucher.com" style="color: #96588a; text-decoration: none; font-weight: bold;">UniVoucher.com</a></li>
+				<li>Enter your Card ID and Card Secret</li>
+				<li>Follow the redemption instructions</li>
+				<li>Enjoy your reward!</li>
+			</ol>
+		</div>
+
+		<p style="margin: 30px 0 10px 0; font-size: 16px; text-align: center; color: #333;">
+			Thank you for being a valued customer!
+		</p>
+
+		<p style="margin: 0; font-size: 14px; text-align: center; color: #777;">
+			If you have any questions, please don\'t hesitate to contact us.
+		</p>
+	</div>
+</div>';
 				}
 			} else {
 				// Order-based card - use order template or default
 				if ( ! empty( $promotion['email_template'] ) ) {
 					$message = $promotion['email_template'];
 				} else {
-					$message = sprintf(
-						"Hello %s,\n\nCongratulations! You've received a promotional gift card.\n\n%s\n\nThank you for your order!",
-						$user->display_name,
-						$card_info
-					);
+					// Default order-based template
+					$message = '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+	<div style="background-color: #96588a; border-radius: 12px 12px 0 0; padding: 40px 30px; text-align: center; border-bottom: 3px solid #7a4872;">
+		<h1 style="margin: 0; font-size: 32px; color: #ffffff;">🎉 You\'ve Got a Gift! 🎉</h1>
+	</div>
+
+	<div style="background-color: #f7f7f7; padding: 40px 30px; border-radius: 0 0 12px 12px; border: 1px solid #ddd; border-top: none;">
+		<p style="margin: 0 0 20px 0; font-size: 18px; color: #333;">Dear {customer_name},</p>
+
+		<p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #555;">
+			Great news! Your recent order <strong>#{order_number}</strong> qualifies for a special gift card. We\'re thrilled to share this exclusive reward with you!
+		</p>
+
+		<div style="background-color: #ffffff; border-radius: 12px; padding: 30px; margin: 30px 0; border: 2px solid #96588a;">
+			<h2 style="margin: 0 0 20px 0; font-size: 24px; text-align: center; color: #96588a;">Your Gift Card</h2>
+			{gift_card_details}
+		</div>
+
+		<div style="border-left: 4px solid #96588a; padding: 20px; margin: 30px 0; border-radius: 4px; background-color: #ffffff;">
+			<h3 style="margin: 0 0 10px 0; font-size: 18px; color: #96588a;">How to Redeem:</h3>
+			<ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #555;">
+				<li>Visit <a href="https://univoucher.com" style="color: #96588a; text-decoration: none; font-weight: bold;">UniVoucher.com</a></li>
+				<li>Enter your Card ID and Card Secret</li>
+				<li>Follow the redemption instructions</li>
+				<li>Enjoy your reward!</li>
+			</ol>
+		</div>
+
+		<p style="margin: 30px 0 10px 0; font-size: 16px; text-align: center; color: #333;">
+			Thank you for your purchase!
+		</p>
+
+		<p style="margin: 0; font-size: 14px; text-align: center; color: #777;">
+			If you have any questions, please don\'t hesitate to contact us.
+		</p>
+	</div>
+</div>';
 				}
 			}
 

@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -194,6 +194,10 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 11. Gift card template variations showing support for multiple cryptocurrencies and blockchain networks
 
 == Changelog ==
+
+= 1.5.4 =
+* Improved default email templates with professional HTML formatting for promotional cards
+* Fixed email subject selection to use appropriate default for manual vs order-based cards
 
 = 1.5.3 =
 * Fixed email template selection for manual promotional cards to use correct template
