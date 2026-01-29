@@ -3,7 +3,7 @@
  * Plugin Name: UniVoucher For WooCommerce
  * Plugin URI: https://univoucher.com
  * Description: Integrate UniVoucher decentralized crypto gift cards with WooCommerce. Create and redeem blockchain-based gift cards for any ERC-20 token or native currency.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: UniVoucher
  * Author URI: https://univoucher.com
  * Text Domain: univoucher-for-woocommerce
@@ -34,7 +34,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 	 * Main UniVoucher_For_WooCommerce Class
 	 *
 	 * @class UniVoucher_For_WooCommerce
-	 * @version 1.5.0
+	 * @version 1.5.1
 	 */
 	final class UniVoucher_For_WooCommerce {
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'UniVoucher_For_WooCommerce' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.5.0';
+		public $version = '1.5.1';
 
 		/**
 		 * The single instance of the class.

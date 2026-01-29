@@ -415,7 +415,8 @@ class UniVoucher_WC_Promotion_Processor {
 		}
 
 		// Generate unique order ID for this request.
-		$api_order_id = 'promo_' . $promotion['id'] . '_' . $order->get_id() . '_' . time();
+		$order_id = $order ? $order->get_id() : 0;
+		$api_order_id = 'promo_' . $promotion['id'] . '_' . $order_id . '_' . time();
 
 		// Generate callback URL.
 		$callback_url = home_url( '/wp-json/univoucher/v1/promotion-callback' );
@@ -430,7 +431,7 @@ class UniVoucher_WC_Promotion_Processor {
 			array(
 				'promotion_id' => $promotion['id'],
 				'user_id'      => $user_id,
-				'order_id'     => $order->get_id(),
+				'order_id'     => $order_id,
 				'promotion'    => $promotion,
 			),
 			HOUR_IN_SECONDS
@@ -472,13 +473,15 @@ class UniVoucher_WC_Promotion_Processor {
 		if ( $response_code === 202 && isset( $response_data['success'] ) && $response_data['success'] ) {
 			// Success - card creation initiated.
 			// The actual card will be stored via callback.
-			$order->add_order_note(
-				sprintf(
-					// translators: %s is the promotion title
-					__( 'UniVoucher: Promotional gift card creation initiated for "%s"', 'univoucher-for-woocommerce' ),
-					$promotion['title']
-				)
-			);
+			if ( $order ) {
+				$order->add_order_note(
+					sprintf(
+						// translators: %s is the promotion title
+						__( 'UniVoucher: Promotional gift card creation initiated for "%s"', 'univoucher-for-woocommerce' ),
+						$promotion['title']
+					)
+				);
+			}
 
 			// Return temporary placeholder data.
 			return array(

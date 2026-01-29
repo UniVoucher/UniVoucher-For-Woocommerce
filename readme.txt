@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -194,6 +194,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 11. Gift card template variations showing support for multiple cryptocurrencies and blockchain networks
 
 == Changelog ==
+
+= 1.5.1 =
+* Fixed manual promotional card creation error when no order is associated
 
 = 1.5.0 =
 * Enhanced promotional card expiration processing to run every 12 hours on any admin page and immediately on the Promotional Cards page
