@@ -5,7 +5,7 @@ Tags: crypto, gift cards, cryptocurrency, blockchain, vouchers
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.9
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -195,6 +195,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 
 == Changelog ==
 
+= 1.5.0 =
+* Enhanced promotional card expiration processing to run every 12 hours on any admin page and immediately on the Promotional Cards page
+
 = 1.4.9 =
 * Minor bug fixing
 
@@ -369,6 +372,9 @@ Yes, this plugin requires WooCommerce to be installed and active as it integrate
 * Dynamic product image generation with drag-and-drop customization interface
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+* Enhancement update improving promotional card expiration processing for better automation and reliability.
 
 = 1.4.9 =
 * Minor bug fixes and improvements.

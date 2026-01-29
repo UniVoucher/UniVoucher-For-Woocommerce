@@ -786,6 +786,9 @@ class UniVoucher_WC_Promotion_Processor {
 	public function process_expired_promotional_cards() {
 		global $wpdb;
 
+		// First, sync all promotional cards status with API before processing.
+		$this->sync_promotional_cards_status();
+
 		// Get all active promotions with expiration days set.
 		$promotions_table = $this->database->uv_get_promotions_table();
 		$promotions = $wpdb->get_results(
@@ -808,6 +811,86 @@ class UniVoucher_WC_Promotion_Processor {
 				// Auto-cancel is disabled - just mark cards as expired.
 				$this->mark_expired_cards_for_promotion( $promotion );
 			}
+		}
+	}
+
+	/**
+	 * Sync all promotional cards status with UniVoucher API.
+	 *
+	 * Checks all cards with 'active' or 'expired' status and updates their database status
+	 * to match the actual status from the API (active, cancelled, or redeemed).
+	 */
+	private function sync_promotional_cards_status() {
+		global $wpdb;
+
+		$cards_table = $this->database->uv_get_promotional_cards_table();
+
+		// Get all cards with 'active' or 'expired' status.
+		$cards_to_sync = $wpdb->get_results(
+			"SELECT * FROM $cards_table
+			WHERE status IN ('active', 'expired')
+			LIMIT 200",
+			ARRAY_A
+		);
+
+		if ( empty( $cards_to_sync ) ) {
+			return;
+		}
+
+		$synced_count = 0;
+		$updated_count = 0;
+
+		foreach ( $cards_to_sync as $card ) {
+			// Get card details from UniVoucher API.
+			$api_url = 'https://api.univoucher.com/v1/cards/single?id=' . urlencode( $card['card_id'] );
+			$response = wp_remote_get( $api_url, array( 'timeout' => 15 ) );
+
+			if ( is_wp_error( $response ) ) {
+				error_log( 'UniVoucher Promotion Sync: Failed to get card status for ' . $card['card_id'] . ' - ' . $response->get_error_message() );
+				continue;
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			$response_body = wp_remote_retrieve_body( $response );
+			$card_data = json_decode( $response_body, true );
+
+			if ( $response_code !== 200 || ! isset( $card_data['active'], $card_data['status'] ) ) {
+				continue;
+			}
+
+			$synced_count++;
+			$api_status = $card_data['status']; // 'active', 'cancelled', or 'redeemed'
+			$new_status = null;
+
+			// Determine the correct status based on API response.
+			if ( $api_status === 'cancelled' ) {
+				$new_status = 'cancelled';
+			} elseif ( $api_status === 'redeemed' ) {
+				$new_status = 'redeemed';
+			}
+			// If API status is 'active', leave it as is (active or expired based on current DB status).
+
+			// Update database if status has changed.
+			if ( $new_status && $new_status !== $card['status'] ) {
+				$wpdb->update(
+					$cards_table,
+					array( 'status' => $new_status ),
+					array( 'id' => $card['id'] ),
+					array( '%s' ),
+					array( '%d' )
+				);
+				$updated_count++;
+			}
+		}
+
+		if ( $updated_count > 0 ) {
+			error_log(
+				sprintf(
+					'UniVoucher Promotion Sync: Synced %d cards, updated %d cards to match API status',
+					$synced_count,
+					$updated_count
+				)
+			);
 		}
 	}
 

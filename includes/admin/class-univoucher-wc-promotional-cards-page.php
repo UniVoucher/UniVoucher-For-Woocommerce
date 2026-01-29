@@ -40,6 +40,7 @@ class UniVoucher_WC_Promotional_Cards_Page {
 	 */
 	public function __construct() {
 		$this->handle_actions();
+		$this->process_expired_cards_on_page_load();
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 	}
 
@@ -59,6 +60,20 @@ class UniVoucher_WC_Promotional_Cards_Page {
 			array(),
 			UNIVOUCHER_WC_VERSION
 		);
+	}
+
+	/**
+	 * Process expired promotional cards on page load.
+	 */
+	private function process_expired_cards_on_page_load() {
+		// Check if we're on the promotional cards page.
+		if ( ! isset( $_GET['page'] ) || 'univoucher-promotional-cards' !== $_GET['page'] ) {
+			return;
+		}
+
+		// Process expired cards every time the page is loaded.
+		$promotion_processor = UniVoucher_WC_Promotion_Processor::instance();
+		$promotion_processor->process_expired_promotional_cards();
 	}
 
 	/**

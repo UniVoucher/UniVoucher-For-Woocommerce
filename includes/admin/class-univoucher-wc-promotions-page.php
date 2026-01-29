@@ -1130,7 +1130,7 @@ class UniVoucher_WC_Promotions_Page {
 				<div class="univoucher-promotion-section">
 					<h2><?php esc_html_e( 'Card Expiration Settings', 'univoucher-for-woocommerce' ); ?></h2>
 					<p class="description" style="margin: 0 0 15px 0;">
-						<?php esc_html_e( 'Configure automatic expiration for promotional gift cards. All expired cards will be automatically cancelled once you visit any page of the UniVoucher plugin to avoid unnecessary cron jobs. The card\'s value will be returned to your internal wallet once cancelled.', 'univoucher-for-woocommerce' ); ?>
+						<?php esc_html_e( 'Configure automatic expiration for promotional gift cards. Expired cards are processed every 12 hours when visiting any admin page, and immediately when visiting the Promotional Cards page. The card\'s value will be returned to your internal wallet once cancelled.', 'univoucher-for-woocommerce' ); ?>
 					</p>
 					<table class="form-table">
 						<tr>
